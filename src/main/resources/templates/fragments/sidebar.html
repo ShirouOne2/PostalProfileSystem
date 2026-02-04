@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<nav id="sidebar" class="sidebar-wrapper" th:fragment="sidebar">
+    <div class="sidebar-content">
+        <div class="sidebar-brand">
+            <a href="#">POST OFFICE</a>
+        </div>
+        
+        <div class="sidebar-header">
+            <div class="user-pic">
+                <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 600;">
+                    <span>A</span>
+                </div>
+            </div>
+            <div class="user-info">
+                <span class="user-name" style="font-size: 14px; font-weight: 600; color: #2c3e50; display: block; margin-bottom: 2px;">Admin User</span>
+                <span class="user-role" style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 8px;">System Administrator</span>
+                
+                <span class="user-status" onclick="toggleStatus()" style="cursor: pointer; font-size: 11px; color: #27ae60;">
+                    <i id="statusIcon" class="fa fa-circle" style="font-size: 8px; margin-right: 4px;"></i>
+                    <span id="statusText" style="font-weight: 500;">Online</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <ul>
+                <li class="header-menu"><span>General</span></li>
+                <li>
+                    <a th:href="@{/dashboard}" id="show-dashboard">
+                        <i class="fas fa-map"></i>
+                        <span>DASHBOARD</span>
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/table}" id="show-data-table">
+                        <i class="fas fa-table"></i>
+                        <span>DATA TABLE</span>
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/quarters}" id="show-quarters">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>QUARTERS</span>
+                    </a>
+                </li>
+         
+                <li class="header-menu"><span>Actions</span></li>
+                <li>
+                    <a href="#" onclick="showInsertModal()">
+                        <i class="fa fa-download"></i>
+                        <span>INSERT</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="#" onclick="showImportModal()">
+                        <i class="fas fa-file-excel"></i>
+                        <span>IMPORT</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="#" onclick="showRegisterModal()">
+                        <i class="fa fa-envelope"></i>
+                        <span>REGISTER</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="#" onclick="showLogoutModal()">
+                <i class="fa fa-power-off"></i>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const statuses = [
+            { text: 'Online', class: 'text-success' },
+            { text: 'Breaktime', class: 'text-warning' },
+            { text: 'Offline', class: 'text-danger' }
+        ];
+        let currentStatus = 0;
+
+        function toggleStatus() {
+            currentStatus = (currentStatus + 1) % statuses.length;
+            const status = statuses[currentStatus];
+            document.getElementById('statusText').textContent = status.text;
+            const icon = document.getElementById('statusIcon');
+            icon.className = 'fa fa-circle ' + status.class;
+        }
+
+        function showInsertModal() { alert('Insert Modal Triggered (Static)'); }
+        function showImportModal() { alert('Import Modal Triggered (Static)'); }
+        function showRegisterModal() { alert('Register Modal Triggered (Static)'); }
+        function showLogoutModal() { alert('Logout Modal Triggered (Static)'); }
+    </script>
+</nav>
+</html>

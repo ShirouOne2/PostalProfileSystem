@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - POST OFFICE</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.6/css/all.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-custom.css}">
+</head>
+
+<body>
+    <div class="logo-bar d-flex justify-content-between align-items-center px-4 py-3 bg-white border-bottom">
+        <div class="d-flex align-items-center">
+            <img th:src="@{/images/asd.jpg}" alt="PHLPOST" style="height: 40px; margin-right: 15px;">
+            <h4 class="mb-0 text-primary font-weight-bold">PHLPost Profile System</h4>
+        </div>
+        
+        <div class="d-flex align-items-center">
+            <div class="user-info d-flex align-items-center">
+                <div class="user-avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px;">
+                    A
+                </div>
+                <span class="font-weight-bold">Admin User</span>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="page-container">
+        <div id="dashboard-container" class="content-container active px-4 pt-4">
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0 p-3 mb-4">
+                        <h5 class="mb-3"><i class="fas fa-filter text-primary"></i> Filter Options</h5>
+                        
+                        <label class="small font-weight-bold">Search Office</label>
+                        <input list="officeList" id="officeInput" class="form-control mb-3" placeholder="Type office name..." />
+                        <datalist id="officeList">
+                            <option value="Manila Central Post Office">
+                            <option value="Quezon City Post Office">
+                        </datalist>
+
+                        <label class="small font-weight-bold">Select Area</label>
+                        <select id="areaDropdown" class="form-control mb-3">
+                            <option value="">-- All Areas --</option>
+                            <option value="1">Area 1 - North Luzon</option>
+                            <option value="2">Area 2 - Central Luzon</option>
+                            <option value="3">Area 3 - Metro Manila</option>
+                        </select>
+
+                        <div class="mt-2">
+                            <h6 class="small font-weight-bold"><i class="fas fa-palette"></i> Status Legend</h6>
+                            <div id="areaLegend" class="row no-gutters mt-2">
+                                <div class="col-6 mb-1 small"><i class="fas fa-circle text-success"></i> Connected</div>
+                                <div class="col-6 mb-1 small"><i class="fas fa-circle text-danger"></i> Offline</div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        
+                        <a th:href="@{/table}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-table mr-2"></i>View Data Table
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="card shadow-sm border-0">
+                        <div id="leafletMap" style="width: 100%; height: 650px; background: #e9ecef; border-radius: 8px;">
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <p class="text-muted">Loading Geographic Map...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirm Logout</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                    <p class="lead">Are you sure you want to end your session?</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a th:href="@{/logout}" class="btn btn-danger px-4">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script th:src="@{/js/dashboard.js}"></script>
+    <script th:src="@{/js/dashboard-custom.js}"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log("Static Dashboard Ready");
+            
+            // Sidebar Active Toggle
+            $('.nav-link').click(function() {
+                $('.nav-link').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+    </script>
+</body>
+</html>

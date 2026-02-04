@@ -1,0 +1,207 @@
+/* Custom Quarters CSS */
+
+/* Leaflet Popup Styles */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 300px;
+    max-width: 350px;
+}
+
+.leaflet-popup-tip {
+    background: white !important;
+}
+
+/* Popup Cover Photo Styles */
+.popup-cover-photo {
+    position: relative;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    min-height: 60px;
+    max-height: 120px;
+    width: 100%;
+}
+
+.popup-cover-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.popup-cover-photo img:hover {
+    opacity: 1;
+}
+
+/* Responsive popup adjustments */
+@media (max-width: 480px) {
+    .leaflet-popup-content {
+        min-width: 260px !important;
+        max-width: 300px !important;
+    }
+    
+    .popup-cover-photo {
+        height: 60px;
+        min-height: 50px;
+        max-height: 80px;
+    }
+}
+
+@media (max-width: 400px) {
+    .leaflet-popup-content {
+        min-width: 240px !important;
+        max-width: 280px !important;
+    }
+    
+    .popup-cover-photo {
+        height: 50px;
+        min-height: 40px;
+        max-height: 70px;
+    }
+}
+
+@media (min-width: 768px) {
+    .leaflet-popup-content {
+        min-width: 320px !important;
+        max-width: 380px !important;
+    }
+    
+    .popup-cover-photo {
+        height: 90px;
+        min-height: 70px;
+        max-height: 130px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .leaflet-popup-content {
+        min-width: 340px !important;
+        max-width: 400px !important;
+    }
+    
+    .popup-cover-photo {
+        height: 100px;
+        min-height: 80px;
+        max-height: 140px;
+    }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1440px) {
+    .leaflet-popup-content {
+        min-width: 360px !important;
+        max-width: 420px !important;
+    }
+    
+    .popup-cover-photo {
+        height: 110px;
+        min-height: 90px;
+        max-height: 150px;
+    }
+}
+
+/* Profile Modal Cover Photo Styles */
+.profile-modal-cover-photo {
+    height: 160px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 120px;
+    max-height: 200px;
+    transition: all 0.3s ease;
+}
+
+/* Profile Modal Responsive Breakpoints */
+@media (max-width: 576px) {
+    .profile-modal-cover-photo {
+        height: 120px;
+        min-height: 100px;
+        max-height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-modal-cover-photo {
+        height: 100px;
+        min-height: 80px;
+        max-height: 130px;
+    }
+}
+
+@media (min-width: 768px) {
+    .profile-modal-cover-photo {
+        height: 180px;
+        min-height: 140px;
+        max-height: 220px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile-modal-cover-photo {
+        height: 200px;
+        min-height: 160px;
+        max-height: 250px;
+    }
+}
+
+@media (min-width: 1440px) {
+    .profile-modal-cover-photo {
+        height: 220px;
+        min-height: 180px;
+        max-height: 280px;
+    }
+}
+
+/* User Avatar Styles */
+.user-avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Logo Bar Styles */
+.logo-bar {
+    background: white;
+    border-bottom: 1px solid #e3e6f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Notification Badge */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Dropdown Styles */
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}

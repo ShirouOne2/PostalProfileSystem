@@ -1,0 +1,144 @@
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f5f5f0;
+}
+
+.split-container {
+    display: flex;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: auto;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0,0,0,0.1);
+}
+
+.left-section { 
+    flex: 55%; 
+}
+
+.background-img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+
+.right-section {
+    flex: 45%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+}
+
+.login-card { 
+    max-width: 420px; 
+    width: 100%; 
+}
+
+.logo { 
+    width: 120px; 
+    margin-bottom: 30px; 
+}
+
+.welcome-text h1 { 
+    font-size: 28px; 
+    color: #1a1a2e; 
+}
+
+.welcome-text p { 
+    color: #6b7280; 
+    margin-bottom: 30px; 
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0 18px;
+    margin-bottom: 20px;
+}
+
+.input-wrapper ion-icon {
+    margin-right: 12px;
+    color: #9ca3af;
+    font-size: 20px;
+}
+
+.input-wrapper input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+}
+
+.password-toggle { 
+    cursor: pointer; 
+}
+
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.forgot-password { 
+    color: #ef4444; 
+    text-decoration: none; 
+}
+
+.login-button {
+    width: 100%;
+    padding: 16px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Full-page GIF overlay */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+#loadingOverlay.fade-out {
+    opacity: 0;
+}
+
+#loadingOverlay img {
+    max-width: 1200px;
+    width: 90%;
+    height: auto;
+}
+
+/* Initially show the form */
+#loginForm { 
+    display: block; 
+}
