@@ -1,10 +1,10 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
-import com.pps.profilesystem.Entity.Region;
+import com.pps.profilesystem.Entity.Regions;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
-import com.pps.profilesystem.Repository.RegionRepository;
+import com.pps.profilesystem.Repository.RegionsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,7 +26,7 @@ public class DashboardController {
     private AreaRepository areaRepository;
 
     @Autowired
-    private RegionRepository regionRepository;
+    private RegionsRepository regionRepository;
 
     /**
      * Display the dashboard page
@@ -43,7 +43,7 @@ public class DashboardController {
 
         // Get filter data
         List<Area> areas = areaRepository.findAll();
-        List<Region> regions = regionRepository.findAll();
+        List<Regions> regions = regionRepository.findAll();
 
         // Add to model
         model.addAttribute("totalOffices", totalOffices);

@@ -21,4 +21,29 @@ public class Barangay {
     @ManyToOne
     @JoinColumn(name = "city_mun_id")
     private CityMunicipality cityMunicipality;
+
+    public Integer getId() {
+        return id;
+    }
+    
+    public void setId(Integer id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public CityMunicipality getCityMunicipality() {
+        return cityMunicipality;
+    }
+    
+    public void setCityMunicipality(CityMunicipality cityMunicipality) {
+        this.cityMunicipality = cityMunicipality;
+    }
+
 }

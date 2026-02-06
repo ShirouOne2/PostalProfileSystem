@@ -20,5 +20,31 @@ public class Province {
 
     @ManyToOne
     @JoinColumn(name = "region_id")
-    private Region region;
+    private Regions regions;
+
+    public Integer getId() {
+        return id;
+    }
+    
+    public void setId(Integer id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public Regions getRegion() {
+        return regions;
+    }
+    
+    public void setRegion(Regions region) {
+        this.regions = region;
+    }
+    
+
 }
