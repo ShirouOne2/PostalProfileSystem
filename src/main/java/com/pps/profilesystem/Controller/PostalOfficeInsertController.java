@@ -21,7 +21,7 @@ public class PostalOfficeInsertController {
     private AreaRepository areaRepository;
 
     @Autowired
-    private RegionRepository regionRepository;
+    private RegionsRepository regionRepository;
 
     @Autowired
     private ProvinceRepository provinceRepository;

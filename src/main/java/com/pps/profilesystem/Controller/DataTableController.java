@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Entity.PostalOffice;
-import com.pps.profilesystem.Entity.Region;
+import com.pps.profilesystem.Entity.Regions;
 import com.pps.profilesystem.Repository.AreaRepository;
-import com.pps.profilesystem.Repository.RegionRepository;
+import com.pps.profilesystem.Repository.RegionsRepository;
 import com.pps.profilesystem.Service.LocationService;
 
 import java.util.List;
@@ -26,14 +26,14 @@ public class DataTableController {
     private AreaRepository areaRepository;
 
     @Autowired
-    private RegionRepository regionRepository;
+    private RegionsRepository regionRepository;
 
     @GetMapping
     public String viewPostOffices(Model model) {
 
         List<PostalOffice> offices = locationService.getAllOffices();
         List<Area> areas = areaRepository.findAll();
-        List<Region> regions = regionRepository.findAll();
+        List<Regions> regions = regionRepository.findAll();
 
         model.addAttribute("offices", offices);
         model.addAttribute("totalCount", locationService.countAll());
