@@ -3,15 +3,12 @@
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 <head>
     <title>Dashboard</title>
-    
     <!-- Boxicons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-
     <div th:fragment="content">
         <div class="bg-white rounded shadow-sm p-4">
-
             <!-- Page Title -->
             <div class="mb-4">
                 <h3 class="mb-1">
@@ -21,39 +18,39 @@
                     Real-time overview of post office network operations and statistics
                 </p>
             </div>
-
+            
             <!-- Quick Stats -->
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="border rounded p-3 text-center">
                         <i class='bx bxs-buildings' style="font-size: 2rem; color: #6c757d;"></i>
-                        <h5 class="mb-0 mt-2">15</h5>
+                        <h5 class="mb-0 mt-2" id="totalOffices">0</h5>
                         <small class="text-muted">Total Post Offices</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3 text-center">
-                        <i class='bx bxs-check-circle' style="font-size: 2rem; color: #6c757d;"></i>
-                        <h5 class="mb-0 mt-2">12</h5>
+                        <i class='bx bxs-check-circle' style="font-size: 2rem; color: #28a745;"></i>
+                        <h5 class="mb-0 mt-2" id="activeOffices">0</h5>
                         <small class="text-muted">Active Locations</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3 text-center">
-                        <i class='bx bxs-x-circle' style="font-size: 2rem; color: #6c757d;"></i>
-                        <h5 class="mb-0 mt-2">3</h5>
+                        <i class='bx bxs-x-circle' style="font-size: 2rem; color: #dc3545;"></i>
+                        <h5 class="mb-0 mt-2" id="inactiveOffices">0</h5>
                         <small class="text-muted">Inactive Locations</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3 text-center">
                         <i class='bx bxs-map' style="font-size: 2rem; color: #6c757d;"></i>
-                        <h5 class="mb-0 mt-2">4</h5>
+                        <h5 class="mb-0 mt-2" id="coverageAreas">0</h5>
                         <small class="text-muted">Coverage Areas</small>
                     </div>
                 </div>
             </div>
-
+            
             <!-- Main Content Row -->
             <div class="row">
                 <!-- Map Section -->
@@ -62,57 +59,53 @@
                         <h5 class="mb-3">
                             <i class='bx bxs-map-alt'></i> Geographic Distribution
                         </h5>
-                        <div style="height: 400px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px dashed #dee2e6;">
-                            <div class="text-center">
-                                <i class='bx bxs-map' style="font-size: 4rem; color: #dee2e6;"></i>
-                                <p class="text-muted mt-2 mb-0">Interactive Map View</p>
-                            </div>
+                        <div id="map" style="height: 400px; border-radius: 8px;"></div>
+                        <div id="mapStatus" class="mt-2 text-center" style="display: none;">
+                            <small class="text-muted">Loading map...</small>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Filter Section -->
                 <div class="col-md-4 mb-4">
                     <div class="border rounded p-3">
                         <h5 class="mb-3">
                             <i class='bx bx-filter-alt'></i> Search & Filter
                         </h5>
-                        
                         <div class="mb-3">
                             <label class="text-muted small mb-1">Search Location</label>
-                            <input type="text" class="form-control" placeholder="Enter post office name...">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Enter post office name...">
                         </div>
-
                         <div class="mb-3">
                             <label class="text-muted small mb-1">Filter by Area</label>
-                            <select class="form-control">
-                                <option>All Areas</option>
-                                <option>Metro North</option>
-                                <option>Metro South</option>
-                                <option>Metro East</option>
-                                <option>Metro West</option>
+                            <select id="areaFilter" class="form-control">
+                                <option value="">All Areas</option>
+                                <option value="1">Metro North</option>
+                                <option value="2">Metro South</option>
+                                <option value="3">Metro East</option>
+                                <option value="4">Metro West</option>
                             </select>
                         </div>
-
                         <div class="mb-3">
                             <label class="text-muted small mb-1">Status</label>
-                            <select class="form-control">
-                                <option>All Statuses</option>
-                                <option>Active</option>
-                                <option>Inactive</option>
-                                <option>Maintenance</option>
+                            <select id="statusFilter" class="form-control">
+                                <option value="">All Statuses</option>
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
                             </select>
                         </div>
-
-                        <button class="btn btn-dark btn-block">
-                            <i class='bx bx-search'></i> Apply Filters
-                        </button>
+                        <div class="d-grid gap-2">
+                            <button id="applyFilters" class="btn btn-dark">
+                                <i class='bx bx-search'></i> Apply Filters
+                            </button>
+                            <button id="clearFilters" class="btn btn-outline-secondary">
+                                <i class='bx bx-x'></i> Clear Filters
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
-
 </body>
 </html>
