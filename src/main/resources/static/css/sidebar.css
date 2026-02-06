@@ -1,16 +1,24 @@
 /* ============================================
    PHLPost Sidebar Styles
-   Clean, modern sidebar from scratch
+   Official PHLPost Color Theme
    ============================================ */
 
-   :root {
+:root {
+    /* PHLPost Official Colors */
+    --phlpost-blue: #2B5BA6;      /* Blue from "PHL" */
+    --phlpost-red: #C1272D;       /* Red from "POST" */
+    --phlpost-yellow: #FFD700;    /* Yellow from mascot */
+    --phlpost-dark-blue: #1a3a6b; /* Darker blue for brand area */
+    --phlpost-light-blue: #3d6fb8; /* Lighter blue for hover */
+    
+    /* Sidebar Variables */
     --sidebar-width: 260px;
-    --sidebar-bg: #2c3e50;
-    --sidebar-brand-bg: #1a252f;
-    --sidebar-link-hover: #34495e;
-    --sidebar-link-active: #3498db;
+    --sidebar-bg: #1e2f4d;        /* Dark blue-gray base */
+    --sidebar-brand-bg: var(--phlpost-dark-blue);
+    --sidebar-link-hover: var(--phlpost-light-blue);
+    --sidebar-link-active: var(--phlpost-red);
     --sidebar-text: #ecf0f1;
-    --sidebar-heading: #7f8c8d;
+    --sidebar-heading: #a8b3c4;
 }
 
 /* Sidebar Container */
@@ -20,13 +28,14 @@
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background: var(--sidebar-bg);
+    background: linear-gradient(180deg, var(--sidebar-bg) 0%, #172640 100%);
     display: flex;
     flex-direction: column;
     z-index: 1000;
     overflow-y: auto;
     overflow-x: hidden;
     transition: all 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Custom Scrollbar for Sidebar */
@@ -39,12 +48,12 @@
 }
 
 #sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--phlpost-blue);
     border-radius: 3px;
 }
 
 #sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--phlpost-red);
 }
 
 /* Sidebar Brand/Logo */
@@ -54,12 +63,14 @@
     padding: .75rem 1rem;
     background: var(--sidebar-brand-bg);
     min-height: 58px;
+    border-bottom: 3px solid var(--phlpost-red);
 }
 
 .brand-icon {
     font-size: 1.1rem;
-    color: var(--sidebar-link-active);
+    color: var(--phlpost-yellow);
     margin-right: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .brand-text {
@@ -95,6 +106,7 @@
     text-decoration: none;
     transition: all 0.2s ease;
     position: relative;
+    border-left: 4px solid transparent;
 }
 
 .sidebar-link i {
@@ -102,6 +114,7 @@
     width: 1.5rem;
     margin-right: 0.75rem;
     text-align: center;
+    color: var(--phlpost-yellow);
 }
 
 .sidebar-link span {
@@ -115,13 +128,23 @@
     color: #fff;
     text-decoration: none;
     padding-left: 1.75rem;
+    border-left-color: var(--phlpost-yellow);
+}
+
+.sidebar-link:hover i {
+    color: var(--phlpost-yellow);
+    transform: scale(1.1);
 }
 
 /* Sidebar Link Active */
 .sidebar-link.active {
     background: var(--sidebar-link-active);
     color: #fff;
-    border-left: 4px solid #2980b9;
+    border-left: 4px solid var(--phlpost-yellow);
+}
+
+.sidebar-link.active i {
+    color: var(--phlpost-yellow);
 }
 
 .sidebar-link.active::before {
@@ -131,19 +154,19 @@
     top: 0;
     height: 100%;
     width: 4px;
-    background: #2980b9;
+    background: var(--phlpost-yellow);
 }
 
 /* Sidebar Divider */
 .sidebar-divider {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
     margin: 1rem 1.5rem;
 }
 
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 1rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid var(--phlpost-blue);
 }
 
 .sidebar-footer a {
@@ -153,12 +176,14 @@
     color: var(--sidebar-text);
     text-decoration: none;
     transition: all 0.2s ease;
+    border-left: 4px solid transparent;
 }
 
 .sidebar-footer a:hover {
-    background: #c0392b;
+    background: var(--phlpost-red);
     color: #fff;
     text-decoration: none;
+    border-left-color: var(--phlpost-yellow);
 }
 
 .sidebar-footer i {
@@ -166,6 +191,7 @@
     width: 1.5rem;
     margin-right: 0.75rem;
     text-align: center;
+    color: var(--phlpost-yellow);
 }
 
 .sidebar-footer span {
@@ -173,19 +199,24 @@
     font-weight: 500;
 }
 
-/* Mobile Toggle Button (optional) */
+/* Mobile Toggle Button */
 .sidebar-toggle {
     display: none;
     position: fixed;
     top: 1rem;
     left: 1rem;
     z-index: 1001;
-    background: var(--sidebar-bg);
+    background: var(--phlpost-blue);
     color: var(--sidebar-text);
     border: none;
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-toggle:hover {
+    background: var(--phlpost-red);
 }
 
 /* Responsive Styles */
@@ -203,7 +234,7 @@
     }
 }
 
-/* Sidebar Collapsed State (optional feature) */
+/* Sidebar Collapsed State */
 #sidebar.collapsed {
     width: 60px;
 }
@@ -233,6 +264,24 @@
 
 .sidebar-link.disabled:hover,
 .sidebar-footer a.disabled:hover {
-    background: var(--sidebar-bg);
+    background: transparent;
     padding-left: 1.5rem;
+    border-left-color: transparent;
+}
+
+/* PHLPost Badge/Accent */
+.sidebar-badge {
+    background: var(--phlpost-yellow);
+    color: var(--phlpost-dark-blue);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    margin-left: auto;
+}
+
+/* Active indicator dot */
+.sidebar-link.active .sidebar-badge {
+    background: var(--phlpost-yellow);
+    color: var(--phlpost-red);
 }

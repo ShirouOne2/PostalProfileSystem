@@ -4,6 +4,14 @@
     <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm sticky-top">
         <div class="container-fluid">
 
+            <!-- Logo - LEFT SIDE -->
+            <a class="navbar-brand d-flex align-items-center" href="#" th:href="@{/dashboard}">
+                <img th:src="@{/assets/images/phlpostlogo.png}" 
+                     alt="PHLPost Logo" 
+                     style="height: 45px;">
+            </a>
+
+            <!-- RIGHT SIDE - Existing notifications and user -->
             <ul class="navbar-nav ml-auto align-items-center">
                 <li class="nav-item dropdown mr-3">
                     <a class="nav-link text-muted" href="#" id="alertsDropdown" role="button" data-toggle="dropdown">
@@ -12,8 +20,10 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <div class="d-flex align-items-center pl-3 border-left">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center pl-3 border-left" 
+                       href="#" id="userDropdown" role="button" data-toggle="dropdown" 
+                       aria-haspopup="true" aria-expanded="false">
                         <div class="text-right mr-2 d-none d-md-block">
                             <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;">Admin User</div>
                             <div class="user-role" style="font-size: 11px; color: #777;">System Admin</div>
@@ -22,6 +32,23 @@
                              style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;">
                             A
                         </div>
+                    </a>
+                    
+                    <!-- User Dropdown Menu -->
+                    <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#" th:href="@{/profile}">
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Profile
+                        </a>
+                        <a class="dropdown-item" href="#" th:href="@{/settings}">
+                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Logout
+                        </a>
                     </div>
                 </li>
             </ul>

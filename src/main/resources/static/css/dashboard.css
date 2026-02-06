@@ -1,0 +1,58 @@
+/* MAP CONTAINER */
+#map {
+    height: 450px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* POPUP */
+.leaflet-popup-content {
+    margin: 8px 12px;
+}
+
+.leaflet-popup-content h6 {
+    margin: 0 0 5px 0;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.leaflet-popup-content p {
+    margin: 3px 0;
+    font-size: 13px;
+}
+
+/* STATUS BADGES */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* CUSTOM MARKER STYLE (if using divIcon) */
+.custom-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.custom-marker.active {
+    background-color: #28a745;
+}
+
+.custom-marker.inactive {
+    background-color: #dc3545;
+}

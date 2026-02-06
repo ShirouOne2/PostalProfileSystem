@@ -1,13 +1,11 @@
 package com.pps.profilesystem.Controller;
 
-import com.pps.profilesystem.Entity.PostalOffice;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.Map;
 
 @RestController
