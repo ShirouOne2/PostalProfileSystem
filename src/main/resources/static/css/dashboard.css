@@ -32,12 +32,12 @@
 }
 
 .status-active {
-    background-color: #d4edda;
+    background-color: #08c635;
     color: #155724;
 }
 
 .status-inactive {
-    background-color: #f8d7da;
+    background-color: #d5091a;
     color: #721c24;
 }
 

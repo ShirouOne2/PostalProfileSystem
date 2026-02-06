@@ -1,0 +1,281 @@
+/**
+ * Custom Table Styles for Post Office Inventory
+ * PHLPost - Post Office Management System
+ */
+
+/* Table Container */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* DataTables Wrapper Customization */
+.dataTables_wrapper {
+    padding: 20px 0;
+}
+
+/* Table Header Styling */
+table.dataTable thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    color: #495057;
+    padding: 12px 18px;
+}
+
+table.dataTable thead th,
+table.dataTable tfoot th {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Table Body Styling */
+table.dataTable tbody td {
+    padding: 12px 18px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+table.dataTable tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #f1f3f5 !important;
+}
+
+/* Striped rows */
+table.dataTable.display tbody tr.odd {
+    background-color: #ffffff;
+}
+
+table.dataTable.display tbody tr.even {
+    background-color: #f8f9fa;
+}
+
+/* Badge Styling */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+    color: #ffffff;
+}
+
+/* Search Box Styling */
+.dataTables_filter input {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.dataTables_filter input:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Length Menu Styling */
+.dataTables_length select {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 1.75rem 0.375rem 0.75rem;
+    font-size: 0.9rem;
+    margin: 0 0.5rem;
+}
+
+/* Pagination Styling */
+.dataTables_paginate {
+    margin-top: 20px;
+}
+
+.dataTables_paginate .paginate_button {
+    padding: 0.375rem 0.75rem;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background-color: #ffffff;
+    color: #007bff !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background-color: #007bff !important;
+    color: #ffffff !important;
+    border-color: #007bff;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Info Text */
+.dataTables_info {
+    font-size: 0.875rem;
+    color: #6c757d;
+    padding-top: 10px;
+}
+
+/* Processing Indicator */
+.dataTables_processing {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 20px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Sorting Icons */
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
+table.dataTable thead .sorting_desc {
+    cursor: pointer;
+    position: relative;
+}
+
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc:after {
+    opacity: 0.3;
+}
+
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before {
+    opacity: 1;
+}
+
+/* Center aligned columns */
+.dt-center {
+    text-align: center;
+}
+
+/* Responsive Table Adjustments */
+@media screen and (max-width: 768px) {
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left;
+        margin-bottom: 10px;
+    }
+    
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: left;
+        margin-top: 10px;
+    }
+    
+    table.dataTable tbody td {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+}
+
+/* Empty State */
+.dataTables_empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Quick Stats Cards */
+.border.rounded {
+    border: 1px solid #dee2e6 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.border.rounded:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Loading State */
+.dataTables_wrapper .dataTables_processing {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+
+/* Custom Scrollbar for Table */
+.dataTables_scrollBody::-webkit-scrollbar {
+    height: 8px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Table Border Customization */
+table.dataTable {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+table.dataTable thead th:first-child {
+    border-top-left-radius: 0.25rem;
+}
+
+table.dataTable thead th:last-child {
+    border-top-right-radius: 0.25rem;
+}
+
+/* Footer Styling */
+table.dataTable tfoot th {
+    background-color: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #495057;
+    padding: 12px 18px;
+}

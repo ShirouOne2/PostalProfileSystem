@@ -1,57 +1,62 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
-      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
-<head>
-    <title>Post Office Inventory - PHLPost</title>
-    <link rel="stylesheet" th:href="@{/css/table.css}">
-    <link rel="stylesheet" th:href="@{/css/table-custom.css}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-</head>
-<body>
-
-    <div th:fragment="content">
-        <div class="bg-white rounded shadow-sm p-4">
-
-            <!-- Page Title -->
-            <div class="mb-4">
-                <h3 class="mb-1">Post Offices</h3>
-                <p class="text-muted mb-0">
-                    Static preview of post office records
-                </p>
-            </div>
+    <!DOCTYPE html>
+    <html xmlns:th="http://www.thymeleaf.org" 
+        th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+    <head>
+        <title>Post Office Inventory - PHLPost</title>
         
-            <!-- Quick Stats -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <h5 class="mb-0" th:text="${totalCount}">0</h5>
-                        <small class="text-muted">Total Offices</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <h5 class="mb-0" th:text="${areaCount}">0</h5>
-                        <small class="text-muted">Areas</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <h5 class="mb-0" th:text="${activeCount}">0</h5>
-                        <small class="text-muted">Active</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <h5 class="mb-0" th:text="${inactiveCount}">0</h5>
-                        <small class="text-muted">Inactive</small>
-                    </div>
-                </div>
-            </div>
+        <!-- Favicon -->
+        <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
         
-            <!-- Table -->
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="thead-light">
+        <!-- DataTables CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.min.css">
+        
+        <!-- Your custom CSS -->
+        <link rel="stylesheet" th:href="@{/css/table.css}">
+    </head>
+    <body>
+
+        <div th:fragment="content">
+            <div class="bg-white rounded shadow-sm p-4">
+
+                <!-- Page Title -->
+                <div class="mb-4">
+                    <h3 class="mb-1">Post Offices</h3>
+                    <p class="text-muted mb-0">
+                        Manage and view all post office records
+                    </p>
+                </div>
+            
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <h5 class="mb-0" th:text="${totalCount}">1258</h5>
+                            <small class="text-muted">Total Offices</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <h5 class="mb-0" th:text="${areaCount}">9</h5>
+                            <small class="text-muted">Areas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <h5 class="mb-0" th:text="${activeCount}">629</h5>
+                            <small class="text-muted">Active</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <h5 class="mb-0" th:text="${inactiveCount}">629</h5>
+                            <small class="text-muted">Inactive</small>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- DataTable -->
+                <table id="myTable" class="display" style="width:100%">
+                    <thead>
                         <tr>
                             <th>#</th>
                             <th>Post Office Name</th>
@@ -62,37 +67,42 @@
                     </thead>
                     <tbody>
                         <tr th:each="office, iter : ${offices}">
-                            <td th:text="${iter.count}">1</td>
-                            <td th:text="${office.name}">Post Office</td>
+                            <td th:text="${office.id != null ? office.id : iter.count}">1</td>
+                            <td th:text="${office.name != null ? office.name : '—'}">Post Office Name</td>
                             <td th:text="${office.area != null ? office.area.areaName : '—'}">Area</td>
                             <td th:text="${office.cityMunicipality != null ? office.cityMunicipality.name : '—'}">City</td>
                             <td>
                                 <span th:if="${office.connectionStatus}"
-                                      class="badge badge-success">Active</span>
+                                    class="badge badge-success">Active</span>
                     
                                 <span th:if="${!office.connectionStatus}"
-                                      class="badge badge-warning">Inactive</span>
+                                    class="badge badge-warning">Inactive</span>
                             </td>
                         </tr>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>#</th>
+                            <th>Post Office Name</th>
+                            <th>Area</th>
+                            <th>City</th>
+                            <th>Status</th>
+                        </tr>
+                    </tfoot>
                 </table>
+            
             </div>
-        
+
+            <!-- Scripts must be loaded in this exact order -->
+            <!-- 1. jQuery -->
+            <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+            
+            <!-- 2. DataTables JS -->
+            <script src="https://cdn.datatables.net/2.3.7/js/dataTables.min.js"></script>
+            
+            <!-- 3. Your initialization script -->
+            <script th:src="@{/js/table.js}"></script>
         </div>
 
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script>
-            $(document).ready(function() {
-                $('#staticTable').DataTable({
-                    "responsive": true,
-                    "pageLength": 10,
-                    "language": {
-                        "search": "Quick Filter:"
-                    }
-                });
-            });
-        </script>
-    </div>
-
-</body>
-</html>
+    </body>
+    </html>

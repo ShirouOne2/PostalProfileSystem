@@ -28,19 +28,20 @@
                         <small class="text-muted">Total Post Offices</small>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <i class='bx bxs-check-circle' style="font-size: 2rem; color: #28a745;"></i>
-                        <h5 class="mb-0 mt-2" id="activeOffices">0</h5>
-                        <small class="text-muted">Active Locations</small>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 text-center">
-                        <i class='bx bxs-x-circle' style="font-size: 2rem; color: #dc3545;"></i>
-                        <h5 class="mb-0 mt-2" id="inactiveOffices">0</h5>
-                        <small class="text-muted">Inactive Locations</small>
-                    </div>
+               <div class="col-md-3">
+    <div class="border-0 rounded p-3 text-center" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);">
+        <i class='bx bxs-check-circle' style="font-size: 2.5rem; color: #FFD700;"></i>
+        <h5 class="mb-0 mt-2 text-white fw-bold" id="activeOffices">0</h5>
+        <small class="text-white">Active Locations</small>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="border-0 rounded p-3 text-center" style="background: linear-gradient(135deg, #C1272D 0%, #a01f24 100%); box-shadow: 0 4px 6px rgba(193, 39, 45, 0.2);">
+        <i class='bx bxs-x-circle' style="font-size: 2.5rem; color: #FFD700;"></i>
+        <h5 class="mb-0 mt-2 text-white fw-bold" id="inactiveOffices">0</h5>
+        <small class="text-white">Inactive Locations</small>
+    </div>
+</di>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3 text-center">
@@ -63,6 +64,22 @@
                         <div id="mapStatus" class="mt-2 text-center" style="display: none;">
                             <small class="text-muted">Loading map...</small>
                         </div>
+                        
+                        <!-- Color Legend -->
+                        <div class="mt-3">
+                            <small class="text-muted d-block mb-2"><strong>Area Colors:</strong></small>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge" style="background-color: #FF6B6B;">Area 1</span>
+                                <span class="badge" style="background-color: #4ECDC4;">Area 2</span>
+                                <span class="badge" style="background-color: #45B7D1;">Area 3</span>
+                                <span class="badge" style="background-color: #FFA07A;">Area 4</span>
+                                <span class="badge" style="background-color: #98D8C8;">Area 5</span>
+                                <span class="badge" style="background-color: #F7DC6F;">Area 6</span>
+                                <span class="badge" style="background-color: #BB8FCE;">Area 7</span>
+                                <span class="badge" style="background-color: #85C1E2;">Area 8</span>
+                                <span class="badge" style="background-color: #F8B88B;">Area 9</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -80,10 +97,15 @@
                             <label class="text-muted small mb-1">Filter by Area</label>
                             <select id="areaFilter" class="form-control">
                                 <option value="">All Areas</option>
-                                <option value="1">Metro North</option>
-                                <option value="2">Metro South</option>
-                                <option value="3">Metro East</option>
-                                <option value="4">Metro West</option>
+                                <option value="1">Area 1</option>
+                                <option value="2">Area 2</option>
+                                <option value="3">Area 3</option>
+                                <option value="4">Area 4</option>
+                                <option value="5">Area 5</option>
+                                <option value="6">Area 6</option>
+                                <option value="7">Area 7</option>
+                                <option value="8">Area 8</option>
+                                <option value="9">Area 9</option>
                             </select>
                         </div>
                         <div class="mb-3">

@@ -13,6 +13,24 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Leaflet loaded successfully, version:', L.version);
     
+    // Color scheme for areas 1-9
+    var areaColors = {
+        1: '#FF6B6B',  // Red
+        2: '#4ECDC4',  // Teal
+        3: '#45B7D1',  // Blue
+        4: '#FFA07A',  // Light Salmon
+        5: '#98D8C8',  // Mint
+        6: '#F7DC6F',  // Yellow
+        7: '#BB8FCE',  // Purple
+        8: '#85C1E2',  // Sky Blue
+        9: '#F8B88B'   // Peach
+    };
+    
+    // Function to get color for an area
+    function getAreaColor(areaId) {
+        return areaColors[areaId] || '#6c757d'; // Default gray for unknown areas
+    }
+    
     // Initialize the map centered on Philippines
     var map = L.map('map', {
         center: [12.8797, 121.7740],
@@ -72,26 +90,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Create circle marker with color based on status
+                // Get color based on area
+                var pinColor = getAreaColor(office.areaId);
+                
+                // Create circle marker with color based on area
+                // If inactive, make it semi-transparent
                 var marker = L.circleMarker([lat, lng], {
                     radius: 8,
-                    fillColor: office.status ? '#28a745' : '#dc3545',
+                    fillColor: pinColor,
                     color: '#ffffff',
                     weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.9
+                    opacity: office.status ? 1 : 0.5,
+                    fillOpacity: office.status ? 0.9 : 0.4
                 });
                 
                 // Create status badge
                 var statusBadge = office.status ? 
-                    '<span class="status-badge status-active">Active</span>' : 
-                    '<span class="status-badge status-inactive">Inactive</span>';
+                    '<span class="badge bg-success">Active</span>' : 
+                    '<span class="badge bg-danger">Inactive</span>';
+                
+                // Create area badge with color
+                var areaBadge = office.areaId ? 
+                    '<span class="badge" style="background-color: ' + pinColor + ';">Area ' + office.areaId + '</span>' : 
+                    '<span class="badge bg-secondary">No Area</span>';
                 
                 // Bind popup with office information
                 marker.bindPopup(
-                    '<h6>' + office.name + '</h6>' +
-                    '<p><strong>Status:</strong> ' + statusBadge + '</p>' +
-                    '<p><strong>Area ID:</strong> ' + (office.areaId || 'N/A') + '</p>'
+                    '<div style="min-width: 200px;">' +
+                    '<h6 class="mb-2">' + office.name + '</h6>' +
+                    '<p class="mb-1"><strong>Status:</strong> ' + statusBadge + '</p>' +
+                    '<p class="mb-1"><strong>Area:</strong> ' + areaBadge + '</p>' +
+                    '<p class="mb-0 text-muted small"><strong>Coordinates:</strong> ' + lat.toFixed(4) + ', ' + lng.toFixed(4) + '</p>' +
+                    '</div>'
                 );
                 
                 // Store office data with marker for filtering
@@ -145,22 +175,43 @@ document.addEventListener('DOMContentLoaded', function() {
         markerClusterGroup.clearLayers();
         
         var visibleCount = 0;
+        var filteredBounds = [];
         
         // Re-add markers that match filters
         markers.forEach(function(marker) {
             var office = marker.officeData;
             
+            // Search filter: matches if search is empty OR office name contains search term
             var matchesSearch = !searchTerm || office.name.toLowerCase().includes(searchTerm);
+            
+            // Area filter: matches if area filter is empty OR office areaId exactly matches selected area
             var matchesArea = !areaFilter || (office.areaId && office.areaId.toString() === areaFilter);
+            
+            // Status filter: matches if status filter is empty OR office status matches selected status
             var matchesStatus = !statusFilter || office.status.toString() === statusFilter;
             
+            // Only show marker if ALL filters match
             if (matchesSearch && matchesArea && matchesStatus) {
                 markerClusterGroup.addLayer(marker);
                 visibleCount++;
+                
+                // Add to bounds for re-centering map
+                var latlng = marker.getLatLng();
+                filteredBounds.push([latlng.lat, latlng.lng]);
             }
         });
         
+        // If markers are visible, fit map to show them
+        if (filteredBounds.length > 0) {
+            map.fitBounds(filteredBounds, { padding: [50, 50] });
+        }
+        
         console.log('Filtered:', visibleCount, 'of', markers.length, 'markers visible');
+        
+        // Show message if no results
+        if (visibleCount === 0) {
+            alert('No post offices match the current filters.');
+        }
     }
     
     function clearFilters() {
@@ -173,11 +224,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Re-add all markers
         markerClusterGroup.clearLayers();
+        var allBounds = [];
+        
         markers.forEach(function(marker) {
             markerClusterGroup.addLayer(marker);
+            var latlng = marker.getLatLng();
+            allBounds.push([latlng.lat, latlng.lng]);
         });
         
-        console.log('All filters cleared');
+        // Fit map to show all markers
+        if (allBounds.length > 0) {
+            map.fitBounds(allBounds, { padding: [50, 50] });
+        }
+        
+        console.log('All filters cleared - showing all', markers.length, 'markers');
     }
     
     // Event listeners for filter buttons
