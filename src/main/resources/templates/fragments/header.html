@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="header">
+    <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm sticky-top">
+        <div class="container-fluid">
+
+            <ul class="navbar-nav ml-auto align-items-center">
+                <li class="nav-item dropdown mr-3">
+                    <a class="nav-link text-muted" href="#" id="alertsDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-bell fa-fw"></i>
+                        <span class="badge badge-danger badge-counter" style="font-size: 10px;">3+</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <div class="d-flex align-items-center pl-3 border-left">
+                        <div class="text-right mr-2 d-none d-md-block">
+                            <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;">Admin User</div>
+                            <div class="user-role" style="font-size: 11px; color: #777;">System Admin</div>
+                        </div>
+                        <div class="user-avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;">
+                            A
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+</html>

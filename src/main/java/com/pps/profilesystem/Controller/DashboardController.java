@@ -1,6 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Entity.Region;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.RegionRepository;
@@ -10,8 +11,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * Dashboard Controller
+ * Handles the main dashboard view with statistics and filters
+ */
 @Controller
 public class DashboardController {
 
@@ -24,23 +28,30 @@ public class DashboardController {
     @Autowired
     private RegionRepository regionRepository;
 
+    /**
+     * Display the dashboard page
+     * @param model Spring MVC model
+     * @return dashboard view name
+     */
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
-        // 1. Fetch lookup data for the filters
-        List<Area> areas = areaRepository.findAll();
-        
-        // 2. Add data to the Model for Thymeleaf
-        model.addAttribute("areas", areas);
-        model.addAttribute("full_name", "Admin User"); // Static for now as requested
-        model.addAttribute("position", "System Administrator");
-        
-        // 3. User Access logic (Static placeholder for your JS window.userAccess)
-        model.addAttribute("userAccess", Map.of(
-            "can_access_all_areas", true,
-            "assigned_area", "All"
-        ));
 
-        // Return the name of your HTML file (dashboard.html)
+        // Get statistics
+        long totalOffices = postalOfficeRepository.count();
+        long activeOffices = postalOfficeRepository.countByConnectionStatus(true);
+        long inactiveOffices = postalOfficeRepository.countByConnectionStatus(false);
+
+        // Get filter data
+        List<Area> areas = areaRepository.findAll();
+        List<Region> regions = regionRepository.findAll();
+
+        // Add to model
+        model.addAttribute("totalOffices", totalOffices);
+        model.addAttribute("activeOffices", activeOffices);
+        model.addAttribute("inactiveOffices", inactiveOffices);
+        model.addAttribute("areas", areas);
+        model.addAttribute("regions", regions); // For modal dropdown
+        model.addAttribute("activePage", "dashboard");
         return "dashboard";
     }
 }

@@ -10,10 +10,26 @@ import com.pps.profilesystem.Repository.PostalOfficeRepository;
 
 @Service
 public class LocationService {
+
     @Autowired
     private PostalOfficeRepository poRepo;
 
-    public List<PostalOffice> getOfflineOffices() {
-        return poRepo.findByConnectionStatus(false);
+    public List<PostalOffice> getAllOffices() {
+        return poRepo.findAll();
+    }
+
+    public long countAll() {
+        return poRepo.count();
+    }
+
+    public long countActive() {
+        return poRepo.countByConnectionStatus(true);
+    }
+
+    public long countInactive() {
+        return poRepo.countByConnectionStatus(false);
+    }
+    public long countAreas() {
+        return poRepo.countDistinctAreas();
     }
 }
