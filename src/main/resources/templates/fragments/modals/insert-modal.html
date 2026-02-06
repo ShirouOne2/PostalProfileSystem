@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Insert Postal Office Modal -->
+<div th:fragment="insertModal" class="modal fade" id="insertPostalOfficeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i> Add New Postal Office
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="insertPostalOfficeForm" th:action="@{/api/postal-office/insert}" method="post">
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="officeName">Post Office Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="officeName" name="name" required 
+                                           placeholder="e.g., Manila Central Post Office">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="postmaster">Postmaster</label>
+                                    <input type="text" class="form-control" id="postmaster" name="postmaster" 
+                                           placeholder="Name of Postmaster">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="2" 
+                                      placeholder="Complete address of the postal office"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="zipCode">ZIP Code</label>
+                                    <input type="text" class="form-control" id="zipCode" name="zipCode" 
+                                           placeholder="e.g., 1000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="areaId">Area <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="areaId" name="areaId" required>
+                                        <option value="">-- Select Area --</option>
+                                        <option th:each="area : ${areas}" 
+                                                th:value="${area.id}" 
+                                                th:text="${area.areaName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Hierarchy Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-map-marked-alt"></i> Location Hierarchy
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="regionId">Region</label>
+                                    <select class="form-control" id="regionId" name="regionId">
+                                        <option value="">-- Select Region --</option>
+                                        <option th:each="region : ${regions}" 
+                                                th:value="${region.id}" 
+                                                th:text="${region.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="provinceId">Province</label>
+                                    <select class="form-control" id="provinceId" name="provinceId" disabled>
+                                        <option value="">-- Select Province --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cityMunId">City/Municipality</label>
+                                    <select class="form-control" id="cityMunId" name="cityMunId" disabled>
+                                        <option value="">-- Select City/Municipality --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="barangayId">Barangay</label>
+                                    <select class="form-control" id="barangayId" name="barangayId" disabled>
+                                        <option value="">-- Select Barangay --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coordinates Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-map-pin"></i> Geographic Coordinates
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="latitude">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
+                                           placeholder="e.g., 14.5995">
+                                    <small class="form-text text-muted">Decimal degrees format</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="longitude">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
+                                           placeholder="e.g., 120.9842">
+                                    <small class="form-text text-muted">Decimal degrees format</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Section -->
+                    <div class="form-section">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-plug"></i> Connection Status
+                        </h6>
+                        
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="connectionStatus" 
+                                       name="connectionStatus" value="true">
+                                <label class="custom-control-label" for="connectionStatus">
+                                    Office is currently connected/active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" form="insertPostalOfficeForm" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Postal Office
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Cascading Dropdown Script -->
+<script th:fragment="insertModalScript">
+$(document).ready(function() {
+    
+    // Region -> Province cascade
+    $('#regionId').on('change', function() {
+        const regionId = $(this).val();
+        const $provinceSelect = $('#provinceId');
+        
+        // Reset dependent dropdowns
+        $provinceSelect.html('<option value="">-- Select Province --</option>').prop('disabled', true);
+        $('#cityMunId').html('<option value="">-- Select City/Municipality --</option>').prop('disabled', true);
+        $('#barangayId').html('<option value="">-- Select Barangay --</option>').prop('disabled', true);
+        
+        if (regionId) {
+            $.get('/api/provinces/by-region/' + regionId, function(provinces) {
+                provinces.forEach(function(province) {
+                    $provinceSelect.append(
+                        $('<option></option>').val(province.id).text(province.name)
+                    );
+                });
+                $provinceSelect.prop('disabled', false);
+            });
+        }
+    });
+    
+    // Province -> City/Municipality cascade
+    $('#provinceId').on('change', function() {
+        const provinceId = $(this).val();
+        const $citySelect = $('#cityMunId');
+        
+        // Reset dependent dropdowns
+        $citySelect.html('<option value="">-- Select City/Municipality --</option>').prop('disabled', true);
+        $('#barangayId').html('<option value="">-- Select Barangay --</option>').prop('disabled', true);
+        
+        if (provinceId) {
+            $.get('/api/cities/by-province/' + provinceId, function(cities) {
+                cities.forEach(function(city) {
+                    $citySelect.append(
+                        $('<option></option>').val(city.id).text(city.name)
+                    );
+                });
+                $citySelect.prop('disabled', false);
+            });
+        }
+    });
+    
+    // City/Municipality -> Barangay cascade
+    $('#cityMunId').on('change', function() {
+        const cityId = $(this).val();
+        const $barangaySelect = $('#barangayId');
+        
+        $barangaySelect.html('<option value="">-- Select Barangay --</option>').prop('disabled', true);
+        
+        if (cityId) {
+            $.get('/api/barangays/by-city/' + cityId, function(barangays) {
+                barangays.forEach(function(barangay) {
+                    $barangaySelect.append(
+                        $('<option></option>').val(barangay.id).text(barangay.name)
+                    );
+                });
+                $barangaySelect.prop('disabled', false);
+            });
+        }
+    });
+    
+    // Form submission
+    $('#insertPostalOfficeForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: $('#officeName').val(),
+            postmaster: $('#postmaster').val() || null,
+            address: $('#address').val() || null,
+            zipCode: $('#zipCode').val() || null,
+            areaId: $('#areaId').val() || null,
+            regionId: $('#regionId').val() || null,
+            provinceId: $('#provinceId').val() || null,
+            cityMunId: $('#cityMunId').val() || null,
+            barangayId: $('#barangayId').val() || null,
+            latitude: $('#latitude').val() || null,
+            longitude: $('#longitude').val() || null,
+            connectionStatus: $('#connectionStatus').is(':checked')
+        };
+        
+        $.ajax({
+            url: '/api/postal-office/insert',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                alert('Postal Office added successfully!');
+                $('#insertPostalOfficeModal').modal('hide');
+                $('#insertPostalOfficeForm')[0].reset();
+                location.reload(); // Reload to see new data
+            },
+            error: function(xhr) {
+                alert('Error: ' + (xhr.responseJSON?.message || 'Failed to add postal office'));
+            }
+        });
+    });
+    
+    // Reset form when modal is closed
+    $('#insertPostalOfficeModal').on('hidden.bs.modal', function() {
+        $('#insertPostalOfficeForm')[0].reset();
+        $('#provinceId, #cityMunId, #barangayId').prop('disabled', true);
+    });
+});
+</script>
+
+<style th:fragment="insertModalStyles">
+.form-section h6 {
+    font-weight: 600;
+}
+
+.custom-control-label {
+    cursor: pointer;
+}
+
+#insertPostalOfficeModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#insertPostalOfficeModal label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+#insertPostalOfficeModal .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#insertPostalOfficeModal .text-danger {
+    font-weight: bold;
+}
+</style>
+
+</html>

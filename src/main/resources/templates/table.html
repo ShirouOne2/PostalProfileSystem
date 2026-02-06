@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Post Office Inventory - PHLPost</title>
+    <link rel="stylesheet" th:href="@{/css/table.css}">
+    <link rel="stylesheet" th:href="@{/css/table-custom.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+
+    <div th:fragment="content">
+        <div class="bg-white rounded shadow-sm p-4">
+
+            <!-- Page Title -->
+            <div class="mb-4">
+                <h3 class="mb-1">Post Offices</h3>
+                <p class="text-muted mb-0">
+                    Static preview of post office records
+                </p>
+            </div>
+        
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h5 class="mb-0" th:text="${totalCount}">0</h5>
+                        <small class="text-muted">Total Offices</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h5 class="mb-0" th:text="${areaCount}">0</h5>
+                        <small class="text-muted">Areas</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h5 class="mb-0" th:text="${activeCount}">0</h5>
+                        <small class="text-muted">Active</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h5 class="mb-0" th:text="${inactiveCount}">0</h5>
+                        <small class="text-muted">Inactive</small>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Post Office Name</th>
+                            <th>Area</th>
+                            <th>City</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="office, iter : ${offices}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${office.name}">Post Office</td>
+                            <td th:text="${office.area != null ? office.area.areaName : '—'}">Area</td>
+                            <td th:text="${office.cityMunicipality != null ? office.cityMunicipality.name : '—'}">City</td>
+                            <td>
+                                <span th:if="${office.connectionStatus}"
+                                      class="badge badge-success">Active</span>
+                    
+                                <span th:if="${!office.connectionStatus}"
+                                      class="badge badge-warning">Inactive</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        
+        </div>
+
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#staticTable').DataTable({
+                    "responsive": true,
+                    "pageLength": 10,
+                    "language": {
+                        "search": "Quick Filter:"
+                    }
+                });
+            });
+        </script>
+    </div>
+
+</body>
+</html>
