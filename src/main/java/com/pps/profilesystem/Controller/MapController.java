@@ -26,8 +26,11 @@ public class MapController {
                 m.put("name", po.getName());
                 m.put("lat", po.getLatitude());
                 m.put("lng", po.getLongitude());
-                m.put("status", po.getConnectionStatus());
-                m.put("areaId", po.getArea().getId());
+                m.put("status", po.getConnectionStatus() != null ? po.getConnectionStatus() : false);
+                m.put("areaId", po.getArea() != null ? po.getArea().getId() : null);  // ✅ Safe null check
+                m.put("address", po.getAddress());
+                m.put("postmaster", po.getPostmaster());
+                m.put("zipCode", po.getZipCode());
                 return m;
             })
             .toList();

@@ -1,50 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="/css/login.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POST OFFICE - Login</title>
+  <link rel="stylesheet" th:href="@{/css/login.css}">
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>Welcome Back</h1>
-            <p>Please login to your account</p>
+<div class="split-container">
+  <div class="left-section">
+    <img th:src="@{/images/background.jpg}" class="background-img" alt="Background">
+  </div>
+  <div class="right-section">
+    <div class="login-card">
+      <img th:src="@{/images/logo.jpg}" class="logo" alt="Logo">
+      <div class="welcome-text">
+        <h1>Login to Get Started</h1>
+        <p>Welcome back! Let's get you signed in.</p>
+      </div>
+
+      <form id="loginForm" method="POST" th:action="@{/login}">
+        <div class="input-wrapper">
+          <ion-icon name="mail-outline"></ion-icon>
+          <input type="email" id="email" name="email" placeholder="Email" required>
+        </div>
+        <div class="input-wrapper">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          <input type="password" id="password" name="password" placeholder="Password" required>
+          <ion-icon name="eye-outline" class="password-toggle" onclick="togglePassword(this)"></ion-icon>
         </div>
 
-        <form id="loginForm" method="POST" action="/login">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required>
-            </div>
-
-            <div class="forgot-password">
-                <a href="#">Forgot password?</a>
-            </div>
-
-            <button type="submit" class="login-button">Login</button>
-        </form>
-
-        <div class="divider">
-            <span>OR</span>
+        <div class="remember-forgot">
+          <label><input type="checkbox" name="remember-me"> Remember me</label>
+          <a th:href="@{/request-otp}" class="forgot-password">Forgot Password?</a>
         </div>
 
-        <div class="social-login">
-            <button class="social-button">Google</button>
-            <button class="social-button">Facebook</button>
-        </div>
-
-        <div class="signup-link">
-            Don't have an account? <a href="#">Sign up</a>
-        </div>
+        <button type="submit" class="login-button">Login</button>
+      </form>
     </div>
+  </div>
+</div>
 
-    <script src="/js/login.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/login.js}"></script>
 </body>
 </html>

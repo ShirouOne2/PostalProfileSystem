@@ -1,4 +1,4 @@
-// users.js - User Management
+// users.js - User Management with SweetAlert2
 
 let users = [];
 let editingUserId = null;
@@ -14,18 +14,57 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load all users
 async function loadUsers() {
     try {
+        // Show loading
+        Swal.fire({
+            title: 'Loading Users...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const response = await fetch('/users/api/all');
         
         if (response.status === 401) {
+            Swal.close();
+            await Swal.fire({
+                icon: 'warning',
+                title: 'Session Expired',
+                text: 'Please login again',
+                confirmButtonText: 'Go to Login'
+            });
             window.location.href = '/login';
             return;
         }
 
         users = await response.json();
         renderUsers();
+        
+        Swal.close();
+        
+        // Show success toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        
+        Toast.fire({
+            icon: 'success',
+            title: `Loaded ${users.length} users`
+        });
+        
     } catch (error) {
         console.error('Error loading users:', error);
-        showNotification('Failed to load users', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to Load Users',
+            text: error.message,
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
@@ -119,6 +158,16 @@ async function handleFormSubmit(e) {
         userData.password = password;
     }
 
+    // Show loading
+    Swal.fire({
+        title: editingUserId ? 'Updating User...' : 'Adding User...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     try {
         let response;
 
@@ -145,16 +194,32 @@ async function handleFormSubmit(e) {
         const result = await response.json();
 
         if (result.success) {
-            showNotification(result.message, 'success');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: result.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
             closeModal();
             loadUsers();
         } else {
-            showNotification(result.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: result.message,
+                confirmButtonColor: '#d33'
+            });
         }
 
     } catch (error) {
         console.error('Error saving user:', error);
-        showNotification('Failed to save user', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to save user',
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
@@ -163,132 +228,152 @@ async function toggleUserStatus(id) {
     const user = users.find(u => u.id === id);
     if (!user) return;
 
-    const confirmMsg = user.active 
-        ? 'Are you sure you want to deactivate this user?' 
-        : 'Are you sure you want to activate this user?';
+    const result = await Swal.fire({
+        title: user.active ? 'Deactivate User?' : 'Activate User?',
+        text: user.active 
+            ? `Are you sure you want to deactivate ${user.name}?` 
+            : `Are you sure you want to activate ${user.name}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: user.active ? 'Yes, Deactivate' : 'Yes, Activate',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: user.active ? '#d33' : '#28a745',
+        cancelButtonColor: '#6c757d'
+    });
 
-    if (!confirm(confirmMsg)) return;
+    if (!result.isConfirmed) return;
+
+    // Show loading
+    Swal.fire({
+        title: 'Updating...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
         const response = await fetch(`/users/api/toggle-status/${id}`, {
             method: 'PUT'
         });
 
-        const result = await response.json();
+        const apiResult = await response.json();
 
-        if (result.success) {
-            showNotification(result.message, 'success');
+        if (apiResult.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: apiResult.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
             loadUsers();
         } else {
-            showNotification(result.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: apiResult.message,
+                confirmButtonColor: '#d33'
+            });
         }
 
     } catch (error) {
         console.error('Error toggling user status:', error);
-        showNotification('Failed to update user status', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to update user status',
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
 // Delete user
 async function deleteUser(id) {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        return;
-    }
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+
+    const result = await Swal.fire({
+        title: 'Delete User?',
+        html: `
+            <p>Are you sure you want to delete <strong>${user.name}</strong>?</p>
+            <p class="text-danger"><small>This action cannot be undone!</small></p>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        focusCancel: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Show loading
+    Swal.fire({
+        title: 'Deleting...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
         const response = await fetch(`/users/api/delete/${id}`, {
             method: 'DELETE'
         });
 
-        const result = await response.json();
+        const apiResult = await response.json();
 
-        if (result.success) {
-            showNotification(result.message, 'success');
+        if (apiResult.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: apiResult.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
             loadUsers();
         } else {
-            showNotification(result.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: apiResult.message,
+                confirmButtonColor: '#d33'
+            });
         }
 
     } catch (error) {
         console.error('Error deleting user:', error);
-        showNotification('Failed to delete user', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to delete user',
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
 // Logout
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
+async function logout() {
+    const result = await Swal.fire({
+        title: 'Logout?',
+        text: 'Are you sure you want to logout?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Logout',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d'
+    });
+
+    if (result.isConfirmed) {
         window.location.href = '/logout';
     }
 }
-
-// Show notification
-function showNotification(message, type = 'error') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    
-    const styles = {
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        padding: '15px 20px',
-        borderRadius: '8px',
-        color: 'white',
-        fontWeight: '500',
-        zIndex: '2000',
-        animation: 'slideIn 0.3s ease-out',
-        maxWidth: '300px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-    };
-
-    Object.assign(notification.style, styles);
-
-    if (type === 'error') {
-        notification.style.background = '#e74c3c';
-    } else if (type === 'success') {
-        notification.style.background = '#27ae60';
-    }
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-    }, 4000);
-}
-
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
 
 // Close modal when clicking outside
 document.getElementById('userModal').addEventListener('click', (e) => {

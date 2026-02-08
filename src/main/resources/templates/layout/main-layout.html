@@ -19,6 +19,9 @@
          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
          crossorigin=""/>
     
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
     <!-- DataTables CSS - Only load on table page -->
     <link th:if="${activePage == 'table'}" rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
     
@@ -167,7 +170,10 @@
     <!-- 3. Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
-    <!-- 4. Sidebar Toggle Script -->
+    <!-- 4. SweetAlert2 - MUST LOAD BEFORE dashboard.js -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- 5. Sidebar Toggle Script -->
     <script>
         // Mobile sidebar toggle
         $(document).ready(function() {
@@ -186,21 +192,20 @@
         });
     </script>
     
-    <!-- 5. Insert Modal Script -->
+    <!-- 6. Insert Modal Script -->
     <div th:replace="~{fragments/modals/insert-modal :: insertModalScript}"></div>
     
-    <!-- 6. Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-         crossorigin=""></script>
+    <!-- 7. Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     
-    <!-- 7. Dashboard JS -->
+    <!-- 8. Dashboard JS -->
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
-    <!-- 8. DataTables JS - AFTER jQuery! Use compatible version 2.1.8 -->
+    <!-- 9. DataTables JS - AFTER jQuery! Use compatible version 2.1.8 -->
     <script th:if="${activePage == 'table'}" src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
     
-    <!-- 9. Table JS - Load LAST -->
+    <!-- 10. Table JS - Load LAST -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
 
 </body>
