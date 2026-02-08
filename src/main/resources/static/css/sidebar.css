@@ -39,6 +39,17 @@ body {
     flex-direction: column;
     overflow-y: auto;
     box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    z-index: 1000;
+}
+
+/* ============================================
+   MAIN CONTENT SPACE (IMPORTANT FIX)
+   ============================================ */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    min-height: 100vh;
+    background-color: #f8f9fa;
 }
 
 /* ============================================
@@ -80,7 +91,6 @@ body {
     text-transform: uppercase;
 }
 
-/* Links */
 .sidebar-link {
     display: flex;
     align-items: center;
@@ -98,14 +108,12 @@ body {
     color: var(--phlpost-blue);
 }
 
-/* Hover */
 .sidebar-link:hover {
     background: var(--sidebar-hover);
     color: var(--phlpost-blue);
     border-left: 4px solid var(--phlpost-blue);
 }
 
-/* Active (Selected Page) */
 .sidebar-link.active {
     background: #fff5f5;
     border-left: 4px solid var(--phlpost-red);
@@ -124,9 +132,7 @@ body {
     margin: 1rem 1.5rem;
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
+/* Footer */
 .sidebar-footer {
     border-top: 1px solid var(--sidebar-border);
     padding: 0.5rem 0;
@@ -150,9 +156,7 @@ body {
     color: var(--phlpost-blue);
 }
 
-/* ============================================
-   BADGE
-   ============================================ */
+/* Badge */
 .sidebar-badge {
     margin-left: auto;
     background: var(--phlpost-red);
@@ -168,9 +172,14 @@ body {
 @media (max-width: 768px) {
     #sidebar {
         left: -260px;
+        transition: 0.3s;
     }
 
     #sidebar.active {
         left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
     }
 }
