@@ -10,14 +10,14 @@
     <div th:fragment="content">
         <div class="bg-white rounded shadow-sm p-4">
             <!-- Page Title -->
-            <div class="mb-4">
+            <!-- <div class="mb-4">
                 <h3 class="mb-1">
                     <i class='bx bxs-dashboard'></i> Dashboard
                 </h3>
                 <p class="text-muted mb-0">
                     Real-time overview of post office network operations and statistics
                 </p>
-            </div>
+            </div> -->
             
             <!-- Quick Stats -->
             <div class="row mb-4">
@@ -63,6 +63,22 @@
                         <div id="mapStatus" class="mt-2 text-center" style="display: none;">
                             <small class="text-muted">Loading map...</small>
                         </div>
+                        
+                        <!-- Area Legend -->
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <small class="text-muted d-block mb-2"><strong>Area Legend:</strong></small>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #FF6B6B;"></span> Area 1</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #4ECDC4;"></span> Area 2</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #45B7D1;"></span> Area 3</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #FFA07A;"></span> Area 4</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #98D8C8;"></span> Area 5</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #F7DC6F;"></span> Area 6</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #BB8FCE;"></span> Area 7</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #F8B739;"></span> Area 8</span>
+                                <span class="area-legend-item"><span class="color-box" style="background-color: #85C1E2;"></span> Area 9</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -80,10 +96,15 @@
                             <label class="text-muted small mb-1">Filter by Area</label>
                             <select id="areaFilter" class="form-control">
                                 <option value="">All Areas</option>
-                                <option value="1">Metro North</option>
-                                <option value="2">Metro South</option>
-                                <option value="3">Metro East</option>
-                                <option value="4">Metro West</option>
+                                <option value="1">Area 1</option>
+                                <option value="2">Area 2</option>
+                                <option value="3">Area 3</option>
+                                <option value="4">Area 4</option>
+                                <option value="5">Area 5</option>
+                                <option value="6">Area 6</option>
+                                <option value="7">Area 7</option>
+                                <option value="8">Area 8</option>
+                                <option value="9">Area 9</option>
                             </select>
                         </div>
                         <div class="mb-3">

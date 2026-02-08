@@ -239,19 +239,28 @@ span.text-muted {
     margin-top: 15px;
 }
 
-/* Pagination styling to match image */
+/* Pagination styling - FIXED SPACING */
 .dataTables_paginate .paginate_button {
     background-color: #ffffff;
     color: #007bff !important;
     border: 1px solid #dee2e6;
     border-radius: 4px;
     padding: 6px 12px;
-    margin: 0 3px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-block;
     min-width: 35px;
     text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    margin: 0 2px !important;
+}
+
+/* Override DataTables default margins */
+.dataTables_paginate a.paginate_button,
+.dataTables_paginate span a.paginate_button {
+    margin-left: 2px !important;
+    margin-right: 2px !important;
 }
 
 .dataTables_paginate .paginate_button:hover:not(.disabled) {
@@ -289,6 +298,7 @@ span.text-muted {
     padding: 6px 12px;
     color: #666;
     display: inline-block;
+    margin: 0 2px;
 }
 
 /* Previous and Next buttons */

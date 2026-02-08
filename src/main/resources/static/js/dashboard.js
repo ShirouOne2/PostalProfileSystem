@@ -13,6 +13,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Leaflet loaded successfully, version:', L.version);
     
+    // Define color palette for areas 1-9
+    var areaColors = {
+        1: '#FF6B6B',  // Red
+        2: '#4ECDC4',  // Teal
+        3: '#45B7D1',  // Blue
+        4: '#FFA07A',  // Light Salmon
+        5: '#98D8C8',  // Mint
+        6: '#F7DC6F',  // Yellow
+        7: '#BB8FCE',  // Purple
+        8: '#F8B739',  // Orange
+        9: '#85C1E2',  // Sky Blue
+        default: '#95A5A6'  // Gray for unknown areas
+    };
+    
+    // Function to get color based on area
+    function getAreaColor(areaId) {
+        return areaColors[areaId] || areaColors.default;
+    }
+    
     // Initialize the map centered on Philippines
     var map = L.map('map', {
         center: [12.8797, 121.7740],
@@ -72,14 +91,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Create circle marker with color based on status
+                // Get color based on area ID
+                var markerColor = getAreaColor(office.areaId);
+                
+                // Create circle marker with color based on area
                 var marker = L.circleMarker([lat, lng], {
                     radius: 8,
-                    fillColor: office.status ? '#28a745' : '#dc3545',
+                    fillColor: markerColor,
                     color: '#ffffff',
                     weight: 2,
                     opacity: 1,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.8
                 });
                 
                 // Create status badge
@@ -87,11 +109,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     '<span class="status-badge status-active">Active</span>' : 
                     '<span class="status-badge status-inactive">Inactive</span>';
                 
+                // Create area badge with matching color
+                var areaBadge = office.areaId ? 
+                    '<span class="area-badge" style="background-color: ' + markerColor + ';">Area ' + office.areaId + '</span>' :
+                    '<span class="area-badge area-unknown">Area N/A</span>';
+                
                 // Bind popup with office information
                 marker.bindPopup(
                     '<h6>' + office.name + '</h6>' +
-                    '<p><strong>Status:</strong> ' + statusBadge + '</p>' +
-                    '<p><strong>Area ID:</strong> ' + (office.areaId || 'N/A') + '</p>'
+                    '<p><strong>Area:</strong> ' + areaBadge + '</p>' +
+                    '<p><strong>Status:</strong> ' + statusBadge + '</p>'
                 );
                 
                 // Store office data with marker for filtering
