@@ -1,44 +1,41 @@
 package com.pps.profilesystem.Controller;
 
-import com.pps.profilesystem.Entity.Area;
-import com.pps.profilesystem.Entity.Regions;
-import com.pps.profilesystem.Repository.AreaRepository;
-import com.pps.profilesystem.Repository.PostalOfficeRepository;
-import com.pps.profilesystem.Repository.RegionsRepository;
+import com.pps.profilesystem.Service.LocationHierarchyService;
+import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.List;
-
+/**
+ * Dashboard Controller
+ * Refactored to use services instead of direct repository access
+ */
 @Controller
 public class DashboardController {
 
     @Autowired
-    private PostalOfficeRepository postalOfficeRepository;
+    private PostalOfficeService postalOfficeService;
 
     @Autowired
-    private AreaRepository areaRepository;
-
-    @Autowired
-    private RegionsRepository regionRepository;
+    private LocationHierarchyService locationService;
 
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
 
-        long totalOffices = postalOfficeRepository.count();
-        long activeOffices = postalOfficeRepository.countByConnectionStatus(true);
-        long inactiveOffices = postalOfficeRepository.countByConnectionStatus(false);
+        // Get statistics using service
+        long totalOffices = postalOfficeService.getTotalCount();
+        long activeOffices = postalOfficeService.getActiveCount();
+        long inactiveOffices = postalOfficeService.getInactiveCount();
 
-        List<Area> areas = areaRepository.findAll();
-        List<Regions> regions = regionRepository.findAll();
-
+        // Get location data using service
+        model.addAttribute("areas", locationService.getAllAreas());
+        model.addAttribute("regions", locationService.getAllRegions());
+        
+        // Add statistics to model
         model.addAttribute("totalOffices", totalOffices);
         model.addAttribute("activeOffices", activeOffices);
         model.addAttribute("inactiveOffices", inactiveOffices);
-        model.addAttribute("areas", areas);
-        model.addAttribute("regions", regions);
         model.addAttribute("activePage", "dashboard");
 
         return "dashboard";

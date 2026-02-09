@@ -1,32 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Quarters Management - POST OFFICE</title>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    
-    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/header.css}">
-    <link rel="stylesheet" th:href="@{/css/quarters.css}">
+<head>
+    <title>Quarters Management</title>
 </head>
 
 <body>
-    <div class="page-wrapper">
-        
-        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-        <div class="main-content">
-            
-            <div th:replace="~{fragments/header :: header}"></div>
+<div th:fragment="content">
 
-           <main class="main-body p-4">
     <div class="container-fluid">
 
-        <!-- Existing Cards & Filters -->
+        <!-- Header Card -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center flex-wrap bg-white p-3 rounded shadow-sm border-left-primary">
@@ -64,7 +50,9 @@
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-success">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3"><i class="fas fa-wifi text-success mr-2"></i> Active</h6>
+                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
+                            <i class="fas fa-wifi text-success mr-2"></i> Active
+                        </h6>
                         <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalConnected}">628</h2>
                     </div>
                 </div>
@@ -72,7 +60,9 @@
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-danger">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3"><i class="fas fa-wifi-slash text-danger mr-2"></i> Inactive</h6>
+                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
+                            <i class="fas fa-wifi-slash text-danger mr-2"></i> Inactive
+                        </h6>
                         <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalDisconnected}">629</h2>
                     </div>
                 </div>
@@ -80,51 +70,18 @@
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-primary">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3"><i class="fas fa-building text-primary mr-2"></i> Total</h6>
+                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
+                            <i class="fas fa-building text-primary mr-2"></i> Total
+                        </h6>
                         <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalOffices}">1257</h2>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quarters Cards Section (Active/Inactive) -->
-        <div class="row">
-            <!-- Active Quarters -->
-            <div class="col-lg-6 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-success text-white font-weight-bold">With Connectivity</div>
-                    <div class="card-body">
-                        <div th:each="quarter : ${quartersData}" class="p-3 mb-2 border rounded shadow-xs"
-                             th:style="${quarter.isCurrent} ? 'border-left: 5px solid #28a745 !important; background: #f8fff9;' : ''">
-                            <div class="d-flex justify-content-between">
-                                <span class="font-weight-bold" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="badge badge-success" th:text="${'+' + quarter.newConnected}">+0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Inactive Quarters -->
-            <div class="col-lg-6 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-danger text-white font-weight-bold">Without Connectivity</div>
-                    <div class="card-body">
-                        <div th:each="quarter : ${quartersData}" class="p-3 mb-2 border rounded shadow-xs"
-                             th:style="${quarter.isCurrent} ? 'border-left: 5px solid #dc3545 !important; background: #fff8f8;' : ''">
-                            <div class="d-flex justify-content-between">
-                                <span class="font-weight-bold" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="badge badge-danger" th:text="${'+' + quarter.newDisconnected}">+0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ✅ Data Table Section -->
+        <!-- TABLE -->
         <div id="dataTableSection" class="mt-4">
             <h4 class="mb-3"><i class="fas fa-table"></i> All Post Offices</h4>
-            
             <div class="table-responsive">
                 <table id="postOfficeTable" class="table table-striped table-bordered" style="width:100%">
                     <thead class="thead-dark">
@@ -132,26 +89,22 @@
                             <th>#</th>
                             <th>AREA</th>
                             <th>POSTAL OFFICE</th>
-                            <th>PROVINCE</th>
+                            <th>ADDRESS</th>
+                            <th>ZIP CODE</th>
                             <th>SPEED</th>
                             <th>STATUS</th>
-                            <th>REMARKS</th>
+                            <th>POSTMASTER</th>
                             <th>ACTION</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Data loaded via AJAX -->
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
 
     </div>
-</main>
 
-        </div>
-    </div>
-
+    <!-- MAP MODAL -->
     <div class="modal fade" id="mapmodal" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -166,11 +119,9 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script th:src="@{/js/quarters.js}"></script>
+    <!-- Page Script - DataTables and jQuery loaded by main-layout -->
+
+</div>
+
 </body>
 </html>

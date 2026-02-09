@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/quarters")
+@RequestMapping("/api/quarters")  // Changed from "/quarters" to "/api/quarters"
 public class QuartersApiController {
 
     @GetMapping("/export")

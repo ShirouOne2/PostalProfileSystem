@@ -31,38 +31,24 @@ public class QuartersController {
             @RequestParam(required = false) String statusFilter,
             Model model) {
 
-        // Set current year if not provided
         int currentYear = (year != null) ? year : LocalDate.now().getYear();
-        
-        // Get current quarter info
-        Map<String, Object> currentQuarterInfo = getCurrentQuarterInfo();
-        
-        // Get connectivity statistics
-        Map<String, Long> connectivityStats = getConnectivityStats();
-        
-        // Get all areas
-        List<String> areas = getAreaNames();
-        
-        // Get quarters data for the year
-        List<Map<String, Object>> quartersData = getQuartersData(currentYear);
-        
-        // Add attributes to model
+
         model.addAttribute("currentYear", currentYear);
-        model.addAttribute("currentQuarterInfo", currentQuarterInfo);
-        model.addAttribute("connectivityStats", connectivityStats);
-        model.addAttribute("areas", areas);
-        model.addAttribute("quartersData", quartersData);
+        model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
+        model.addAttribute("connectivityStats", getConnectivityStats());
+        model.addAttribute("areas", getAreas());  // ← FIXED: Return Area objects, not strings
+        model.addAttribute("quartersData", getQuartersData(currentYear));
         model.addAttribute("selectedAreaFilter", areaFilter);
         model.addAttribute("selectedQuarterFilter", quarterFilter);
         model.addAttribute("selectedStatusFilter", statusFilter);
+
         model.addAttribute("activePage", "quarters");
-        
-        // Add user access (you can customize this based on your security setup)
+
         Map<String, Boolean> userAccess = new HashMap<>();
-        userAccess.put("can_access_all_areas", true); // Modify based on your user permissions
+        userAccess.put("can_access_all_areas", true);
         model.addAttribute("userAccess", userAccess);
 
-        return "quarter"; // This maps to quarter.html
+        return "quarters";
     }
 
     /**
@@ -75,7 +61,7 @@ public class QuartersController {
         
         String quarter;
         String monthName = now.getMonth().toString();
-        long daysUntilNext; // Changed from int to long
+        long daysUntilNext;
         
         if (month >= 1 && month <= 3) {
             quarter = "Q1";
@@ -116,18 +102,10 @@ public class QuartersController {
     }
 
     /**
-     * Get list of area names
+     * Get list of Area objects (FIXED)
      */
-    private List<String> getAreaNames() {
-        List<Area> areas = areaRepository.findAll();
-        List<String> areaNames = new ArrayList<>();
-        
-        for (Area area : areas) {
-            // Use getId() or getAreaName() depending on your Area entity
-            areaNames.add("Area " + area.getId()); // Changed from getName() to getId()
-        }
-        
-        return areaNames;
+    private List<Area> getAreas() {
+        return areaRepository.findAll();
     }
 
     /**
@@ -147,8 +125,8 @@ public class QuartersController {
             quarterData.put("year", year);
             quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
             quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
-            quarterData.put("newConnected", 0L); // You'll need to implement logic to track new connections per quarter
-            quarterData.put("newDisconnected", 0L); // You'll need to implement logic to track new disconnections per quarter
+            quarterData.put("newConnected", 0L);
+            quarterData.put("newDisconnected", 0L);
             quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
             
             quartersData.add(quarterData);

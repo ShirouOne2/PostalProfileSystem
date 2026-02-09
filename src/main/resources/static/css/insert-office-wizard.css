@@ -1,0 +1,65 @@
+/* Wizard Styles */
+.wizard-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.wizard-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.wizard-step-indicator {
+    background: #e9ecef;
+    color: #6c757d;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.wizard-step-indicator.active {
+    background: #007bff;
+    color: white;
+}
+
+.wizard-step {
+    display: none;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+/* Form Styles */
+.card-header h5 {
+    font-size: 1.1rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.custom-control-label {
+    cursor: pointer;
+}
+
+label {
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+}
+
+.text-danger {
+    font-weight: bold;
+}

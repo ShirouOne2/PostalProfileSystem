@@ -22,4 +22,8 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
 
     @Query("SELECT COUNT(DISTINCT po.area.id) FROM PostalOffice po WHERE po.area IS NOT NULL")
     long countDistinctAreas();
+    
+    // NEW: Custom query that eagerly fetches Area for map display
+    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL")
+    List<PostalOffice> findAllWithAreaForMap();
 }

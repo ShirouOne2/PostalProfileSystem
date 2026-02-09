@@ -2,47 +2,45 @@ package com.pps.profilesystem.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.pps.profilesystem.Entity.Area;
-import com.pps.profilesystem.Entity.PostalOffice;
-import com.pps.profilesystem.Entity.Regions;
-import com.pps.profilesystem.Repository.AreaRepository;
-import com.pps.profilesystem.Repository.RegionsRepository;
-import com.pps.profilesystem.Service.LocationService;
+import com.pps.profilesystem.Service.LocationHierarchyService;
+import com.pps.profilesystem.Service.PostalOfficeService;
 
-import java.util.List;
-
+/**
+ * Controller for displaying postal offices in a data table
+ * Refactored to use services instead of direct repository access
+ */
 @Controller
 @RequestMapping("/table")
 public class DataTableController {
 
     @Autowired
-    private LocationService locationService;
+    private PostalOfficeService postalOfficeService;
 
     @Autowired
-    private AreaRepository areaRepository;
-
-    @Autowired
-    private RegionsRepository regionRepository;
+    private LocationHierarchyService locationService;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public String viewPostOffices(Model model) {
 
-        List<PostalOffice> offices = locationService.getAllOffices();
-        List<Area> areas = areaRepository.findAll();
-        List<Regions> regions = regionRepository.findAll();
-
-        model.addAttribute("offices", offices);
-        model.addAttribute("totalCount", locationService.countAll());
-        model.addAttribute("activeCount", locationService.countActive());
-        model.addAttribute("inactiveCount", locationService.countInactive());
-        model.addAttribute("areaCount", locationService.countAreas());
-        model.addAttribute("areas", areas); // For modal dropdown
-        model.addAttribute("regions", regions); // For modal dropdown
+        // Get data using services
+        model.addAttribute("offices", postalOfficeService.getAllPostalOffices());
+        model.addAttribute("totalCount", postalOfficeService.getTotalCount());
+        model.addAttribute("activeCount", postalOfficeService.getActiveCount());
+        model.addAttribute("inactiveCount", postalOfficeService.getInactiveCount());
+        model.addAttribute("areaCount", postalOfficeService.getDistinctAreasCount());
+        
+        // For modal dropdowns
+        model.addAttribute("areas", locationService.getAllAreas());
+        model.addAttribute("regions", locationService.getAllRegions());
+        
         model.addAttribute("activePage", "table");
-        return "table"; // <-- table.html
+        
+        return "table";
     }
 }

@@ -48,3 +48,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Toggle password visibility function
+function togglePassword(icon) {
+    const passwordInput = icon.parentElement.querySelector('input[type="password"]');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.name = 'eye-off-outline';
+    } else {
+        passwordInput.type = 'password';
+        icon.name = 'eye-outline';
+    }
+}

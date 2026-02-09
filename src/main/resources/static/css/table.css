@@ -341,3 +341,19 @@ span.text-muted {
         margin: 0;
     }
 }
+
+/* Action buttons styling */
+.btn-view-profile {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+.btn-delete {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+.action-buttons {
+    white-space: nowrap;
+}
