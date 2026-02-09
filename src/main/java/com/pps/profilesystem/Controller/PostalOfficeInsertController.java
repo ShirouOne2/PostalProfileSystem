@@ -1,7 +1,8 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.*;
-import com.pps.profilesystem.Repository.*;
+import com.pps.profilesystem.Service.LocationHierarchyService;
+import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,34 +11,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST Controller for inserting/creating postal offices
+ * Uses services instead of direct repository access
+ */
 @RestController
 @RequestMapping("/api")
 public class PostalOfficeInsertController {
 
     @Autowired
-    private PostalOfficeRepository postalOfficeRepository;
+    private PostalOfficeService postalOfficeService;
 
     @Autowired
-    private AreaRepository areaRepository;
-
-    @Autowired
-    private RegionsRepository regionRepository;
-
-    @Autowired
-    private ProvinceRepository provinceRepository;
-
-    @Autowired
-    private CityMunicipalityRepository cityMunicipalityRepository;
-
-    @Autowired
-    private BarangayRepository barangayRepository;
+    private LocationHierarchyService locationService;
 
     /**
      * Get provinces by region ID (cascading dropdown)
      */
     @GetMapping("/provinces/by-region/{regionId}")
     public List<Province> getProvincesByRegion(@PathVariable Integer regionId) {
-        return provinceRepository.findByRegionId(regionId);
+        return locationService.getProvincesByRegion(regionId);
     }
 
     /**
@@ -45,7 +38,7 @@ public class PostalOfficeInsertController {
      */
     @GetMapping("/cities/by-province/{provinceId}")
     public List<CityMunicipality> getCitiesByProvince(@PathVariable Integer provinceId) {
-        return cityMunicipalityRepository.findByProvinceId(provinceId);
+        return locationService.getCitiesByProvince(provinceId);
     }
 
     /**
@@ -53,58 +46,18 @@ public class PostalOfficeInsertController {
      */
     @GetMapping("/barangays/by-city/{cityId}")
     public List<Barangay> getBarangaysByCity(@PathVariable Integer cityId) {
-        return barangayRepository.findByCityMunicipalityId(cityId);
+        return locationService.getBarangaysByCity(cityId);
     }
 
     /**
      * Insert new postal office
+     * Accepts request body and builds PostalOffice entity
      */
     @PostMapping("/postal-office/insert")
-    public ResponseEntity<?> insertPostalOffice(@RequestBody PostalOfficeDTO dto) {
+    public ResponseEntity<Map<String, Object>> insertPostalOffice(@RequestBody Map<String, Object> requestData) {
         try {
-            PostalOffice office = new PostalOffice();
-            
-            // Basic information
-            office.setName(dto.getName());
-            office.setPostmaster(dto.getPostmaster());
-            office.setAddress(dto.getAddress());
-            office.setZipCode(dto.getZipCode());
-            
-            // Location hierarchy - set relationships
-            if (dto.getAreaId() != null) {
-                areaRepository.findById(dto.getAreaId())
-                    .ifPresent(office::setArea);
-            }
-            
-            if (dto.getRegionId() != null) {
-                regionRepository.findById(dto.getRegionId())
-                    .ifPresent(office::setRegion);
-            }
-            
-            if (dto.getProvinceId() != null) {
-                provinceRepository.findById(dto.getProvinceId())
-                    .ifPresent(office::setProvince);
-            }
-            
-            if (dto.getCityMunId() != null) {
-                cityMunicipalityRepository.findById(dto.getCityMunId())
-                    .ifPresent(office::setCityMunicipality);
-            }
-            
-            if (dto.getBarangayId() != null) {
-                barangayRepository.findById(dto.getBarangayId())
-                    .ifPresent(office::setBarangay);
-            }
-            
-            // Coordinates
-            office.setLatitude(dto.getLatitude());
-            office.setLongitude(dto.getLongitude());
-            
-            // Connection status
-            office.setConnectionStatus(dto.getConnectionStatus() != null ? dto.getConnectionStatus() : false);
-            
-            // Save to database
-            PostalOffice savedOffice = postalOfficeRepository.save(office);
+            PostalOffice office = buildPostalOfficeFromRequest(requestData);
+            PostalOffice savedOffice = postalOfficeService.createPostalOffice(office);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -122,57 +75,111 @@ public class PostalOfficeInsertController {
     }
 
     /**
-     * DTO for postal office insertion
+     * Helper method to build PostalOffice entity from request data
      */
-    public static class PostalOfficeDTO {
-        private String name;
-        private String postmaster;
-        private String address;
-        private String zipCode;
-        private Integer areaId;
-        private Integer regionId;
-        private Integer provinceId;
-        private Integer cityMunId;
-        private Integer barangayId;
-        private Double latitude;
-        private Double longitude;
-        private Boolean connectionStatus;
+    private PostalOffice buildPostalOfficeFromRequest(Map<String, Object> data) {
+        PostalOffice office = new PostalOffice();
+        
+        // Basic information
+        office.setName((String) data.get("name"));
+        office.setPostmaster((String) data.get("postmaster"));
+        office.setAddress((String) data.get("address"));
+        office.setZipCode((String) data.get("zipCode"));
+        
+        // Location hierarchy - set relationships using service
+        setLocationHierarchy(office, data);
+        
+        // Coordinates
+        if (data.get("latitude") != null) {
+            office.setLatitude(parseDouble(data.get("latitude")));
+        }
+        if (data.get("longitude") != null) {
+            office.setLongitude(parseDouble(data.get("longitude")));
+        }
+        
+        // Connection status
+        Boolean connectionStatus = (Boolean) data.get("connectionStatus");
+        office.setConnectionStatus(connectionStatus != null ? connectionStatus : false);
+        
+        return office;
+    }
 
-        // Getters and Setters
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+    /**
+     * Set location hierarchy relationships on postal office
+     */
+    private void setLocationHierarchy(PostalOffice office, Map<String, Object> data) {
+        Integer areaId = parseInteger(data.get("areaId"));
+        Integer regionId = parseInteger(data.get("regionId"));
+        Integer provinceId = parseInteger(data.get("provinceId"));
+        Integer cityMunId = parseInteger(data.get("cityMunId"));
+        Integer barangayId = parseInteger(data.get("barangayId"));
+        
+        if (areaId != null) {
+            locationService.getAllAreas().stream()
+                .filter(a -> a.getId().equals(areaId))
+                .findFirst()
+                .ifPresent(office::setArea);
+        }
+        
+        if (regionId != null) {
+            locationService.getAllRegions().stream()
+                .filter(r -> r.getId().equals(regionId))
+                .findFirst()
+                .ifPresent(office::setRegion);
+        }
+        
+        if (provinceId != null) {
+            locationService.getProvincesByRegion(regionId).stream()
+                .filter(p -> p.getId().equals(provinceId))
+                .findFirst()
+                .ifPresent(office::setProvince);
+        }
+        
+        if (cityMunId != null) {
+            locationService.getCitiesByProvince(provinceId).stream()
+                .filter(c -> c.getId().equals(cityMunId))
+                .findFirst()
+                .ifPresent(office::setCityMunicipality);
+        }
+        
+        if (barangayId != null) {
+            locationService.getBarangaysByCity(cityMunId).stream()
+                .filter(b -> b.getId().equals(barangayId))
+                .findFirst()
+                .ifPresent(office::setBarangay);
+        }
+    }
 
-        public String getPostmaster() { return postmaster; }
-        public void setPostmaster(String postmaster) { this.postmaster = postmaster; }
+    /**
+     * Helper to parse Integer from Object
+     */
+    private Integer parseInteger(Object value) {
+        if (value == null) return null;
+        if (value instanceof Integer) return (Integer) value;
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
 
-        public String getAddress() { return address; }
-        public void setAddress(String address) { this.address = address; }
-
-        public String getZipCode() { return zipCode; }
-        public void setZipCode(String zipCode) { this.zipCode = zipCode; }
-
-        public Integer getAreaId() { return areaId; }
-        public void setAreaId(Integer areaId) { this.areaId = areaId; }
-
-        public Integer getRegionId() { return regionId; }
-        public void setRegionId(Integer regionId) { this.regionId = regionId; }
-
-        public Integer getProvinceId() { return provinceId; }
-        public void setProvinceId(Integer provinceId) { this.provinceId = provinceId; }
-
-        public Integer getCityMunId() { return cityMunId; }
-        public void setCityMunId(Integer cityMunId) { this.cityMunId = cityMunId; }
-
-        public Integer getBarangayId() { return barangayId; }
-        public void setBarangayId(Integer barangayId) { this.barangayId = barangayId; }
-
-        public Double getLatitude() { return latitude; }
-        public void setLatitude(Double latitude) { this.latitude = latitude; }
-
-        public Double getLongitude() { return longitude; }
-        public void setLongitude(Double longitude) { this.longitude = longitude; }
-
-        public Boolean getConnectionStatus() { return connectionStatus; }
-        public void setConnectionStatus(Boolean connectionStatus) { this.connectionStatus = connectionStatus; }
+    /**
+     * Helper to parse Double from Object
+     */
+    private Double parseDouble(Object value) {
+        if (value == null) return null;
+        if (value instanceof Double) return (Double) value;
+        if (value instanceof Integer) return ((Integer) value).doubleValue();
+        if (value instanceof String) {
+            try {
+                return Double.parseDouble((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 }

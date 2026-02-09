@@ -41,6 +41,39 @@
     color: #721c24;
 }
 
+/* AREA BADGES */
+.area-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.area-unknown {
+    background-color: #95A5A6;
+}
+
+/* AREA LEGEND */
+.area-legend-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+}
+
+.color-box {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    margin-right: 4px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
 /* CUSTOM MARKER STYLE (if using divIcon) */
 .custom-marker {
     width: 12px;

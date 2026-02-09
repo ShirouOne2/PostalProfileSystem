@@ -1,287 +1,185 @@
 /* ============================================
-   PHLPost Sidebar Styles
-   Official PHLPost Color Theme
+   PHLPost WHITE AESTHETIC SIDEBAR
+   Clean • Minimal • Professional
    ============================================ */
 
 :root {
-    /* PHLPost Official Colors */
-    --phlpost-blue: #2B5BA6;      /* Blue from "PHL" */
-    --phlpost-red: #C1272D;       /* Red from "POST" */
-    --phlpost-yellow: #FFD700;    /* Yellow from mascot */
-    --phlpost-dark-blue: #1a3a6b; /* Darker blue for brand area */
-    --phlpost-light-blue: #3d6fb8; /* Lighter blue for hover */
-    
-    /* Sidebar Variables */
+    --phlpost-blue: #2B5BA6;
+    --phlpost-red: #C1272D;
+    --phlpost-yellow: #FFD700;
+
     --sidebar-width: 260px;
-    --sidebar-bg: #1e2f4d;        /* Dark blue-gray base */
-    --sidebar-brand-bg: var(--phlpost-dark-blue);
-    --sidebar-link-hover: var(--phlpost-light-blue);
-    --sidebar-link-active: var(--phlpost-red);
-    --sidebar-text: #ecf0f1;
-    --sidebar-heading: #a8b3c4;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: #e6e9ef;
+    --sidebar-text: #2c3e50;
+    --sidebar-muted: #8a97a8;
+    --sidebar-hover: #f4f7fb;
+    --sidebar-active: #C1272D;
 }
 
-/* Sidebar Container */
+/* Page background */
+body {
+    background: #f5f7fb;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
 #sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background: linear-gradient(180deg, var(--sidebar-bg) 0%, #172640 100%);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
     display: flex;
     flex-direction: column;
-    z-index: 1000;
     overflow-y: auto;
-    overflow-x: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    z-index: 1000;
 }
 
-/* Custom Scrollbar for Sidebar */
-#sidebar::-webkit-scrollbar {
-    width: 6px;
+/* ============================================
+   MAIN CONTENT SPACE (IMPORTANT FIX)
+   ============================================ */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    min-height: 100vh;
+    background-color: #f8f9fa;
 }
 
-#sidebar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-#sidebar::-webkit-scrollbar-thumb {
-    background: var(--phlpost-blue);
-    border-radius: 3px;
-}
-
-#sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--phlpost-red);
-}
-
-/* Sidebar Brand/Logo */
+/* ============================================
+   BRAND
+   ============================================ */
 .sidebar-brand {
     display: flex;
     align-items: center;
-    padding: .75rem 1rem;
-    background: var(--sidebar-brand-bg);
-    min-height: 58px;
-    border-bottom: 3px solid var(--phlpost-red);
+    padding: 1rem 1.2rem;
+    border-bottom: 2px solid var(--sidebar-border);
 }
 
 .brand-icon {
-    font-size: 1.1rem;
     color: var(--phlpost-yellow);
-    margin-right: 0.75rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 1.2rem;
+    margin-right: 0.6rem;
 }
 
 .brand-text {
-    font-size: 1rem;
     font-weight: 700;
-    color: var(--sidebar-text);
-    text-transform: uppercase;
+    font-size: 1rem;
+    color: var(--phlpost-blue);
     letter-spacing: 0.5px;
 }
 
-/* Sidebar Menu Container */
+/* ============================================
+   MENU
+   ============================================ */
 .sidebar-menu {
-    flex: 1;
     padding: 1rem 0;
+    flex: 1;
 }
 
-/* Sidebar Section Headings */
 .sidebar-heading {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--sidebar-heading);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--sidebar-muted);
+    padding: 1rem 1.5rem 0.4rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 1rem 1.5rem 0.5rem 1.5rem;
 }
 
-/* Sidebar Links */
 .sidebar-link {
     display: flex;
     align-items: center;
     padding: 0.75rem 1.5rem;
     color: var(--sidebar-text);
     text-decoration: none;
-    transition: all 0.2s ease;
-    position: relative;
+    font-size: 0.92rem;
     border-left: 4px solid transparent;
+    transition: all 0.2s ease;
 }
 
 .sidebar-link i {
-    font-size: 1rem;
     width: 1.5rem;
-    margin-right: 0.75rem;
-    text-align: center;
-    color: var(--phlpost-yellow);
+    margin-right: 0.7rem;
+    color: var(--phlpost-blue);
 }
 
-.sidebar-link span {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Sidebar Link Hover */
 .sidebar-link:hover {
-    background: var(--sidebar-link-hover);
-    color: #fff;
-    text-decoration: none;
-    padding-left: 1.75rem;
-    border-left-color: var(--phlpost-yellow);
+    background: var(--sidebar-hover);
+    color: var(--phlpost-blue);
+    border-left: 4px solid var(--phlpost-blue);
 }
 
-.sidebar-link:hover i {
-    color: var(--phlpost-yellow);
-    transform: scale(1.1);
-}
-
-/* Sidebar Link Active */
 .sidebar-link.active {
-    background: var(--sidebar-link-active);
-    color: #fff;
-    border-left: 4px solid var(--phlpost-yellow);
+    background: #fff5f5;
+    border-left: 4px solid var(--phlpost-red);
+    color: var(--phlpost-red);
+    font-weight: 600;
 }
 
 .sidebar-link.active i {
-    color: var(--phlpost-yellow);
+    color: var(--phlpost-red);
 }
 
-.sidebar-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: var(--phlpost-yellow);
-}
-
-/* Sidebar Divider */
+/* Divider */
 .sidebar-divider {
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    height: 1px;
+    background: var(--sidebar-border);
     margin: 1rem 1.5rem;
 }
 
-/* Sidebar Footer */
+/* Footer */
 .sidebar-footer {
-    padding: 1rem 0;
-    border-top: 2px solid var(--phlpost-blue);
+    border-top: 1px solid var(--sidebar-border);
+    padding: 0.5rem 0;
 }
 
 .sidebar-footer a {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.5rem;
+    padding: 0.7rem 1.5rem;
     color: var(--sidebar-text);
     text-decoration: none;
-    transition: all 0.2s ease;
-    border-left: 4px solid transparent;
 }
 
 .sidebar-footer a:hover {
-    background: var(--phlpost-red);
-    color: #fff;
-    text-decoration: none;
-    border-left-color: var(--phlpost-yellow);
+    background: var(--sidebar-hover);
+    color: var(--phlpost-blue);
 }
 
 .sidebar-footer i {
-    font-size: 1rem;
-    width: 1.5rem;
-    margin-right: 0.75rem;
-    text-align: center;
-    color: var(--phlpost-yellow);
+    margin-right: 0.7rem;
+    color: var(--phlpost-blue);
 }
 
-.sidebar-footer span {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Mobile Toggle Button */
-.sidebar-toggle {
-    display: none;
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 1001;
-    background: var(--phlpost-blue);
-    color: var(--sidebar-text);
-    border: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.sidebar-toggle:hover {
+/* Badge */
+.sidebar-badge {
+    margin-left: auto;
     background: var(--phlpost-red);
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
 }
 
-/* Responsive Styles */
+/* ============================================
+   MOBILE
+   ============================================ */
 @media (max-width: 768px) {
     #sidebar {
-        left: calc(var(--sidebar-width) * -1);
+        left: -260px;
+        transition: 0.3s;
     }
 
     #sidebar.active {
         left: 0;
     }
 
-    .sidebar-toggle {
-        display: block;
+    .main-content {
+        margin-left: 0;
     }
-}
-
-/* Sidebar Collapsed State */
-#sidebar.collapsed {
-    width: 60px;
-}
-
-#sidebar.collapsed .brand-text,
-#sidebar.collapsed .sidebar-heading,
-#sidebar.collapsed .sidebar-link span,
-#sidebar.collapsed .sidebar-footer span {
-    display: none;
-}
-
-#sidebar.collapsed .sidebar-link {
-    justify-content: center;
-    padding: 0.75rem 0;
-}
-
-#sidebar.collapsed .sidebar-link i {
-    margin-right: 0;
-}
-
-/* Disabled/Coming Soon Links */
-.sidebar-link.disabled,
-.sidebar-footer a.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.sidebar-link.disabled:hover,
-.sidebar-footer a.disabled:hover {
-    background: transparent;
-    padding-left: 1.5rem;
-    border-left-color: transparent;
-}
-
-/* PHLPost Badge/Accent */
-.sidebar-badge {
-    background: var(--phlpost-yellow);
-    color: var(--phlpost-dark-blue);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 10px;
-    margin-left: auto;
-}
-
-/* Active indicator dot */
-.sidebar-link.active .sidebar-badge {
-    background: var(--phlpost-yellow);
-    color: var(--phlpost-red);
 }

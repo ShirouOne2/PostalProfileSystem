@@ -33,11 +33,13 @@
             <span>Data Table</span>
         </a>
 
-        <!-- Static link (not implemented yet) -->
-        <a href="#" class="sidebar-link disabled" onclick="return false;">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Quarters</span>
-        </a>
+       
+        
+       <a th:href="@{/quarters}" class="sidebar-link" 
+   th:classappend="${activePage == 'quarters'} ? 'active' : ''">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Quarters</span>
+</a>
 
         <!-- Divider -->
         <hr class="sidebar-divider">

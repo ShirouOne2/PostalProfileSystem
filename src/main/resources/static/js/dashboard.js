@@ -3,193 +3,225 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard initializing...');
-    
-    // Check if Leaflet is loaded
+
+    // Ensure Leaflet and SweetAlert2 are loaded
     if (typeof L === 'undefined') {
         console.error('Leaflet is not loaded!');
-        alert('Map library failed to load. Please refresh the page.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Map Library Error',
+            text: 'Map library failed to load. Please refresh the page.',
+            confirmButtonText: 'Refresh Page',
+            confirmButtonColor: '#3085d6'
+        }).then(() => location.reload());
         return;
     }
-    
+
     console.log('Leaflet loaded successfully, version:', L.version);
-    
-    // Initialize the map centered on Philippines
-    var map = L.map('map', {
+
+    // Define color palette for areas 1-9
+    const areaColors = {
+        1: '#FF6B6B',
+        2: '#4ECDC4',
+        3: '#45B7D1',
+        4: '#FFA07A',
+        5: '#98D8C8',
+        6: '#F7DC6F',
+        7: '#BB8FCE',
+        8: '#F8B739',
+        9: '#85C1E2',
+        default: '#95A5A6'
+    };
+
+    function getAreaColor(areaId) {
+        return areaColors[areaId] || areaColors.default;
+    }
+
+    // Initialize map
+    const map = L.map('map', {
         center: [12.8797, 121.7740],
         zoom: 5,
         minZoom: 2,
         maxZoom: 18,
-        // Snap back to Philippines bounds when dragging outside
         maxBounds: [
-            [4.0, 116.0],  // Southwest coordinates
-            [21.5, 127.0]  // Northeast coordinates
+            [4.0, 116.0],
+            [21.5, 127.0]
         ],
         maxBoundsViscosity: 1.0
     });
-    
-    // Add OpenStreetMap tiles
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18
     }).addTo(map);
-    
-    // Storage for markers
-    var markers = [];
-    var markerClusterGroup = L.layerGroup().addTo(map);
-    
-    // Load post offices from API
-    console.log('Fetching post offices from /api/post-offices...');
-    
+
+    // Marker storage
+    const markers = [];
+    const markerClusterGroup = L.layerGroup().addTo(map);
+
+    // Show loading indicator
+    Swal.fire({
+        title: 'Loading Map Data...',
+        text: 'Please wait while we load post office locations',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    // Fetch post offices
     fetch('/api/post-offices')
         .then(response => {
-            console.log('API Response status:', response.status);
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             return response.json();
         })
         .then(data => {
             console.log('Loaded', data.length, 'post offices');
-            console.log('Sample data:', data.slice(0, 2));
-            
-            // Clear existing markers
+
+            // Reset markers
             markerClusterGroup.clearLayers();
-            markers = [];
-            
-            var bounds = [];
-            var addedCount = 0;
-            var skippedCount = 0;
-            
-            // Add markers for each post office
-            data.forEach(function(office) {
-                var lat = parseFloat(office.lat);
-                var lng = parseFloat(office.lng);
-                
-                // Validate coordinates
+            markers.length = 0;
+            const bounds = [];
+            let skippedCount = 0;
+
+            data.forEach(office => {
+                const lat = parseFloat(office.lat);
+                const lng = parseFloat(office.lng);
+
+                // Skip invalid coordinates
                 if (isNaN(lat) || isNaN(lng)) {
                     console.warn('Invalid coordinates for:', office.name);
                     skippedCount++;
                     return;
                 }
-                
-                // Create circle marker with color based on status
-                var marker = L.circleMarker([lat, lng], {
+
+                // Circle marker
+                const marker = L.circleMarker([lat, lng], {
                     radius: 8,
-                    fillColor: office.status ? '#28a745' : '#dc3545',
-                    color: '#ffffff',
+                    fillColor: getAreaColor(office.areaId),
+                    color: '#fff',
                     weight: 2,
                     opacity: 1,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.8
                 });
-                
-                // Create status badge
-                var statusBadge = office.status ? 
-                    '<span class="status-badge status-active">Active</span>' : 
-                    '<span class="status-badge status-inactive">Inactive</span>';
-                
-                // Bind popup with office information
+
+                // Bind popup
+                const statusBadge = office.status
+                    ? '<span class="status-badge status-active">Active</span>'
+                    : '<span class="status-badge status-inactive">Inactive</span>';
+
+                const areaBadge = office.areaId
+                    ? `<span class="area-badge" style="background-color: ${getAreaColor(office.areaId)}">Area ${office.areaId}</span>`
+                    : '<span class="area-badge area-unknown">Area N/A</span>';
+
                 marker.bindPopup(
-                    '<h6>' + office.name + '</h6>' +
-                    '<p><strong>Status:</strong> ' + statusBadge + '</p>' +
-                    '<p><strong>Area ID:</strong> ' + (office.areaId || 'N/A') + '</p>'
+                    `<h6>${office.name}</h6>` +
+                    `<p><strong>Area:</strong> ${areaBadge}</p>` +
+                    `<p><strong>Status:</strong> ${statusBadge}</p>`
                 );
-                
-                // Store office data with marker for filtering
+
+                // Store data for filtering
                 marker.officeData = office;
-                markers.push(marker);
+
+                // Add marker to cluster group and array
                 markerClusterGroup.addLayer(marker);
-                
-                // Add to bounds for auto-zoom
+                markers.push(marker);
+
                 bounds.push([lat, lng]);
-                addedCount++;
             });
-            
-            console.log('Added', addedCount, 'markers');
-            if (skippedCount > 0) {
-                console.warn('Skipped', skippedCount, 'offices due to invalid coordinates');
-            }
-            
-            // Fit map to show all markers
-            if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-            
+
+            // Fit map to markers
+            if (bounds.length) map.fitBounds(bounds, { padding: [50, 50] });
+
             // Update statistics
-            var total = data.length;
-            var active = data.filter(o => o.status === true).length;
-            var inactive = total - active;
-            var areas = [...new Set(data.map(o => o.areaId).filter(id => id != null))].length;
-            
-            document.getElementById('totalOffices').textContent = total;
-            document.getElementById('activeOffices').textContent = active;
-            document.getElementById('inactiveOffices').textContent = inactive;
-            document.getElementById('coverageAreas').textContent = areas;
-            
-            console.log('Dashboard loaded successfully!');
-            console.log('Statistics:', { total, active, inactive, areas });
+            const total = data.length;
+            const active = data.filter(o => o.status === true).length;
+            const inactive = total - active;
+            const areas = [...new Set(data.map(o => o.areaId).filter(id => id != null))].length;
+
+            document.getElementById('totalOffices') && (document.getElementById('totalOffices').textContent = total);
+            document.getElementById('activeOffices') && (document.getElementById('activeOffices').textContent = active);
+            document.getElementById('inactiveOffices') && (document.getElementById('inactiveOffices').textContent = inactive);
+            document.getElementById('coverageAreas') && (document.getElementById('coverageAreas').textContent = areas);
+
+            Swal.close();
+
+            // Show success toast
+            Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            }).fire({
+                icon: 'success',
+                title: `Loaded ${total} post offices successfully!`
+            });
+
+            if (skippedCount > 0) {
+                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 })
+                    .fire({
+                        icon: 'warning',
+                        title: `${skippedCount} offices skipped due to invalid coordinates`
+                    });
+            }
         })
         .catch(error => {
             console.error('Error loading post offices:', error);
-            alert('Failed to load post office data: ' + error.message + '\n\nPlease check:\n1. Is the server running?\n2. Is the API endpoint correct?\n3. Check browser console for details.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to Load Data',
+                html: `<p>${error.message}</p>`,
+                confirmButtonText: 'Retry',
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            }).then(result => {
+                if (result.isConfirmed) location.reload();
+            });
         });
-    
+
     // Filter functions
     function applyFilters() {
-        var searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-        var areaFilter = document.getElementById('areaFilter').value;
-        var statusFilter = document.getElementById('statusFilter').value;
-        
-        console.log('Applying filters:', { searchTerm, areaFilter, statusFilter });
-        
-        // Clear current markers
+        const searchTerm = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+        const areaFilter = document.getElementById('areaFilter')?.value;
+        const statusFilter = document.getElementById('statusFilter')?.value;
+
         markerClusterGroup.clearLayers();
-        
-        var visibleCount = 0;
-        
-        // Re-add markers that match filters
-        markers.forEach(function(marker) {
-            var office = marker.officeData;
-            
-            var matchesSearch = !searchTerm || office.name.toLowerCase().includes(searchTerm);
-            var matchesArea = !areaFilter || (office.areaId && office.areaId.toString() === areaFilter);
-            var matchesStatus = !statusFilter || office.status.toString() === statusFilter;
-            
+
+        let visibleCount = 0;
+        markers.forEach(marker => {
+            const office = marker.officeData;
+            const matchesSearch = !searchTerm || office.name.toLowerCase().includes(searchTerm);
+            const matchesArea = !areaFilter || (office.areaId && office.areaId.toString() === areaFilter);
+            const matchesStatus = !statusFilter || office.status.toString() === statusFilter;
+
             if (matchesSearch && matchesArea && matchesStatus) {
                 markerClusterGroup.addLayer(marker);
                 visibleCount++;
             }
         });
-        
-        console.log('Filtered:', visibleCount, 'of', markers.length, 'markers visible');
+
+        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
+            .fire({ icon: 'info', title: `Showing ${visibleCount} of ${markers.length} offices` });
     }
-    
+
     function clearFilters() {
-        console.log('Clearing all filters...');
-        
-        // Reset filter inputs
-        document.getElementById('searchInput').value = '';
-        document.getElementById('areaFilter').value = '';
-        document.getElementById('statusFilter').value = '';
-        
-        // Re-add all markers
+        document.getElementById('searchInput') && (document.getElementById('searchInput').value = '');
+        document.getElementById('areaFilter') && (document.getElementById('areaFilter').value = '');
+        document.getElementById('statusFilter') && (document.getElementById('statusFilter').value = '');
+
         markerClusterGroup.clearLayers();
-        markers.forEach(function(marker) {
-            markerClusterGroup.addLayer(marker);
-        });
-        
-        console.log('All filters cleared');
+        markers.forEach(marker => markerClusterGroup.addLayer(marker));
+
+        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
+            .fire({ icon: 'success', title: 'Filters cleared - showing all offices' });
     }
-    
-    // Event listeners for filter buttons
-    document.getElementById('applyFilters').addEventListener('click', applyFilters);
-    document.getElementById('clearFilters').addEventListener('click', clearFilters);
-    
-    // Allow Enter key to apply filters in search box
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            applyFilters();
-        }
+
+    // Event listeners
+    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+    document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
+    document.getElementById('searchInput')?.addEventListener('keypress', e => {
+        if (e.key === 'Enter') applyFilters();
     });
-    
+
     console.log('Dashboard initialization complete');
 });
