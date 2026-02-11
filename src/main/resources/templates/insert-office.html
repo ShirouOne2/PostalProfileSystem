@@ -28,85 +28,106 @@
                 </div>
             </div>
 
+            <!-- Wizard Progress Indicators -->
+            <div class="wizard-progress mb-4">
+                <div class="wizard-step-indicator active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Basic Info & Location</div>
+                </div>
+                <div class="wizard-step-indicator" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Coordinates & Status</div>
+                </div>
+            </div>
+
             <!-- Insert Form -->
             <form id="insertPostalOfficeForm">
                 
-                <!-- STEP 1: Basic Information -->
+                <!-- STEP 1: Basic Information + Location Hierarchy -->
                 <div id="step-1" class="wizard-step active">
+                    
                     <!-- Basic Information Section -->
                     <div class="card mb-4">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">
-                                <i class="fas fa-info-circle text-primary"></i> Basic Information
+                                <i class="fas fa-info-circle"></i> Basic Information
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="officeName">Post Office Name <span class="text-danger">*</span></label>
+                                        <label for="officeName">
+                                            Post Office Name <span class="text-danger">*</span>
+                                        </label>
                                         <input type="text" class="form-control" id="officeName" name="name" required 
                                                placeholder="e.g., Manila Central Post Office">
+                                        <small class="form-text text-muted">Official name of the post office</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="postmaster">Postmaster</label>
-                                        <input type="text" class="form-control" id="postmaster" name="postmaster" 
-                                               placeholder="Name of Postmaster">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="address">Address</label>
-                                <textarea class="form-control" id="address" name="address" rows="3" 
-                                          placeholder="Complete address of the postal office"></textarea>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="zipCode">ZIP Code</label>
-                                        <input type="text" class="form-control" id="zipCode" name="zipCode" 
-                                               placeholder="e.g., 1000">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="areaId">Area <span class="text-danger">*</span></label>
+                                        <label for="areaId">
+                                            Area <span class="text-danger">*</span>
+                                        </label>
                                         <select class="form-control" id="areaId" name="areaId" required>
                                             <option value="">-- Select Area --</option>
                                             <option th:each="area : ${areas}" 
                                                     th:value="${area.id}" 
                                                     th:text="${area.areaName}"></option>
                                         </select>
+                                        <small class="form-text text-muted">Operational area assignment</small>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postmaster">Postmaster</label>
+                                        <input type="text" class="form-control" id="postmaster" name="postmaster" 
+                                               placeholder="Name of Postmaster">
+                                        <small class="form-text text-muted">Officer in charge</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="zipCode">ZIP Code</label>
+                                        <input type="text" class="form-control" id="zipCode" name="zipCode" 
+                                               placeholder="e.g., 1000" maxlength="10">
+                                        <small class="form-text text-muted">Postal code for this area</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address">Complete Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="2" 
+                                          placeholder="Street address, building name, landmarks"></textarea>
+                                <small class="form-text text-muted">Detailed location information</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Navigation for Step 1 -->
-                    <div class="text-right">
-                        <button type="button" id="nextStep1" class="btn btn-primary">Next →</button>
-                    </div>
-                </div>
-
-                <!-- STEP 2: Location Hierarchy -->
-                <div id="step-2" class="wizard-step">
                     <!-- Location Hierarchy Section -->
                     <div class="card mb-4">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-success text-white">
                             <h5 class="mb-0">
-                                <i class="fas fa-map-marked-alt text-primary"></i> Location Hierarchy
+                                <i class="fas fa-map-marked-alt"></i> Location Hierarchy
                             </h5>
                         </div>
                         <div class="card-body">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Note:</strong> Dropdowns will populate automatically as you make selections
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="regionId">Region</label>
+                                        <label for="regionId">
+                                            Region <span class="text-danger">*</span>
+                                        </label>
                                         <select class="form-control" id="regionId" name="regionId">
                                             <option value="">-- Select Region --</option>
                                             <option th:each="region : ${regions}" 
@@ -117,11 +138,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="provinceId">Province</label>
-                                        <select class="form-control" id="provinceId" name="provinceId" disabled>
+                                        <label for="provinceId">
+                                            Province <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-control" id="provinceId" name="provinceId" required>
                                             <option value="">-- Select Province --</option>
                                         </select>
-                                        <small class="form-text text-muted">Select a region first</small>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-arrow-left"></i> Select a region first
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -129,21 +154,159 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="cityMunId">City/Municipality</label>
-                                        <select class="form-control" id="cityMunId" name="cityMunId" disabled>
+                                        <label for="cityMunId">
+                                            City/Municipality <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-control" id="cityMunId" name="cityMunId" required>
                                             <option value="">-- Select City/Municipality --</option>
                                         </select>
-                                        <small class="form-text text-muted">Select a province first</small>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-arrow-left"></i> Select a province first
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="barangayId">Barangay</label>
-                                        <select class="form-control" id="barangayId" name="barangayId" disabled>
+                                        <label for="barangayId">Barangay (Optional)</label>
+                                        <select class="form-control" id="barangayId" name="barangayId">
                                             <option value="">-- Select Barangay --</option>
                                         </select>
-                                        <small class="form-text text-muted">Select a city/municipality first</small>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-arrow-left"></i> Select a city/municipality first
+                                        </small>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation for Step 1 -->
+                    <div class="text-right">
+                        <button type="button" id="nextStep1" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-right"></i> Next Step
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Coordinates & Status -->
+                <div id="step-2" class="wizard-step">
+                    
+                    <!-- Coordinates Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-pin"></i> Geographic Coordinates
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Tip:</strong> Enter coordinates in decimal degrees format (e.g., 14.5995, 120.9842)
+                                <br>
+                                <small>You can use Google Maps to find exact coordinates</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="latitude">
+                                            Latitude
+                                            <span class="badge badge-info ml-1">Optional</span>
+                                        </label>
+                                        <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
+                                               placeholder="e.g., 14.5995"
+                                               min="-90" max="90">
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-compass"></i> North is positive, South is negative (-90 to 90)
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="longitude">
+                                            Longitude
+                                            <span class="badge badge-info ml-1">Optional</span>
+                                        </label>
+                                        <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
+                                               placeholder="e.g., 120.9842"
+                                               min="-180" max="180">
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-compass"></i> East is positive, West is negative (-180 to 180)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-secondary mt-3">
+                                <i class="fas fa-question-circle"></i> 
+                                <strong>How to get coordinates:</strong>
+                                <ol class="mb-0 mt-2">
+                                    <li>Open Google Maps</li>
+                                    <li>Right-click on the post office location</li>
+                                    <li>Click on the coordinates to copy them</li>
+                                    <li>Paste the first number as Latitude, second as Longitude</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection Status Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-plug"></i> Connection Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="custom-control custom-switch custom-control-lg">
+                                <input type="checkbox" class="custom-control-input" id="connectionStatus" 
+                                       name="connectionStatus" value="true">
+                                <label class="custom-control-label" for="connectionStatus">
+                                    <strong>This post office has active internet connectivity</strong>
+                                </label>
+                            </div>
+                            <small class="form-text text-muted mt-3">
+                                <i class="fas fa-info-circle"></i> 
+                                Enable this switch if the post office currently has an active internet connection
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Summary Section -->
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clipboard-check"></i> Review Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                Please review the information before submitting:
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-5">Office Name:</dt>
+                                        <dd class="col-sm-7" id="review-name">-</dd>
+                                        
+                                        <dt class="col-sm-5">Area:</dt>
+                                        <dd class="col-sm-7" id="review-area">-</dd>
+                                        
+                                        <dt class="col-sm-5">Region:</dt>
+                                        <dd class="col-sm-7" id="review-region">-</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-5">Province:</dt>
+                                        <dd class="col-sm-7" id="review-province">-</dd>
+                                        
+                                        <dt class="col-sm-5">City/Mun:</dt>
+                                        <dd class="col-sm-7" id="review-city">-</dd>
+                                        
+                                        <dt class="col-sm-5">Status:</dt>
+                                        <dd class="col-sm-7" id="review-status">-</dd>
+                                    </dl>
                                 </div>
                             </div>
                         </div>
@@ -151,71 +314,9 @@
 
                     <!-- Navigation for Step 2 -->
                     <div class="d-flex justify-content-between">
-                        <button type="button" id="prevStep2" class="btn btn-secondary">← Previous</button>
-                        <button type="button" id="nextStep2" class="btn btn-primary">Next →</button>
-                    </div>
-                </div>
-
-                <!-- STEP 3: Coordinates & Status -->
-                <div id="step-3" class="wizard-step">
-                    <!-- Coordinates Section -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-map-pin text-primary"></i> Geographic Coordinates
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> 
-                                Enter coordinates in decimal degrees format (e.g., 14.5995, 120.9842)
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="latitude">Latitude</label>
-                                        <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
-                                               placeholder="e.g., 14.5995">
-                                        <small class="form-text text-muted">North is positive, South is negative</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="longitude">Longitude</label>
-                                        <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
-                                               placeholder="e.g., 120.9842">
-                                        <small class="form-text text-muted">East is positive, West is negative</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Status Section -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-plug text-primary"></i> Connection Status
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="connectionStatus" 
-                                       name="connectionStatus" value="true">
-                                <label class="custom-control-label" for="connectionStatus">
-                                    <strong>Office is currently connected/active</strong>
-                                </label>
-                            </div>
-                            <small class="form-text text-muted mt-2">
-                                Enable this if the post office has active internet connectivity
-                            </small>
-                        </div>
-                    </div>
-
-                    <!-- Navigation for Step 3 -->
-                    <div class="d-flex justify-content-between">
-                        <button type="button" id="prevStep3" class="btn btn-secondary">← Previous</button>
+                        <button type="button" id="prevStep2" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Previous Step
+                        </button>
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="fas fa-save"></i> Save Post Office
                         </button>
@@ -225,7 +326,57 @@
             </form>
 
         </div>
+
+        <!-- SweetAlert2 CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <!-- Wizard Script -->
         <script th:src="@{/js/insert-office-wizard.js}"></script>
+
+        <!-- Review Summary Update Script -->
+        <script>
+            // Update review summary when moving to step 2
+            document.addEventListener('DOMContentLoaded', function() {
+                const step1Next = document.getElementById('nextStep1');
+                if (step1Next) {
+                    step1Next.addEventListener('click', function() {
+                        setTimeout(updateReviewSummary, 100);
+                    });
+                }
+                
+                function updateReviewSummary() {
+                    // Office Name
+                    const officeName = document.getElementById('officeName')?.value || '-';
+                    document.getElementById('review-name').textContent = officeName;
+                    
+                    // Area
+                    const areaSelect = document.getElementById('areaId');
+                    const areaText = areaSelect?.options[areaSelect.selectedIndex]?.text || '-';
+                    document.getElementById('review-area').textContent = areaText;
+                    
+                    // Region
+                    const regionSelect = document.getElementById('regionId');
+                    const regionText = regionSelect?.options[regionSelect.selectedIndex]?.text || '-';
+                    document.getElementById('review-region').textContent = regionText;
+                    
+                    // Province
+                    const provinceSelect = document.getElementById('provinceId');
+                    const provinceText = provinceSelect?.options[provinceSelect.selectedIndex]?.text || '-';
+                    document.getElementById('review-province').textContent = provinceText;
+                    
+                    // City
+                    const citySelect = document.getElementById('cityMunId');
+                    const cityText = citySelect?.options[citySelect.selectedIndex]?.text || '-';
+                    document.getElementById('review-city').textContent = cityText;
+                    
+                    // Status
+                    const status = document.getElementById('connectionStatus')?.checked ? 
+                                   '<span class="badge badge-success">Active</span>' : 
+                                   '<span class="badge badge-secondary">Inactive</span>';
+                    document.getElementById('review-status').innerHTML = status;
+                }
+            });
+        </script>
 
     </div>
 

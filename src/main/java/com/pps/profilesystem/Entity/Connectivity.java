@@ -61,6 +61,16 @@ public class Connectivity {
     private LocalDateTime updatedStamp;
 
     // =======================
+    // NEW: Connection Date Tracking
+    // =======================
+
+    @Column(name = "date_connected")
+    private LocalDateTime dateConnected;
+
+    @Column(name = "date_disconnected")
+    private LocalDateTime dateDisconnected;
+
+    // =======================
     // Lifecycle hooks
     // =======================
 
@@ -68,6 +78,11 @@ public class Connectivity {
     protected void onCreate() {
         createdStamp = LocalDateTime.now();
         updatedStamp = LocalDateTime.now();
+        
+        // Automatically set connection date when creating new connectivity record
+        if (dateConnected == null) {
+            dateConnected = LocalDateTime.now();
+        }
     }
 
     @PreUpdate
@@ -171,7 +186,88 @@ public class Connectivity {
         return createdStamp;
     }
 
+    public void setCreatedStamp(LocalDateTime createdStamp) {
+        this.createdStamp = createdStamp;
+    }
+
     public LocalDateTime getUpdatedStamp() {
         return updatedStamp;
+    }
+
+    public void setUpdatedStamp(LocalDateTime updatedStamp) {
+        this.updatedStamp = updatedStamp;
+    }
+
+    // =======================
+    // NEW: Date Tracking Getters & Setters
+    // =======================
+
+    public LocalDateTime getDateConnected() {
+        return dateConnected;
+    }
+
+    public void setDateConnected(LocalDateTime dateConnected) {
+        this.dateConnected = dateConnected;
+    }
+
+    public LocalDateTime getDateDisconnected() {
+        return dateDisconnected;
+    }
+
+    public void setDateDisconnected(LocalDateTime dateDisconnected) {
+        this.dateDisconnected = dateDisconnected;
+    }
+
+    // =======================
+    // Helper Methods
+    // =======================
+
+    /**
+     * Check if this connection is currently active
+     * (connected but not disconnected)
+     */
+    public boolean isActive() {
+        return dateConnected != null && dateDisconnected == null;
+    }
+
+    /**
+     * Mark this connection as disconnected
+     */
+    public void disconnect() {
+        if (dateDisconnected == null) {
+            this.dateDisconnected = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Get the quarter number (1-4) when this connection was established
+     */
+    public Integer getConnectionQuarter() {
+        if (dateConnected == null) return null;
+        return (dateConnected.getMonthValue() - 1) / 3 + 1;
+    }
+
+    /**
+     * Get the year when this connection was established
+     */
+    public Integer getConnectionYear() {
+        if (dateConnected == null) return null;
+        return dateConnected.getYear();
+    }
+
+    /**
+     * Get the quarter number (1-4) when this connection was terminated
+     */
+    public Integer getDisconnectionQuarter() {
+        if (dateDisconnected == null) return null;
+        return (dateDisconnected.getMonthValue() - 1) / 3 + 1;
+    }
+
+    /**
+     * Get the year when this connection was terminated
+     */
+    public Integer getDisconnectionYear() {
+        if (dateDisconnected == null) return null;
+        return dateDisconnected.getYear();
     }
 }

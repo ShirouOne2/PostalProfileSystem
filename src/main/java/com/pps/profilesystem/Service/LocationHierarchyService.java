@@ -41,7 +41,7 @@ public class LocationHierarchyService {
      * Get provinces by region ID
      */
     public List<Province> getProvincesByRegion(Integer regionId) {
-        return provinceRepository.findByRegionId(regionId);
+        return provinceRepository.findByRegionsId(regionId);
     }
 
     /**
