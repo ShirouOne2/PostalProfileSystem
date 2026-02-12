@@ -41,6 +41,9 @@ public class PostalOfficeService {
     @Autowired
     private ProviderRepository providerRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * Get all postal offices
      */
@@ -168,6 +171,11 @@ public class PostalOfficeService {
             .orElseGet(() -> {
                 Provider newProvider = new Provider();
                 newProvider.setName("Default Provider");
+                // Set a default user to avoid CreatedBy null constraint
+                User defaultUser = userRepository.findAll().stream()
+                    .findFirst()
+                    .orElse(null);
+                newProvider.setCreatedBy(defaultUser);
                 return providerRepository.save(newProvider);
             });
         
@@ -319,7 +327,6 @@ public class PostalOfficeService {
         newConn.setProvider(providerOpt.get());
         newConn.setDateConnected(LocalDateTime.now());
         Connectivity savedConn = connectivityRepository.save(newConn);
-
         office.setActiveConnectivity(savedConn);
         office.setConnectionStatus(true);
         
