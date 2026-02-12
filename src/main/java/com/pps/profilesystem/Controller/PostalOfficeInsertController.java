@@ -1,5 +1,8 @@
 package com.pps.profilesystem.Controller;
 
+import com.pps.profilesystem.DTO.BarangayDTO;
+import com.pps.profilesystem.DTO.CityMunicipalityDTO;
+import com.pps.profilesystem.DTO.ProvinceDTO;
 import com.pps.profilesystem.Entity.*;
 import com.pps.profilesystem.Service.LocationHierarchyService;
 import com.pps.profilesystem.Service.PostalOfficeService;
@@ -10,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * REST Controller for inserting/creating postal offices
- * Uses services instead of direct repository access
  */
 @RestController
 @RequestMapping("/api")
@@ -25,47 +28,75 @@ public class PostalOfficeInsertController {
     @Autowired
     private LocationHierarchyService locationService;
 
-    /**
-     * Get provinces by region ID (cascading dropdown)
-     */
     @GetMapping("/provinces/by-region/{regionId}")
-    public List<Province> getProvincesByRegion(@PathVariable Integer regionId) {
-        return locationService.getProvincesByRegion(regionId);
+    public ResponseEntity<?> getProvincesByRegion(@PathVariable Integer regionId) {
+        try {
+            List<Province> provinces = locationService.getProvincesByRegion(regionId);
+            
+            // Convert to DTOs to avoid lazy loading issues
+            List<ProvinceDTO> provinceDTOs = provinces.stream()
+                .map(p -> new ProvinceDTO(p.getId(), p.getName()))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(provinceDTOs);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Failed to load provinces: " + e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
-    /**
-     * Get cities/municipalities by province ID (cascading dropdown)
-     */
     @GetMapping("/cities/by-province/{provinceId}")
-    public List<CityMunicipality> getCitiesByProvince(@PathVariable Integer provinceId) {
-        return locationService.getCitiesByProvince(provinceId);
+    public ResponseEntity<?> getCitiesByProvince(@PathVariable Integer provinceId) {
+        try {
+            List<CityMunicipality> cities = locationService.getCitiesByProvince(provinceId);
+            
+            // Convert to DTOs to avoid lazy loading issues
+            List<CityMunicipalityDTO> cityDTOs = cities.stream()
+                .map(c -> new CityMunicipalityDTO(c.getId(), c.getName()))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(cityDTOs);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Failed to load cities: " + e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
-    /**
-     * Get barangays by city/municipality ID (cascading dropdown)
-     */
     @GetMapping("/barangays/by-city/{cityId}")
-    public List<Barangay> getBarangaysByCity(@PathVariable Integer cityId) {
-        return locationService.getBarangaysByCity(cityId);
+    public ResponseEntity<?> getBarangaysByCity(@PathVariable Integer cityId) {
+        try {
+            List<Barangay> barangays = locationService.getBarangaysByCity(cityId);
+            
+            // Convert to DTOs to avoid lazy loading issues
+            List<BarangayDTO> barangayDTOs = barangays.stream()
+                .map(b -> new BarangayDTO(b.getId(), b.getName()))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(barangayDTOs);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Failed to load barangays: " + e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
-    /**
-     * Insert new postal office
-     * Accepts request body and builds PostalOffice entity
-     */
     @PostMapping("/postal-office/insert")
     public ResponseEntity<Map<String, Object>> insertPostalOffice(@RequestBody Map<String, Object> requestData) {
         try {
             PostalOffice office = buildPostalOfficeFromRequest(requestData);
             PostalOffice savedOffice = postalOfficeService.createPostalOffice(office);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Postal office added successfully");
             response.put("id", savedOffice.getId());
-            
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
@@ -75,87 +106,15 @@ public class PostalOfficeInsertController {
     }
 
     /**
-     * Helper method to build PostalOffice entity from request data
-     */
-    private PostalOffice buildPostalOfficeFromRequest(Map<String, Object> data) {
-        PostalOffice office = new PostalOffice();
-        
-        // Basic information
-        office.setName((String) data.get("name"));
-        office.setPostmaster((String) data.get("postmaster"));
-        office.setAddress((String) data.get("address"));
-        office.setZipCode((String) data.get("zipCode"));
-        
-        // Location hierarchy - set relationships using service
-        setLocationHierarchy(office, data);
-        
-        // Coordinates
-        if (data.get("latitude") != null) {
-            office.setLatitude(parseDouble(data.get("latitude")));
-        }
-        if (data.get("longitude") != null) {
-            office.setLongitude(parseDouble(data.get("longitude")));
-        }
-        
-        // Connection status
-        Boolean connectionStatus = (Boolean) data.get("connectionStatus");
-        office.setConnectionStatus(connectionStatus != null ? connectionStatus : false);
-        
-        return office;
-    }
-
-    /**
-     * Set location hierarchy relationships on postal office
-     */
-    private void setLocationHierarchy(PostalOffice office, Map<String, Object> data) {
-        Integer areaId = parseInteger(data.get("areaId"));
-        Integer regionId = parseInteger(data.get("regionId"));
-        Integer provinceId = parseInteger(data.get("provinceId"));
-        Integer cityMunId = parseInteger(data.get("cityMunId"));
-        Integer barangayId = parseInteger(data.get("barangayId"));
-        
-        if (areaId != null) {
-            locationService.getAllAreas().stream()
-                .filter(a -> a.getId().equals(areaId))
-                .findFirst()
-                .ifPresent(office::setArea);
-        }
-        
-        if (regionId != null) {
-            locationService.getAllRegions().stream()
-                .filter(r -> r.getId().equals(regionId))
-                .findFirst()
-                .ifPresent(office::setRegion);
-        }
-        
-        if (provinceId != null) {
-            locationService.getProvincesByRegion(regionId).stream()
-                .filter(p -> p.getId().equals(provinceId))
-                .findFirst()
-                .ifPresent(office::setProvince);
-        }
-        
-        if (cityMunId != null) {
-            locationService.getCitiesByProvince(provinceId).stream()
-                .filter(c -> c.getId().equals(cityMunId))
-                .findFirst()
-                .ifPresent(office::setCityMunicipality);
-        }
-        
-        if (barangayId != null) {
-            locationService.getBarangaysByCity(cityMunId).stream()
-                .filter(b -> b.getId().equals(barangayId))
-                .findFirst()
-                .ifPresent(office::setBarangay);
-        }
-    }
-
-    /**
-     * Helper to parse Integer from Object
+     * Helper method to safely parse Integer from Object (handles both String and Integer)
      */
     private Integer parseInteger(Object value) {
-        if (value == null) return null;
-        if (value instanceof Integer) return (Integer) value;
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
         if (value instanceof String) {
             try {
                 return Integer.parseInt((String) value);
@@ -163,23 +122,115 @@ public class PostalOfficeInsertController {
                 return null;
             }
         }
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
         return null;
     }
 
-    /**
-     * Helper to parse Double from Object
-     */
-    private Double parseDouble(Object value) {
-        if (value == null) return null;
-        if (value instanceof Double) return (Double) value;
-        if (value instanceof Integer) return ((Integer) value).doubleValue();
-        if (value instanceof String) {
-            try {
-                return Double.parseDouble((String) value);
-            } catch (NumberFormatException e) {
-                return null;
+    private PostalOffice buildPostalOfficeFromRequest(Map<String, Object> requestData) {
+        PostalOffice office = new PostalOffice();
+        
+        // Basic Information - safely convert to String in case value is not a raw String
+        if (requestData.get("name") != null) {
+            office.setName(requestData.get("name").toString());
+        }
+        if (requestData.get("postmaster") != null) {
+            office.setPostmaster(requestData.get("postmaster").toString());
+        }
+        if (requestData.get("address") != null) {
+            office.setAddress(requestData.get("address").toString());
+        }
+        if (requestData.get("zipCode") != null) {
+            office.setZipCode(requestData.get("zipCode").toString());
+        }
+        
+        // Location Hierarchy - set entities based on IDs
+        if (requestData.get("areaId") != null) {
+            Integer areaId = parseInteger(requestData.get("areaId"));
+            if (areaId != null) {
+                locationService.getAllAreas().stream()
+                    .filter(a -> a.getId().equals(areaId))
+                    .findFirst()
+                    .ifPresent(office::setArea);
             }
         }
-        return null;
+        
+        if (requestData.get("regionId") != null) {
+            Integer regionId = parseInteger(requestData.get("regionId"));
+            if (regionId != null) {
+                locationService.getAllRegions().stream()
+                    .filter(r -> r.getId().equals(regionId))
+                    .findFirst()
+                    .ifPresent(office::setRegion);
+            }
+        }
+        
+        if (requestData.get("provinceId") != null) {
+            Integer provinceId = parseInteger(requestData.get("provinceId"));
+            Integer regionId = parseInteger(requestData.get("regionId"));
+            if (provinceId != null && regionId != null) {
+                locationService.getProvincesByRegion(regionId).stream()
+                    .filter(p -> p.getId().equals(provinceId))
+                    .findFirst()
+                    .ifPresent(office::setProvince);
+            }
+        }
+        
+        if (requestData.get("cityMunId") != null) {
+            Integer cityMunId = parseInteger(requestData.get("cityMunId"));
+            Integer provinceId = parseInteger(requestData.get("provinceId"));
+            if (cityMunId != null && provinceId != null) {
+                locationService.getCitiesByProvince(provinceId).stream()
+                    .filter(c -> c.getId().equals(cityMunId))
+                    .findFirst()
+                    .ifPresent(office::setCityMunicipality);
+            }
+        }
+        
+        if (requestData.get("barangayId") != null) {
+            Integer barangayId = parseInteger(requestData.get("barangayId"));
+            Integer cityMunId = parseInteger(requestData.get("cityMunId"));
+            if (barangayId != null && cityMunId != null) {
+                locationService.getBarangaysByCity(cityMunId).stream()
+                    .filter(b -> b.getId().equals(barangayId))
+                    .findFirst()
+                    .ifPresent(office::setBarangay);
+            }
+        }
+        
+        // Coordinates - safely parse Double regardless of whether JSON sends a number or string
+        if (requestData.get("latitude") != null) {
+            Object latObj = requestData.get("latitude");
+            try {
+                if (latObj instanceof Number) {
+                    office.setLatitude(((Number) latObj).doubleValue());
+                } else if (latObj instanceof String && !((String) latObj).isEmpty()) {
+                    office.setLatitude(Double.parseDouble((String) latObj));
+                }
+            } catch (NumberFormatException ignored) { }
+        }
+        if (requestData.get("longitude") != null) {
+            Object lngObj = requestData.get("longitude");
+            try {
+                if (lngObj instanceof Number) {
+                    office.setLongitude(((Number) lngObj).doubleValue());
+                } else if (lngObj instanceof String && !((String) lngObj).isEmpty()) {
+                    office.setLongitude(Double.parseDouble((String) lngObj));
+                }
+            } catch (NumberFormatException ignored) { }
+        }
+        
+        // Connection Status - safely parse Boolean regardless of whether JSON sends true/false or "true"/"false"
+        Object statusVal = requestData.get("connectionStatus");
+        if (statusVal instanceof Boolean) {
+            office.setConnectionStatus((Boolean) statusVal);
+        } else if (statusVal instanceof String) {
+            office.setConnectionStatus(Boolean.parseBoolean((String) statusVal));
+        } else {
+            office.setConnectionStatus(false); // Default to false
+        }
+        
+        return office;
     }
 }

@@ -26,4 +26,13 @@ public class MapController {
     public List<Map<String, Object>> getPostOffices() {
         return postalOfficeService.getAllPostalOfficesForMap();
     }
+
+    /**
+     * Get all post offices for table display (includes those without coordinates)
+     * @return List of all post offices as Map objects
+     */
+    @GetMapping("/post-offices/all")
+    public List<Map<String, Object>> getAllPostOffices() {
+        return postalOfficeService.getAllPostalOfficesForTable();
+    }
 }

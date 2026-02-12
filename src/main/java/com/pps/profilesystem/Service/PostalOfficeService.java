@@ -59,6 +59,16 @@ public class PostalOfficeService {
     }
 
     /**
+     * Get all postal offices for table display (includes those without coordinates)
+     */
+    public List<Map<String, Object>> getAllPostalOfficesForTable() {
+        return postalOfficeRepository.findAll()
+            .stream()
+            .map(this::convertToMapDTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Create new postal office
      */
     public PostalOffice createPostalOffice(PostalOffice postalOffice) {
@@ -173,6 +183,7 @@ public class PostalOfficeService {
         map.put("address", po.getAddress());
         map.put("postmaster", po.getPostmaster());
         map.put("zipCode", po.getZipCode());
+        map.put("isp", po.getInternetServiceProvider());
         return map;
     }
 

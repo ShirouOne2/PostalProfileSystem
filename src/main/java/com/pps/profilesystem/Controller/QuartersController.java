@@ -3,6 +3,7 @@ package com.pps.profilesystem.Controller;
 import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import com.pps.profilesystem.Service.ConnectivityHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +24,9 @@ public class QuartersController {
     @Autowired
     private AreaRepository areaRepository;
 
+    @Autowired
+    private ConnectivityHistoryService connectivityHistoryService;
+
     @GetMapping
     public String showQuartersPage(
             @RequestParam(required = false) Integer year,
@@ -36,7 +40,7 @@ public class QuartersController {
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
         model.addAttribute("connectivityStats", getConnectivityStats());
-        model.addAttribute("areas", getAreas());  // ← FIXED: Return Area objects, not strings
+        model.addAttribute("areas", getAreas());  // â† FIXED: Return Area objects, not strings
         model.addAttribute("quartersData", getQuartersData(currentYear));
         model.addAttribute("selectedAreaFilter", areaFilter);
         model.addAttribute("selectedQuarterFilter", quarterFilter);
@@ -119,14 +123,40 @@ public class QuartersController {
         int currentQuarter = (now.getMonthValue() - 1) / 3;
         
         for (int i = 0; i < quarters.length; i++) {
+            int quarterNum = i + 1;  // Q1=1, Q2=2, Q3=3, Q4=4
             Map<String, Object> quarterData = new HashMap<>();
             
             quarterData.put("quarter", quarters[i]);
             quarterData.put("year", year);
-            quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
-            quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
-            quarterData.put("newConnected", 0L);
-            quarterData.put("newDisconnected", 0L);
+            
+            // Try to get snapshot data from ConnectivityHistoryService
+            try {
+                Map<String, Object> stats = connectivityHistoryService.getQuarterlyStatistics(year, quarterNum);
+                
+                if ((Boolean) stats.getOrDefault("hasData", false)) {
+                    // Snapshot exists - use real data
+                    quarterData.put("connected", stats.get("connected"));
+                    quarterData.put("disconnected", stats.get("disconnected"));
+                    quarterData.put("newlyConnected", stats.getOrDefault("newlyConnected", 0L));
+                    quarterData.put("newlyDisconnected", stats.getOrDefault("newlyDisconnected", 0L));
+                    quarterData.put("hasSnapshot", true);
+                } else {
+                    // No snapshot - use current counts
+                    quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
+                    quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
+                    quarterData.put("newlyConnected", 0L);
+                    quarterData.put("newlyDisconnected", 0L);
+                    quarterData.put("hasSnapshot", false);
+                }
+            } catch (Exception e) {
+                // Error getting snapshot - use current counts
+                quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
+                quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
+                quarterData.put("newlyConnected", 0L);
+                quarterData.put("newlyDisconnected", 0L);
+                quarterData.put("hasSnapshot", false);
+            }
+            
             quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
             
             quartersData.add(quarterData);
