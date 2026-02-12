@@ -3,7 +3,6 @@ package com.pps.profilesystem.Controller;
 import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
-import com.pps.profilesystem.Service.ConnectivityHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,8 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
-
+/**
+ * Controller for Quarters Management Page
+ * Displays connectivity status across quarters using historical connectivity data
+ * Shows actual connection/disconnection counts for each quarter based on connectivity records
+ */
 @Controller
 @RequestMapping("/quarters")
 public class QuartersController {
@@ -23,9 +27,6 @@ public class QuartersController {
 
     @Autowired
     private AreaRepository areaRepository;
-
-    @Autowired
-    private ConnectivityHistoryService connectivityHistoryService;
 
     @GetMapping
     public String showQuartersPage(
@@ -40,7 +41,7 @@ public class QuartersController {
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
         model.addAttribute("connectivityStats", getConnectivityStats());
-        model.addAttribute("areas", getAreas());  // â† FIXED: Return Area objects, not strings
+        model.addAttribute("areas", getAreas());
         model.addAttribute("quartersData", getQuartersData(currentYear));
         model.addAttribute("selectedAreaFilter", areaFilter);
         model.addAttribute("selectedQuarterFilter", quarterFilter);
@@ -106,7 +107,7 @@ public class QuartersController {
     }
 
     /**
-     * Get list of Area objects (FIXED)
+     * Get list of Area objects
      */
     private List<Area> getAreas() {
         return areaRepository.findAll();
@@ -114,6 +115,7 @@ public class QuartersController {
 
     /**
      * Get quarters data for a specific year
+     * Now uses historical connectivity data to show actual counts per quarter
      */
     private List<Map<String, Object>> getQuartersData(int year) {
         List<Map<String, Object>> quartersData = new ArrayList<>();
@@ -122,41 +124,41 @@ public class QuartersController {
         LocalDate now = LocalDate.now();
         int currentQuarter = (now.getMonthValue() - 1) / 3;
         
+        // Quarter month ranges
+        int[][] quarterMonths = {
+            {1, 3},   // Q1: Jan-Mar
+            {4, 6},   // Q2: Apr-Jun
+            {7, 9},   // Q3: Jul-Sep
+            {10, 12}  // Q4: Oct-Dec
+        };
+        
         for (int i = 0; i < quarters.length; i++) {
-            int quarterNum = i + 1;  // Q1=1, Q2=2, Q3=3, Q4=4
             Map<String, Object> quarterData = new HashMap<>();
             
             quarterData.put("quarter", quarters[i]);
             quarterData.put("year", year);
             
-            // Try to get snapshot data from ConnectivityHistoryService
-            try {
-                Map<String, Object> stats = connectivityHistoryService.getQuarterlyStatistics(year, quarterNum);
-                
-                if ((Boolean) stats.getOrDefault("hasData", false)) {
-                    // Snapshot exists - use real data
-                    quarterData.put("connected", stats.get("connected"));
-                    quarterData.put("disconnected", stats.get("disconnected"));
-                    quarterData.put("newlyConnected", stats.getOrDefault("newlyConnected", 0L));
-                    quarterData.put("newlyDisconnected", stats.getOrDefault("newlyDisconnected", 0L));
-                    quarterData.put("hasSnapshot", true);
-                } else {
-                    // No snapshot - use current counts
-                    quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
-                    quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
-                    quarterData.put("newlyConnected", 0L);
-                    quarterData.put("newlyDisconnected", 0L);
-                    quarterData.put("hasSnapshot", false);
-                }
-            } catch (Exception e) {
-                // Error getting snapshot - use current counts
-                quarterData.put("connected", postalOfficeRepository.countByConnectionStatus(true));
-                quarterData.put("disconnected", postalOfficeRepository.countByConnectionStatus(false));
-                quarterData.put("newlyConnected", 0L);
-                quarterData.put("newlyDisconnected", 0L);
-                quarterData.put("hasSnapshot", false);
-            }
+            // Get historical connection counts for this quarter
+            int startMonth = quarterMonths[i][0];
+            int endMonth = quarterMonths[i][1];
             
+            // Count new connections in this quarter
+            long newlyConnected = postalOfficeRepository.countConnectedInQuarter(year, startMonth, endMonth);
+            
+            // Count new disconnections in this quarter
+            long newlyDisconnected = postalOfficeRepository.countDisconnectedInQuarter(year, startMonth, endMonth);
+            
+            // Calculate totals as of the end of this quarter
+            LocalDateTime quarterEnd = LocalDateTime.of(year, endMonth, getLastDayOfMonth(year, endMonth), 23, 59, 59);
+            long totalConnected = postalOfficeRepository.countActiveAtQuarterEnd(quarterEnd);
+            long totalDisconnected = postalOfficeRepository.count() - totalConnected;
+            
+            quarterData.put("connected", totalConnected);
+            quarterData.put("disconnected", totalDisconnected);
+            quarterData.put("newlyConnected", newlyConnected);
+            quarterData.put("newlyDisconnected", newlyDisconnected);
+            
+            // Mark current quarter
             quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
             
             quartersData.add(quarterData);
@@ -164,4 +166,11 @@ public class QuartersController {
         
         return quartersData;
     }
-}
+    
+    /**
+     * Helper method to get the last day of a month
+     */
+    private int getLastDayOfMonth(int year, int month) {
+        return java.time.YearMonth.of(year, month).lengthOfMonth();
+    }
+}  

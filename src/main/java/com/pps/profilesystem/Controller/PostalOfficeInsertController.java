@@ -89,7 +89,9 @@ public class PostalOfficeInsertController {
     public ResponseEntity<Map<String, Object>> insertPostalOffice(@RequestBody Map<String, Object> requestData) {
         try {
             PostalOffice office = buildPostalOfficeFromRequest(requestData);
-            PostalOffice savedOffice = postalOfficeService.createPostalOffice(office);
+            
+            // Use the updated service method that creates connectivity record if active
+            PostalOffice savedOffice = postalOfficeService.createPostalOfficeWithConnectivity(office);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

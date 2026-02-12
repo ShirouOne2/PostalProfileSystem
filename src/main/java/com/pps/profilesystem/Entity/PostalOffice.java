@@ -2,7 +2,15 @@ package com.pps.profilesystem.Entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.List;
 
+/**
+ * PostalOffice Entity
+ * 
+ * Relationships with Connectivity:
+ * 1. activeConnectivity - Points to the CURRENT active connectivity record (via connectivity_id)
+ * 2. connectivityHistory - List of ALL connectivity records for this office (via OfficeID)
+ */
 @Entity
 @Table(name = "postal_offices")
 @Data
@@ -18,6 +26,7 @@ public class PostalOffice {
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    // --- Location Hierarchy ---
     // EAGER fetch - frequently accessed in tables and maps
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "area_id", nullable = true)
@@ -32,7 +41,6 @@ public class PostalOffice {
     @JoinColumn(name = "province_id", nullable = true)
     private Province province;
 
-    // Changed to LAZY - NOT displayed in quarters table, causing N+1 queries
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "city_mun_id", nullable = true)
     private CityMunicipality cityMunicipality;
@@ -42,13 +50,67 @@ public class PostalOffice {
     private Barangay barangay;
 
     private String zipCode;
+    
+    // --- Coordinates ---
     private Double longitude;
     private Double latitude;
 
+    // --- Connection Status ---
     @Column(name = "connection_status")
     private Boolean connectionStatus = false;
 
+    // ⭐ CURRENT/ACTIVE CONNECTIVITY RECORD
+    // Points to the connectivity record that is currently active
+    // This should only be set if connection_status = TRUE
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "connectivity_id", nullable = true)
+    private Connectivity activeConnectivity;
+
+    // ⭐ ALL CONNECTIVITY RECORDS (Historical + Current)
+    // This is the reverse side of the Connectivity.postalOffice relationship
+    // Includes both active and disconnected connectivity records
+    @OneToMany(mappedBy = "postalOffice", fetch = FetchType.LAZY)
+    private List<Connectivity> connectivityHistory;
+
+    // --- Staff Information ---
+    @Column(name = "no_of_employees")
+    private Integer noOfEmployees;
+
+    @Column(name = "no_of_postal_tellers")
+    private Integer noOfPostalTellers;
+
+    @Column(name = "no_of_letter_carriers")
+    private Integer noOfLetterCarriers;
+
+    // --- Classification & Services ---
+    private String classification;
+
+    @Column(columnDefinition = "TEXT")
+    private String serviceProvided;
+
+    // --- ISP Information ---
     private String internetServiceProvider;
+
+    @Column(name = "type_of_connection")
+    private String typeOfConnection;
+
+    private String speed;
+
+    @Column(name = "static_ip_address")
+    private String staticIpAddress;
+
+    // --- Contact Information ---
+    @Column(name = "postal_office_contact_person")
+    private String postalOfficeContactPerson;
+
+    @Column(name = "postal_office_contact_number")
+    private String postalOfficeContactNumber;
+
+    @Column(name = "isp_contact_person")
+    private String ispContactPerson;
+
+    @Column(name = "isp_contact_number")
+    private String ispContactNumber;
 
     // --- Getters & Setters ---
     public Integer getId() { return id; }
@@ -90,6 +152,79 @@ public class PostalOffice {
     public Boolean getConnectionStatus() { return connectionStatus; }
     public void setConnectionStatus(Boolean connectionStatus) { this.connectionStatus = connectionStatus; }
 
+    // ⭐ Active Connectivity getter/setter
+    public Connectivity getActiveConnectivity() { return activeConnectivity; }
+    public void setActiveConnectivity(Connectivity activeConnectivity) { this.activeConnectivity = activeConnectivity; }
+
+    // ⭐ Connectivity History getter/setter
+    public List<Connectivity> getConnectivityHistory() { return connectivityHistory; }
+    public void setConnectivityHistory(List<Connectivity> connectivityHistory) { this.connectivityHistory = connectivityHistory; }
+
+    public Integer getNoOfEmployees() { return noOfEmployees; }
+    public void setNoOfEmployees(Integer noOfEmployees) { this.noOfEmployees = noOfEmployees; }
+
+    public Integer getNoOfPostalTellers() { return noOfPostalTellers; }
+    public void setNoOfPostalTellers(Integer noOfPostalTellers) { this.noOfPostalTellers = noOfPostalTellers; }
+
+    public Integer getNoOfLetterCarriers() { return noOfLetterCarriers; }
+    public void setNoOfLetterCarriers(Integer noOfLetterCarriers) { this.noOfLetterCarriers = noOfLetterCarriers; }
+
+    public String getClassification() { return classification; }
+    public void setClassification(String classification) { this.classification = classification; }
+
+    public String getServiceProvided() { return serviceProvided; }
+    public void setServiceProvided(String serviceProvided) { this.serviceProvided = serviceProvided; }
+
     public String getInternetServiceProvider() { return internetServiceProvider; }
     public void setInternetServiceProvider(String internetServiceProvider) { this.internetServiceProvider = internetServiceProvider; }
+
+    public String getTypeOfConnection() { return typeOfConnection; }
+    public void setTypeOfConnection(String typeOfConnection) { this.typeOfConnection = typeOfConnection; }
+
+    public String getSpeed() { return speed; }
+    public void setSpeed(String speed) { this.speed = speed; }
+
+    public String getStaticIpAddress() { return staticIpAddress; }
+    public void setStaticIpAddress(String staticIpAddress) { this.staticIpAddress = staticIpAddress; }
+
+    public String getPostalOfficeContactPerson() { return postalOfficeContactPerson; }
+    public void setPostalOfficeContactPerson(String postalOfficeContactPerson) { this.postalOfficeContactPerson = postalOfficeContactPerson; }
+
+    public String getPostalOfficeContactNumber() { return postalOfficeContactNumber; }
+    public void setPostalOfficeContactNumber(String postalOfficeContactNumber) { this.postalOfficeContactNumber = postalOfficeContactNumber; }
+
+    public String getIspContactPerson() { return ispContactPerson; }
+    public void setIspContactPerson(String ispContactPerson) { this.ispContactPerson = ispContactPerson; }
+
+    public String getIspContactNumber() { return ispContactNumber; }
+    public void setIspContactNumber(String ispContactNumber) { this.ispContactNumber = ispContactNumber; }
+
+    // --- Helper Methods ---
+    
+    /**
+     * Check if this office is currently connected
+     */
+    public boolean isConnected() {
+        return Boolean.TRUE.equals(connectionStatus) && activeConnectivity != null;
+    }
+
+    /**
+     * Get the provider name if currently connected
+     */
+    public String getCurrentProviderName() {
+        if (activeConnectivity != null && activeConnectivity.getProvider() != null) {
+            return activeConnectivity.getProvider().getName();
+        }
+        return null;
+    }
+
+    /**
+     * Get the connection date if currently connected
+     */
+    public java.time.LocalDateTime getConnectionDate() {
+        if (activeConnectivity != null) {
+            return activeConnectivity.getDateConnected();
+        }
+        return null;
+    }
 }

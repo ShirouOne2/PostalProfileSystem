@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,12 @@ public class PostalOfficeService {
 
     @Autowired
     private BarangayRepository barangayRepository;
+
+    @Autowired
+    private ConnectivityRepository connectivityRepository;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     /**
      * Get all postal offices
@@ -69,15 +76,43 @@ public class PostalOfficeService {
     }
 
     /**
-     * Create new postal office
+     * Create new postal office (backward compatibility)
      */
     public PostalOffice createPostalOffice(PostalOffice postalOffice) {
         return postalOfficeRepository.save(postalOffice);
     }
 
     /**
-     * Update existing postal office
+     * Create new postal office with automatic connectivity tracking
+     * ⭐ IMPROVED: Better handling of the bidirectional relationship
      */
+    @Transactional
+    public PostalOffice createPostalOfficeWithConnectivity(PostalOffice postalOffice) {
+        // Step 1: Save the postal office WITHOUT connectivity_id first
+        // This establishes the office ID which connectivity needs
+        postalOffice.setActiveConnectivity(null); // Ensure it's null initially
+        PostalOffice savedOffice = postalOfficeRepository.save(postalOffice);
+        
+        // Step 2: If the office is active, create and link a connectivity record
+        if (Boolean.TRUE.equals(postalOffice.getConnectionStatus())) {
+            Connectivity connectivity = createConnectivityRecord(savedOffice);
+            
+            // Step 3: Save the connectivity record (this sets connectivity.OfficeID)
+            Connectivity savedConnectivity = connectivityRepository.save(connectivity);
+            
+            // Step 4: Link back to postal office (this sets office.connectivity_id)
+            savedOffice.setActiveConnectivity(savedConnectivity);
+            savedOffice = postalOfficeRepository.save(savedOffice);
+        }
+        
+        return savedOffice;
+    }
+
+    /**
+     * Update existing postal office
+     * ⭐ IMPROVED: Better handling of connectivity status changes
+     */
+    @Transactional
     public PostalOffice updatePostalOffice(Integer id, PostalOffice updatedOffice) {
         Optional<PostalOffice> existing = postalOfficeRepository.findById(id);
         if (existing.isEmpty()) {
@@ -85,8 +120,64 @@ public class PostalOfficeService {
         }
         
         PostalOffice office = existing.get();
+        Boolean oldStatus = office.getConnectionStatus();
+        
+        // Update fields
         updateOfficeFields(office, updatedOffice);
+        
+        Boolean newStatus = office.getConnectionStatus();
+        
+        // Handle connectivity status changes
+        handleConnectivityStatusChange(office, oldStatus, newStatus);
+        
         return postalOfficeRepository.save(office);
+    }
+
+    /**
+     * ⭐ IMPROVED: Handle connectivity linking when status changes
+     */
+    private void handleConnectivityStatusChange(PostalOffice office, Boolean oldStatus, Boolean newStatus) {
+        // Changed from inactive/null to active
+        if (!Boolean.TRUE.equals(oldStatus) && Boolean.TRUE.equals(newStatus)) {
+            // Create new connectivity record and link it
+            Connectivity connectivity = createConnectivityRecord(office);
+            Connectivity savedConnectivity = connectivityRepository.save(connectivity);
+            office.setActiveConnectivity(savedConnectivity);
+        }
+        // Changed from active to inactive
+        else if (Boolean.TRUE.equals(oldStatus) && !Boolean.TRUE.equals(newStatus)) {
+            // Disconnect current connectivity record
+            if (office.getActiveConnectivity() != null) {
+                Connectivity conn = office.getActiveConnectivity();
+                conn.setDateDisconnected(LocalDateTime.now());
+                connectivityRepository.save(conn);
+                
+                // Unlink from postal office
+                office.setActiveConnectivity(null);
+            }
+        }
+    }
+
+    /**
+     * Helper method to create a new connectivity record
+     */
+    private Connectivity createConnectivityRecord(PostalOffice office) {
+        // Get default or first provider
+        Provider defaultProvider = providerRepository.findAll().stream()
+            .findFirst()
+            .orElseGet(() -> {
+                Provider newProvider = new Provider();
+                newProvider.setName("Default Provider");
+                return providerRepository.save(newProvider);
+            });
+        
+        Connectivity connectivity = new Connectivity();
+        connectivity.setPostalOffice(office);  // Sets OfficeID
+        connectivity.setProvider(defaultProvider);
+        connectivity.setDateConnected(LocalDateTime.now());
+        // dateDisconnected is null for active connections
+        
+        return connectivity;
     }
 
     /**
@@ -114,8 +205,10 @@ public class PostalOfficeService {
     }
 
     /**
-     * Soft delete - mark as inactive
+     * Soft delete - mark as inactive and disconnect
+     * ⭐ IMPROVED: Better handling of connectivity unlinking
      */
+    @Transactional
     public PostalOffice softDeletePostalOffice(Integer id) {
         Optional<PostalOffice> officeOpt = postalOfficeRepository.findById(id);
         if (officeOpt.isEmpty()) {
@@ -124,6 +217,15 @@ public class PostalOfficeService {
         
         PostalOffice office = officeOpt.get();
         office.setConnectionStatus(false);
+        
+        // Disconnect and unlink active connectivity
+        if (office.getActiveConnectivity() != null) {
+            Connectivity conn = office.getActiveConnectivity();
+            conn.setDateDisconnected(LocalDateTime.now());
+            connectivityRepository.save(conn);
+            office.setActiveConnectivity(null);
+        }
+        
         return postalOfficeRepository.save(office);
     }
 
@@ -165,6 +267,63 @@ public class PostalOfficeService {
      */
     public List<PostalOffice> findByCityMunicipality(Integer cityId) {
         return postalOfficeRepository.findByCityMunicipalityId(cityId);
+    }
+
+    // ========== NEW: Connectivity-Specific Methods ==========
+
+    /**
+     * Get connectivity history for a postal office
+     */
+    public List<Connectivity> getConnectivityHistory(Integer officeId) {
+        return connectivityRepository.findByOfficeIdOrderByDateConnectedDesc(officeId);
+    }
+
+    /**
+     * Get current active connectivity for a postal office
+     */
+    public Optional<Connectivity> getActiveConnectivity(Integer officeId) {
+        Optional<PostalOffice> office = postalOfficeRepository.findById(officeId);
+        if (office.isPresent() && office.get().getActiveConnectivity() != null) {
+            return Optional.of(office.get().getActiveConnectivity());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Switch provider for an active office
+     */
+    @Transactional
+    public PostalOffice switchProvider(Integer officeId, Integer newProviderId) {
+        Optional<PostalOffice> officeOpt = postalOfficeRepository.findById(officeId);
+        if (officeOpt.isEmpty()) {
+            throw new RuntimeException("Postal office not found with ID: " + officeId);
+        }
+
+        PostalOffice office = officeOpt.get();
+        
+        // Disconnect old provider
+        if (office.getActiveConnectivity() != null) {
+            Connectivity oldConn = office.getActiveConnectivity();
+            oldConn.setDateDisconnected(LocalDateTime.now());
+            connectivityRepository.save(oldConn);
+        }
+
+        // Connect new provider
+        Optional<Provider> providerOpt = providerRepository.findById(newProviderId);
+        if (providerOpt.isEmpty()) {
+            throw new RuntimeException("Provider not found with ID: " + newProviderId);
+        }
+
+        Connectivity newConn = new Connectivity();
+        newConn.setPostalOffice(office);
+        newConn.setProvider(providerOpt.get());
+        newConn.setDateConnected(LocalDateTime.now());
+        Connectivity savedConn = connectivityRepository.save(newConn);
+
+        office.setActiveConnectivity(savedConn);
+        office.setConnectionStatus(true);
+        
+        return postalOfficeRepository.save(office);
     }
 
     // ========== Helper Methods ==========

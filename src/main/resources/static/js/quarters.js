@@ -1,19 +1,17 @@
 /**
  * Quarters Management Page
- * Includes full filter support: Year, Quarter (Q1â€“Q4), Area, Status (Active/Inactive)
+ * Includes full filter support: Year, Quarter (Q1Ã¢â‚¬â€œQ4), Area, Status (Active/Inactive)
  */
 
 $(document).ready(function () {
-    console.log('âœ… Quarters.js loaded');
+    console.log('Ã¢Å“â€¦ Quarters.js loaded');
 
     createMapModal();
     initializeTable();
-    initializeButtons();
     initializeFilters();
     initializeYearSelector();
     initializeClickableCards();
     initializeMapModal();
-    checkCurrentQuarterSnapshot();
     initializeFilterPanel();
 });
 
@@ -23,7 +21,7 @@ $(document).ready(function () {
 ===================================================== */
 function initializeFilterPanel() {
 
-    // â”€â”€ Collapse / expand toggle â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Collapse / expand toggle Ã¢â€â‚¬Ã¢â€â‚¬
     $('#toggleFiltersBtn').on('click', function () {
         const body    = $('#filterBody');
         const chevron = $('#filterChevron');
@@ -32,29 +30,29 @@ function initializeFilterPanel() {
         chevron.toggleClass('fa-chevron-up fa-chevron-down');
     });
 
-    // â”€â”€ Highlight selects that already have a value (page load) â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Highlight selects that already have a value (page load) Ã¢â€â‚¬Ã¢â€â‚¬
     highlightActiveSelects();
 
-    // â”€â”€ Render any pre-selected tags from URL params â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Render any pre-selected tags from URL params Ã¢â€â‚¬Ã¢â€â‚¬
     renderFilterTags();
 
-    // â”€â”€ Apply button â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Apply button Ã¢â€â‚¬Ã¢â€â‚¬
     $('#applyFiltersBtn').off('click').on('click', function () {
         applyFilters();
     });
 
-    // â”€â”€ Clear button â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Clear button Ã¢â€â‚¬Ã¢â€â‚¬
     $('#clearFiltersBtn').off('click').on('click', function () {
         clearFilters();
     });
 
-    // â”€â”€ Live highlight on change â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Live highlight on change Ã¢â€â‚¬Ã¢â€â‚¬
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('change', function () {
         highlightActiveSelects();
         renderFilterTags();
     });
 
-    // â”€â”€ Allow pressing Enter in any select to apply â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Allow pressing Enter in any select to apply Ã¢â€â‚¬Ã¢â€â‚¬
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('keypress', function (e) {
         if (e.key === 'Enter') applyFilters();
     });
@@ -146,10 +144,10 @@ function renderFilterTags() {
 
 function getQuarterLabel(q) {
     const map = {
-        Q1: 'Q1 (Janâ€“Mar)',
-        Q2: 'Q2 (Aprâ€“Jun)',
-        Q3: 'Q3 (Julâ€“Sep)',
-        Q4: 'Q4 (Octâ€“Dec)'
+        Q1: 'Q1 (JanÃ¢â‚¬â€œMar)',
+        Q2: 'Q2 (AprÃ¢â‚¬â€œJun)',
+        Q3: 'Q3 (JulÃ¢â‚¬â€œSep)',
+        Q4: 'Q4 (OctÃ¢â‚¬â€œDec)'
     };
     return map[q] || q;
 }
@@ -259,7 +257,7 @@ function initializeTable() {
 function applyTableFilters(api, areaFilter, statusFilter) {
     if (!api) return;
 
-    // Area column = index 1 â†’ search 'Area X'
+    // Area column = index 1 Ã¢â€ â€™ search 'Area X'
     if (areaFilter) {
         api.column(1).search('Area ' + areaFilter);
     }
@@ -293,7 +291,7 @@ function initializeFilters() {
 
 
 /* =====================================================
-   YEAR SELECTOR  (standalone dropdown â†’ navigate)
+   YEAR SELECTOR  (standalone dropdown Ã¢â€ â€™ navigate)
 ===================================================== */
 function initializeYearSelector() {
     // The year selector is now part of the filter panel.
@@ -315,92 +313,6 @@ function initializeClickableCards() {
             window.location.href = `/quarters?statusFilter=inactive&year=${encodeURIComponent(year)}`;
         } else {
             window.location.href = `/quarters?year=${encodeURIComponent(year)}`;
-        }
-    });
-}
-
-
-/* =====================================================
-   SNAPSHOT FUNCTIONS
-===================================================== */
-function createCurrentSnapshot() {
-    $.ajax({
-        url: '/api/connectivity-history/snapshot/current',
-        method: 'POST',
-        success: function (response) {
-            if (response.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Snapshot Created!',
-                    html: `
-                        <p><strong>Quarter:</strong> Q${response.quarter} ${response.year}</p>
-                        <p><strong>Total Offices:</strong> ${response.totalOffices}</p>
-                        <p><strong>Connected:</strong> ${response.connected}</p>
-                        <p><strong>Disconnected:</strong> ${response.disconnected}</p>
-                    `,
-                    timer: 3000
-                }).then(() => location.reload());
-            } else {
-                Swal.fire({ icon: 'warning', title: 'Snapshot Already Exists', text: response.message });
-            }
-        },
-        error: function (xhr) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Failed to Create Snapshot',
-                text: xhr.responseJSON?.message || 'An error occurred'
-            });
-        }
-    });
-}
-
-function checkCurrentQuarterSnapshot() {
-    $.ajax({
-        url: '/api/connectivity-history/current-quarter',
-        method: 'GET',
-        success: function (response) {
-            if (response.hasSnapshot) {
-                $('#manualUpdateBtn')
-                    .removeClass('btn-outline-primary btn-outline-warning')
-                    .addClass('btn-success')
-                    .html('<i class="fas fa-check"></i> Snapshot Exists');
-            } else {
-                $('#manualUpdateBtn')
-                    .removeClass('btn-success')
-                    .addClass('btn-outline-warning')
-                    .html('<i class="fas fa-exclamation-triangle"></i> Create Snapshot');
-            }
-        }
-    });
-}
-
-function deleteCurrentSnapshot() {
-    $.ajax({
-        url: '/api/connectivity-history/snapshot/current',
-        method: 'DELETE',
-        success: function (response) {
-            if (response.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Snapshot Deleted!',
-                    html: `
-                        <p><strong>Quarter:</strong> Q${response.quarter} ${response.year}</p>
-                        <p><strong>Total Offices Removed:</strong> ${response.totalOffices}</p>
-                        <p><strong>Connected:</strong> ${response.connected}</p>
-                        <p><strong>Disconnected:</strong> ${response.disconnected}</p>
-                    `,
-                    timer: 3000
-                }).then(() => location.reload());
-            } else {
-                Swal.fire({ icon: 'warning', title: 'No Snapshot Found', text: response.message });
-            }
-        },
-        error: function (xhr) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Failed to Delete Snapshot',
-                text: xhr.responseJSON?.message || 'An error occurred'
-            });
         }
     });
 }
@@ -438,7 +350,7 @@ function initializeMap() {
     const map = L.map('leafletMap').setView([12.8797, 121.7740], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Â© OpenStreetMap contributors',
+        attribution: 'Ã‚Â© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(map);
 

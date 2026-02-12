@@ -29,12 +29,6 @@
                                 <span th:text="${currentQuarterInfo.quarter}">Q1</span> 
                                 (<span th:text="${currentQuarterInfo.monthName}">FEBRUARY</span>)
                             </span>
-                            <button class="btn btn-sm btn-outline-primary ml-2" id="manualUpdateBtn">
-                                <i class="fas fa-camera"></i> Create Snapshot
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger ml-1" id="deleteSnapshotBtn">
-                                <i class="fas fa-trash"></i> Delete Snapshot
-                            </button>
                         </div>
                     </div>
                     
@@ -88,13 +82,13 @@
                                 <select id="quarterFilter" class="form-control form-control-sm filter-select">
                                     <option value="">All Quarters</option>
                                     <option value="Q1"
-                                            th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan â€“ Mar)</option>
+                                            th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan Ã¢â‚¬â€œ Mar)</option>
                                     <option value="Q2"
-                                            th:selected="${selectedQuarterFilter == 'Q2'}">Q2 (Apr â€“ Jun)</option>
+                                            th:selected="${selectedQuarterFilter == 'Q2'}">Q2 (Apr Ã¢â‚¬â€œ Jun)</option>
                                     <option value="Q3"
-                                            th:selected="${selectedQuarterFilter == 'Q3'}">Q3 (Jul â€“ Sep)</option>
+                                            th:selected="${selectedQuarterFilter == 'Q3'}">Q3 (Jul Ã¢â‚¬â€œ Sep)</option>
                                     <option value="Q4"
-                                            th:selected="${selectedQuarterFilter == 'Q4'}">Q4 (Oct â€“ Dec)</option>
+                                            th:selected="${selectedQuarterFilter == 'Q4'}">Q4 (Oct Ã¢â‚¬â€œ Dec)</option>
                                 </select>
                             </div>
 
