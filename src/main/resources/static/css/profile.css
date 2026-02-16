@@ -4,6 +4,15 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Override main layout for profile page */
+#sidebar {
+    display: none;
+}
+
+.main-content {
+    margin-left: 0;
+}
+
 .cover-photo-container {
     position: relative;
     height: 300px;
@@ -326,13 +335,19 @@ body {
 }
 
 .badge-success {
-    background: #28a745;
+    background-color: #28a745;
     color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
 .badge-danger {
-    background: #dc3545;
+    background-color: #dc3545;
     color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
 .badge-warning {

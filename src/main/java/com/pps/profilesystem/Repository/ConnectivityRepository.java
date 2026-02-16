@@ -21,9 +21,6 @@ public interface ConnectivityRepository extends JpaRepository<Connectivity, Inte
     // Find all connectivity records by provider
     List<Connectivity> findByProviderProviderId(Integer providerId);
 
-    // Find all connectivity records created by a specific user
-    List<Connectivity> findByCreatedById(Long userId);
-
     // Find all wired connections
     List<Connectivity> findByIsWiredTrue();
 

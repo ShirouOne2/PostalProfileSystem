@@ -84,6 +84,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let skippedCount = 0;
 
             data.forEach(office => {
+                // Debug: Log the office object to see available fields
+                console.log('Office data:', office);
+
                 const lat = parseFloat(office.lat);
                 const lng = parseFloat(office.lng);
 
@@ -104,20 +107,59 @@ document.addEventListener('DOMContentLoaded', function() {
                     fillOpacity: 0.8
                 });
 
-                // Bind popup
-                const statusBadge = office.status
-                    ? '<span class="status-badge status-active">Active</span>'
-                    : '<span class="status-badge status-inactive">Inactive</span>';
+                // Bind popup with detailed information
+                console.log('Office data for popup:', office);
+                const statusLabel = office.status ? 'Active' : 'Inactive';
+                const badgeBg = office.status ? '#d4edda' : '#f8d7da';
+                const badgeColor = office.status ? '#155724' : '#721c24';
+                
+                const nameRaw = office.name || 'N/A';
+                const addressRaw = office.address || 'Address not available';
+                const postmasterRaw = office.postmaster || 'Not assigned';
+                const employeesRaw = (office.noOfEmployees === null || office.noOfEmployees === undefined || office.noOfEmployees === 0) ? 'Not available' : office.noOfEmployees;
+                const contactPersonRaw = office.postalOfficeContactPerson || 'Not available';
+                const contactNumberRaw = office.postalOfficeContactNumber || 'Not available';
+                const officeId = office.id || '';
+                
+                // Image placeholder (you can update this path based on your actual image storage)
+                const coverPhotoSrc = office.coverPhoto || '/images/no-image.png';
 
-                const areaBadge = office.areaId
-                    ? `<span class="area-badge" style="background-color: ${getAreaColor(office.areaId)}">Area ${office.areaId}</span>`
-                    : '<span class="area-badge area-unknown">Area N/A</span>';
+                const popupContent = `
+                    <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.4;max-width:240px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <span style="font-size:13px;font-weight:600;color:#002868;">PHLPost Station</span>
+                            <span style="padding:2px 8px;border-radius:999px;background:${badgeBg};color:${badgeColor};font-size:11px;">${statusLabel}</span>
+                        </div>
+                        <div style="color:#1f2a44;font-weight:600;margin-bottom:4px;">${nameRaw}</div>
+                        <div style="color:#4d5a73;margin-bottom:6px;">${addressRaw}</div>
+                        <div style="background:#f7f9ff;border:1px solid rgba(0,40,104,0.08);border-radius:8px;padding:6px 8px;margin-bottom:6px;">
+                            <div style="margin-bottom:4px;">
+                                <span style="color:#7a869a;">Postmaster</span><br>
+                                <strong style="color:#002868;">${postmasterRaw}</strong>
+                            </div>
+                            <div style="margin-bottom:4px;">
+                                <span style="color:#7a869a;">Employees</span><br>
+                                <strong style="color:#002868;">${employeesRaw}</strong>
+                            </div>
+                            <div style="margin-bottom:4px;">
+                                <span style="color:#7a869a;">Contact</span><br>
+                                <strong style="color:#002868;">${contactPersonRaw}</strong><br>
+                                <span style="color:#4d5a73;">${contactNumberRaw}</span>
+                            </div>
+                        </div>
+                        <img src="${coverPhotoSrc}" onerror="this.src='/images/no-image.png'" style="width:100%;height:110px;border-radius:8px;object-fit:cover;margin-bottom:6px;" />
+                        <div style="display:flex;gap:4px;">
+                            <button onclick="window.location.href='/postal-office/view/${officeId}'" style="flex:1;padding:6px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;text-decoration:none;display:inline-block;text-align:center;">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </div>
+                    </div>
+                `;
 
-                marker.bindPopup(
-                    `<h6>${office.name}</h6>` +
-                    `<p><strong>Area:</strong> ${areaBadge}</p>` +
-                    `<p><strong>Status:</strong> ${statusBadge}</p>`
-                );
+                marker.bindPopup(popupContent, {
+                    maxWidth: 260,
+                    className: 'custom-popup'
+                });
 
                 // Store data for filtering
                 marker.officeData = office;
@@ -190,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let visibleCount = 0;
         markers.forEach(marker => {
             const office = marker.officeData;
-            const matchesSearch = !searchTerm || office.name.toLowerCase().includes(searchTerm);
+            const matchesSearch = !searchTerm || (office.name && office.name.toLowerCase().includes(searchTerm));
             const matchesArea = !areaFilter || (office.areaId && office.areaId.toString() === areaFilter);
             const matchesStatus = !statusFilter || office.status.toString() === statusFilter;
 

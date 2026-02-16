@@ -21,21 +21,6 @@ public class PostalOfficeService {
     private PostalOfficeRepository postalOfficeRepository;
 
     @Autowired
-    private AreaRepository areaRepository;
-
-    @Autowired
-    private RegionsRepository regionsRepository;
-
-    @Autowired
-    private ProvinceRepository provinceRepository;
-
-    @Autowired
-    private CityMunicipalityRepository cityMunicipalityRepository;
-
-    @Autowired
-    private BarangayRepository barangayRepository;
-
-    @Autowired
     private ConnectivityRepository connectivityRepository;
 
     @Autowired
@@ -84,7 +69,7 @@ public class PostalOfficeService {
 
     /**
      * Create new postal office with automatic connectivity tracking
-     * ⭐ IMPROVED: Better handling of the bidirectional relationship
+     * â­ IMPROVED: Better handling of the bidirectional relationship
      */
     @Transactional
     public PostalOffice createPostalOfficeWithConnectivity(PostalOffice postalOffice) {
@@ -110,7 +95,7 @@ public class PostalOfficeService {
 
     /**
      * Update existing postal office
-     * ⭐ IMPROVED: Better handling of connectivity status changes
+     * â­ IMPROVED: Better handling of connectivity status changes
      */
     @Transactional
     public PostalOffice updatePostalOffice(Integer id, PostalOffice updatedOffice) {
@@ -134,7 +119,7 @@ public class PostalOfficeService {
     }
 
     /**
-     * ⭐ IMPROVED: Handle connectivity linking when status changes
+     * â­ IMPROVED: Handle connectivity linking when status changes
      */
     private void handleConnectivityStatusChange(PostalOffice office, Boolean oldStatus, Boolean newStatus) {
         // Changed from inactive/null to active
@@ -206,7 +191,7 @@ public class PostalOfficeService {
 
     /**
      * Soft delete - mark as inactive and disconnect
-     * ⭐ IMPROVED: Better handling of connectivity unlinking
+     * â­ IMPROVED: Better handling of connectivity unlinking
      */
     @Transactional
     public PostalOffice softDeletePostalOffice(Integer id) {
@@ -311,7 +296,7 @@ public class PostalOfficeService {
         // Connect new provider
         Optional<Provider> providerOpt = providerRepository.findById(newProviderId);
         if (providerOpt.isEmpty()) {
-            throw new RuntimeException("Provider not found with ID: " + newProviderId);
+           throw new RuntimeException("Provider not found with ID: " + newProviderId);
         }
 
         Connectivity newConn = new Connectivity();
@@ -319,14 +304,11 @@ public class PostalOfficeService {
         newConn.setProvider(providerOpt.get());
         newConn.setDateConnected(LocalDateTime.now());
         Connectivity savedConn = connectivityRepository.save(newConn);
-
         office.setActiveConnectivity(savedConn);
         office.setConnectionStatus(true);
         
-        return postalOfficeRepository.save(office);
+        return office;
     }
-
-    // ========== Helper Methods ==========
 
     /**
      * Convert PostalOffice entity to Map for API response
@@ -342,7 +324,11 @@ public class PostalOfficeService {
         map.put("address", po.getAddress());
         map.put("postmaster", po.getPostmaster());
         map.put("zipCode", po.getZipCode());
+        map.put("speed", po.getSpeed());
         map.put("isp", po.getInternetServiceProvider());
+        map.put("noOfEmployees", po.getNoOfEmployees());
+        map.put("postalOfficeContactPerson", po.getPostalOfficeContactPerson());
+        map.put("postalOfficeContactNumber", po.getPostalOfficeContactNumber());
         return map;
     }
 

@@ -25,10 +25,6 @@ public class Connectivity {
     @JoinColumn(name = "ProviderID", nullable = false)
     private Provider provider;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CreatedBy")
-    private User createdBy;
-
     // =======================
     // Fields
     // =======================
@@ -116,14 +112,6 @@ public class Connectivity {
 
     public void setProvider(Provider provider) {
         this.provider = provider;
-    }
-
-    public User getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
     }
 
     public Boolean getIsWired() {
