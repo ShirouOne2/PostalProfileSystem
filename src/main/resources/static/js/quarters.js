@@ -1,12 +1,14 @@
 /**
  * Quarters Management Page
- * Includes full filter support: Year, Quarter (Q1Ã¢â‚¬â€œQ4), Area, Status (Active/Inactive)
+ * Includes full filter support: Year, Quarter (Q1–Q4), Area, Status (Active/Inactive)
+ * WITH EDIT FUNCTIONALITY
  */
 
 $(document).ready(function () {
-    console.log('Ã¢Å“â€¦ Quarters.js loaded');
+    console.log('✓ Quarters.js loaded');
 
     createMapModal();
+    createEditModal();
     initializeTable();
     initializeFilters();
     initializeYearSelector();
@@ -21,7 +23,7 @@ $(document).ready(function () {
 ===================================================== */
 function initializeFilterPanel() {
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Collapse / expand toggle Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Collapse / expand toggle ––
     $('#toggleFiltersBtn').on('click', function () {
         const body    = $('#filterBody');
         const chevron = $('#filterChevron');
@@ -30,29 +32,29 @@ function initializeFilterPanel() {
         chevron.toggleClass('fa-chevron-up fa-chevron-down');
     });
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Highlight selects that already have a value (page load) Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Highlight selects that already have a value (page load) ––
     highlightActiveSelects();
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Render any pre-selected tags from URL params Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Render any pre-selected tags from URL params ––
     renderFilterTags();
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Apply button Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Apply button ––
     $('#applyFiltersBtn').off('click').on('click', function () {
         applyFilters();
     });
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Clear button Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Clear button ––
     $('#clearFiltersBtn').off('click').on('click', function () {
         clearFilters();
     });
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Live highlight on change Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Live highlight on change ––
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('change', function () {
         highlightActiveSelects();
         renderFilterTags();
     });
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Allow pressing Enter in any select to apply Ã¢â€â‚¬Ã¢â€â‚¬
+    // –– Allow pressing Enter in any select to apply ––
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('keypress', function (e) {
         if (e.key === 'Enter') applyFilters();
     });
@@ -144,10 +146,10 @@ function renderFilterTags() {
 
 function getQuarterLabel(q) {
     const map = {
-        Q1: 'Q1 (JanÃ¢â‚¬â€œMar)',
-        Q2: 'Q2 (AprÃ¢â‚¬â€œJun)',
-        Q3: 'Q3 (JulÃ¢â‚¬â€œSep)',
-        Q4: 'Q4 (OctÃ¢â‚¬â€œDec)'
+        Q1: 'Q1 (Jan–Mar)',
+        Q2: 'Q2 (Apr–Jun)',
+        Q3: 'Q3 (Jul–Sep)',
+        Q4: 'Q4 (Oct–Dec)'
     };
     return map[q] || q;
 }
@@ -191,16 +193,17 @@ function initializeTable() {
             url: '/api/post-offices/all',
             dataSrc: ''
         },
-        columnDefs: [
-            { targets: [4], visible: false, searchable: false }
-        ],
         columns: [
             { data: null,      render: (d, t, r, m) => m.row + 1 },
             { data: 'areaId',  render: d => d ? 'Area ' + d : 'N/A' },
             { data: 'name',    defaultContent: 'N/A' },
             { data: 'address', defaultContent: 'N/A' },
             { data: 'zipCode', defaultContent: 'N/A' },
-            { data: 'isp',     defaultContent: 'N/A' },
+            { 
+                data: 'speed',
+                defaultContent: 'N/A',
+                render: d => d || 'N/A'
+            },
             {
                 data: 'status',
                 render: d => d
@@ -257,7 +260,7 @@ function initializeTable() {
 function applyTableFilters(api, areaFilter, statusFilter) {
     if (!api) return;
 
-    // Area column = index 1 Ã¢â€ â€™ search 'Area X'
+    // Area column = index 1 – search 'Area X'
     if (areaFilter) {
         api.column(1).search('Area ' + areaFilter);
     }
@@ -291,7 +294,7 @@ function initializeFilters() {
 
 
 /* =====================================================
-   YEAR SELECTOR  (standalone dropdown Ã¢â€ â€™ navigate)
+   YEAR SELECTOR  (standalone dropdown – navigate)
 ===================================================== */
 function initializeYearSelector() {
     // The year selector is now part of the filter panel.
@@ -350,7 +353,7 @@ function initializeMap() {
     const map = L.map('leafletMap').setView([12.8797, 121.7740], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Ã‚Â© OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(map);
 
@@ -381,7 +384,196 @@ function initializeMap() {
 
 
 /* =====================================================
-   OFFICE ACTIONS - ENHANCED WITH LOADING ANIMATIONS
+   EDIT MODAL
+===================================================== */
+function createEditModal() {
+    const modalHTML = `
+        <div class="modal fade" id="editOfficeModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit"></i> Edit Post Office
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editOfficeForm">
+                            <input type="hidden" id="editOfficeId">
+                            
+                            <div class="row">
+                                <!-- Basic Information -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editName">Office Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="editName" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editPostmaster">Postmaster</label>
+                                        <input type="text" class="form-control" id="editPostmaster">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editAddress">Address</label>
+                                <textarea class="form-control" id="editAddress" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editZipCode">Zip Code</label>
+                                        <input type="text" class="form-control" id="editZipCode">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editStatus">Status <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="editStatus" required>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ISP Information -->
+                            <h6 class="mt-3 mb-2 text-primary">Internet Service Provider</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISP">ISP</label>
+                                        <input type="text" class="form-control" id="editISP">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editSpeed">Speed</label>
+                                        <input type="text" class="form-control" id="editSpeed" placeholder="e.g., 100 Mbps">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editTypeOfConnection">Connection Type</label>
+                                        <input type="text" class="form-control" id="editTypeOfConnection" placeholder="e.g., Fiber, DSL">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editStaticIP">Static IP Address</label>
+                                        <input type="text" class="form-control" id="editStaticIP">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Staff Information -->
+                            <h6 class="mt-3 mb-2 text-primary">Staff Information</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfEmployees">No. of Employees</label>
+                                        <input type="number" class="form-control" id="editNoOfEmployees" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfTellers">No. of Tellers</label>
+                                        <input type="number" class="form-control" id="editNoOfTellers" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfCarriers">No. of Carriers</label>
+                                        <input type="number" class="form-control" id="editNoOfCarriers" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Contact Information -->
+                            <h6 class="mt-3 mb-2 text-primary">Contact Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editContactPerson">Office Contact Person</label>
+                                        <input type="text" class="form-control" id="editContactPerson">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editContactNumber">Office Contact Number</label>
+                                        <input type="text" class="form-control" id="editContactNumber">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISPContactPerson">ISP Contact Person</label>
+                                        <input type="text" class="form-control" id="editISPContactPerson">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISPContactNumber">ISP Contact Number</label>
+                                        <input type="text" class="form-control" id="editISPContactNumber">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Location Coordinates -->
+                            <h6 class="mt-3 mb-2 text-primary">Location Coordinates</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editLatitude">Latitude</label>
+                                        <input type="number" class="form-control" id="editLatitude" step="0.000001">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editLongitude">Longitude</label>
+                                        <input type="number" class="form-control" id="editLongitude" step="0.000001">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    $('body').append(modalHTML);
+}
+
+
+/* =====================================================
+   OFFICE ACTIONS - ENHANCED WITH EDIT FUNCTIONALITY
 ===================================================== */
 
 /**
@@ -407,15 +599,141 @@ function viewOffice(id, officeName) {
 }
 
 /**
- * Edit office (placeholder for future implementation)
+ * Edit office - Load data and show modal
  */
 function editOffice(id) { 
-    Swal.fire({ 
-        icon: 'info', 
-        title: 'Coming Soon', 
-        text: 'Edit functionality is under development.',
-        confirmButtonText: 'OK'
-    }); 
+    // Show loading
+    Swal.fire({
+        title: 'Loading Office Data...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Fetch office data
+    $.ajax({
+        url: '/api/postal-office/' + id,
+        method: 'GET',
+        success: function(office) {
+            Swal.close();
+            
+            // Populate form fields
+            $('#editOfficeId').val(office.id);
+            $('#editName').val(office.name || '');
+            $('#editPostmaster').val(office.postmaster || '');
+            $('#editAddress').val(office.address || '');
+            $('#editZipCode').val(office.zipCode || '');
+            $('#editStatus').val(office.connectionStatus ? 'true' : 'false');
+            $('#editISP').val(office.internetServiceProvider || '');
+            $('#editSpeed').val(office.speed || '');
+            $('#editTypeOfConnection').val(office.typeOfConnection || '');
+            $('#editStaticIP').val(office.staticIpAddress || '');
+            $('#editNoOfEmployees').val(office.noOfEmployees || '');
+            $('#editNoOfTellers').val(office.noOfPostalTellers || '');
+            $('#editNoOfCarriers').val(office.noOfLetterCarriers || '');
+            $('#editContactPerson').val(office.postalOfficeContactPerson || '');
+            $('#editContactNumber').val(office.postalOfficeContactNumber || '');
+            $('#editISPContactPerson').val(office.ispContactPerson || '');
+            $('#editISPContactNumber').val(office.ispContactNumber || '');
+            $('#editLatitude').val(office.latitude || '');
+            $('#editLongitude').val(office.longitude || '');
+            
+            // Show modal
+            $('#editOfficeModal').modal('show');
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: xhr.responseJSON?.message || 'Failed to load office data',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+/**
+ * Save office changes
+ */
+function saveOfficeChanges() {
+    const id = $('#editOfficeId').val();
+    
+    // Validate required fields
+    if (!$('#editName').val()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Office name is required',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Prepare update data
+    const updateData = {
+        name: $('#editName').val(),
+        postmaster: $('#editPostmaster').val() || null,
+        address: $('#editAddress').val() || null,
+        zipCode: $('#editZipCode').val() || null,
+        connectionStatus: $('#editStatus').val() === 'true',
+        internetServiceProvider: $('#editISP').val() || null,
+        speed: $('#editSpeed').val() || null,
+        typeOfConnection: $('#editTypeOfConnection').val() || null,
+        staticIpAddress: $('#editStaticIP').val() || null,
+        noOfEmployees: $('#editNoOfEmployees').val() ? parseInt($('#editNoOfEmployees').val()) : null,
+        noOfPostalTellers: $('#editNoOfTellers').val() ? parseInt($('#editNoOfTellers').val()) : null,
+        noOfLetterCarriers: $('#editNoOfCarriers').val() ? parseInt($('#editNoOfCarriers').val()) : null,
+        postalOfficeContactPerson: $('#editContactPerson').val() || null,
+        postalOfficeContactNumber: $('#editContactNumber').val() || null,
+        ispContactPerson: $('#editISPContactPerson').val() || null,
+        ispContactNumber: $('#editISPContactNumber').val() || null,
+        latitude: $('#editLatitude').val() ? parseFloat($('#editLatitude').val()) : null,
+        longitude: $('#editLongitude').val() ? parseFloat($('#editLongitude').val()) : null
+    };
+    
+    // Show saving progress
+    Swal.fire({
+        title: 'Saving Changes...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Send update request
+    $.ajax({
+        url: '/api/postal-office/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(updateData),
+        success: function(response) {
+            $('#editOfficeModal').modal('hide');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Post office updated successfully',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                // Reload the page to refresh the table
+                location.reload();
+            });
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: xhr.responseJSON?.message || 'Failed to update post office',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
 }
 
 /**

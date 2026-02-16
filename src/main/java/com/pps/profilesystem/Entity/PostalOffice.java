@@ -49,6 +49,7 @@ public class PostalOffice {
     @JoinColumn(name = "barangay_id", nullable = true)
     private Barangay barangay;
 
+    @Column(name = "zip_code")
     private String zipCode;
     
     // --- Coordinates ---
@@ -59,14 +60,14 @@ public class PostalOffice {
     @Column(name = "connection_status")
     private Boolean connectionStatus = false;
 
-    // ⭐ CURRENT/ACTIVE CONNECTIVITY RECORD
+    // â­ CURRENT/ACTIVE CONNECTIVITY RECORD
     // Points to the connectivity record that is currently active
     // This should only be set if connection_status = TRUE
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "connectivity_id", nullable = true)
     private Connectivity activeConnectivity;
 
-    // ⭐ ALL CONNECTIVITY RECORDS (Historical + Current)
+    // â­ ALL CONNECTIVITY RECORDS (Historical + Current)
     // This is the reverse side of the Connectivity.postalOffice relationship
     // Includes both active and disconnected connectivity records
     @OneToMany(mappedBy = "postalOffice", fetch = FetchType.LAZY)
@@ -85,10 +86,11 @@ public class PostalOffice {
     // --- Classification & Services ---
     private String classification;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "service_provided", columnDefinition = "TEXT")
     private String serviceProvided;
 
     // --- ISP Information ---
+    @Column(name = "internet_service_provider")
     private String internetServiceProvider;
 
     @Column(name = "type_of_connection")
@@ -152,11 +154,11 @@ public class PostalOffice {
     public Boolean getConnectionStatus() { return connectionStatus; }
     public void setConnectionStatus(Boolean connectionStatus) { this.connectionStatus = connectionStatus; }
 
-    // ⭐ Active Connectivity getter/setter
+    // â­ Active Connectivity getter/setter
     public Connectivity getActiveConnectivity() { return activeConnectivity; }
     public void setActiveConnectivity(Connectivity activeConnectivity) { this.activeConnectivity = activeConnectivity; }
 
-    // ⭐ Connectivity History getter/setter
+    // â­ Connectivity History getter/setter
     public List<Connectivity> getConnectivityHistory() { return connectivityHistory; }
     public void setConnectivityHistory(List<Connectivity> connectivityHistory) { this.connectivityHistory = connectivityHistory; }
 

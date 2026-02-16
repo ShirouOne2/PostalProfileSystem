@@ -12,22 +12,6 @@
     
     <!-- Profile CSS -->
     <link rel="stylesheet" th:href="@{/css/profile.css}">
-    
-    <style>
-        /* Override main layout for profile page */
-        body {
-            background: #f8f9fa;
-        }
-        
-        /* Hide sidebar and adjust main content for profile page */
-        #sidebar {
-            display: none;
-        }
-        
-        .main-content {
-            margin-left: 0;
-        }
-    </style>
 
 
         <!-- Cover Photo -->
@@ -53,17 +37,33 @@
             <!-- Profile Name -->
             <div class="profile-info-section">
                 <h1 class="profile-name" th:text="${postOffice.postalOffice}">Post Office Name</h1>
+                <p class="text-muted">
+                    <i class="fas fa-map-marker-alt"></i> 
+                    <span th:text="${postOffice.city + ', ' + postOffice.province}">Location</span>
+                </p>
             </div>
 
             <!-- Profile Tabs -->
             <div class="profile-tabs">
-                <a href="#" class="tab-item active">
-                    <i class="fas fa-info-circle"></i> About
+                <a href="#basic" class="tab-item active">
+                    <i class="fas fa-info-circle"></i> Basic Info
+                </a>
+                <a href="#location" class="tab-item">
+                    <i class="fas fa-map-marker-alt"></i> Location
+                </a>
+                <a href="#connectivity" class="tab-item">
+                    <i class="fas fa-wifi"></i> Connectivity
+                </a>
+                <a href="#contact" class="tab-item">
+                    <i class="fas fa-address-book"></i> Contact
+                </a>
+                <a href="#staff" class="tab-item">
+                    <i class="fas fa-users"></i> Staff
                 </a>
             </div>
 
             <!-- Basic Information Card -->
-            <div class="info-card">
+            <div class="info-card" id="basic">
                 <div class="card-header">
                     <i class="fas fa-info-circle"></i> Basic Information
                 </div>
@@ -97,10 +97,30 @@
                         <div class="info-value" th:text="${postOffice.postmaster ?: 'N/A'}">Postmaster</div>
                     </div>
                 </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Classification</div>
+                        <div class="info-value" th:text="${postOffice.classification ?: 'N/A'}">Classification</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-concierge-bell"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Services Provided</div>
+                        <div class="info-value" th:text="${postOffice.serviceProvided ?: 'N/A'}">Services</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Location Information Card -->
-            <div class="info-card">
+            <div class="info-card" id="location">
                 <div class="card-header">
                     <i class="fas fa-map-marker-alt"></i> Location Information
                 </div>
@@ -130,7 +150,7 @@
                         <i class="fas fa-city"></i>
                     </div>
                     <div class="info-content">
-                        <div class="info-label">City</div>
+                        <div class="info-label">City/Municipality</div>
                         <div class="info-value" th:text="${postOffice.city ?: 'N/A'}">City</div>
                     </div>
                 </div>
@@ -160,7 +180,7 @@
                         <i class="fas fa-road"></i>
                     </div>
                     <div class="info-content">
-                        <div class="info-label">Address Line</div>
+                        <div class="info-label">Complete Address</div>
                         <div class="info-value" th:text="${postOffice.addressLine ?: 'N/A'}">Address Line</div>
                     </div>
                 </div>
@@ -170,19 +190,22 @@
                         <i class="fas fa-globe"></i>
                     </div>
                     <div class="info-content">
-                        <div class="info-label">Latitude</div>
-                        <div class="info-value" th:text="${postOffice.latitude ?: 'N/A'}">Latitude</div>
+                        <div class="info-label">Coordinates</div>
+                        <div class="info-value">
+                            <span th:if="${postOffice.latitude != null and postOffice.longitude != null}">
+                                Lat: <span th:text="${postOffice.latitude}">0</span>, 
+                                Lng: <span th:text="${postOffice.longitude}">0</span>
+                            </span>
+                            <span th:unless="${postOffice.latitude != null and postOffice.longitude != null}">N/A</span>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Longitude</div>
-                        <div class="info-value" th:text="${postOffice.longitude ?: 'N/A'}">Longitude</div>
-                    </div>
+            <!-- Connectivity Information Card -->
+            <div class="info-card" id="connectivity">
+                <div class="card-header">
+                    <i class="fas fa-wifi"></i> Connectivity Information
                 </div>
 
                 <div class="info-row">
@@ -200,14 +223,141 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Internet Service Provider</div>
+                        <div class="info-value" th:text="${postOffice.internetServiceProvider ?: 'N/A'}">ISP</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-ethernet"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Type of Connection</div>
+                        <div class="info-value" th:text="${postOffice.typeOfConnection ?: 'N/A'}">Connection Type</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Connection Speed</div>
+                        <div class="info-value" th:text="${postOffice.speed ?: 'N/A'}">Speed</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Static IP Address</div>
+                        <div class="info-value" th:text="${postOffice.staticIpAddress ?: 'N/A'}">IP Address</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Card -->
+            <div class="info-card" id="contact">
+                <div class="card-header">
+                    <i class="fas fa-address-book"></i> Contact Information
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Postal Office Contact Person</div>
+                        <div class="info-value" th:text="${postOffice.postalOfficeContactPerson ?: 'N/A'}">Contact Person</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Postal Office Contact Number</div>
+                        <div class="info-value" th:text="${postOffice.postalOfficeContactNumber ?: 'N/A'}">Contact Number</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">ISP Contact Person</div>
+                        <div class="info-value" th:text="${postOffice.ispContactPerson ?: 'N/A'}">ISP Contact Person</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">ISP Contact Number</div>
+                        <div class="info-value" th:text="${postOffice.ispContactNumber ?: 'N/A'}">ISP Contact Number</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Information Card -->
+            <div class="info-card" id="staff">
+                <div class="card-header">
+                    <i class="fas fa-users"></i> Staff Information
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Number of Employees</div>
+                        <div class="info-value" th:text="${postOffice.noOfEmployees ?: '0'}">Employees</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Number of Postal Tellers</div>
+                        <div class="info-value" th:text="${postOffice.noOfPostalTellers ?: '0'}">Tellers</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-icon">
+                        <i class="fas fa-people-carry"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Number of Letter Carriers</div>
+                        <div class="info-value" th:text="${postOffice.noOfLetterCarriers ?: '0'}">Letter Carriers</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="text-center mt-4">
-                <a th:href="@{/table}" class="back-button">
+            <div class="text-center mt-4 mb-4">
+                <a th:href="@{/table}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Table
                 </a>
-                <button onclick="window.print()" class="print-button">
+                <a th:href="@{/postal-office/edit/{id}(id=${postOffice.id})}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+                <button onclick="window.print()" class="btn btn-info">
                     <i class="fas fa-print"></i> Print Profile
                 </button>
             </div>

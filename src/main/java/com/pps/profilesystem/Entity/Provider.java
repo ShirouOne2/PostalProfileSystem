@@ -9,21 +9,20 @@ public class Provider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ProviderID")
+    @Column(name = "providerid")  // ✅ Changed to lowercase
     private Integer providerId;
 
-    @Column(name = "Name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)  // ✅ Changed to lowercase
     private String name;
 
-    @Column(name = "CreatedStamp", updatable = false)
+    @Column(name = "created_stamp", updatable = false)  // ✅ Changed to snake_case
     private LocalDateTime createdStamp;
 
-    @Column(name = "UpdatedStamp")
+    @Column(name = "updated_stamp")  // ✅ Changed to snake_case
     private LocalDateTime updatedStamp;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CreatedBy")
-    private User createdBy;
+    
+    @Column(name = "created_by")  // ✅ Add this field (missing from entity)
+    private Long createdBy;
 
     // =======================
     // Lifecycle hooks
@@ -67,12 +66,15 @@ public class Provider {
         return updatedStamp;
     }
 
-    public User getCreatedBy() {
+    public void setUpdatedStamp(LocalDateTime updatedStamp) {
+        this.updatedStamp = updatedStamp;
+    }
+    
+    public Long getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
 }
-

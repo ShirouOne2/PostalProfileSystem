@@ -117,6 +117,58 @@ document.addEventListener('DOMContentLoaded', function() {
         ind.addEventListener('click', () => showStep(i));
     });
 
+    // =======================
+    // Auto-set dates based on connection status
+    // =======================
+    const connectionStatusCheckbox = document.getElementById('connectionStatus');
+    const dateConnectedInput = document.getElementById('dateConnected');
+    const dateDisconnectedInput = document.getElementById('dateDisconnected');
+    
+    // Function to get current datetime in the format required by datetime-local input
+    function getCurrentDateTimeLocal() {
+        const now = new Date();
+        // Format: YYYY-MM-DDTHH:MM
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Set initial date when page loads
+    if (connectionStatusCheckbox && dateConnectedInput && dateDisconnectedInput) {
+        // Set dateConnected initially (since connection is unchecked by default, we don't set it)
+        // But if it gets checked, we'll set it
+        
+        connectionStatusCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Active/Connected - set date_connected to current date, clear date_disconnected
+                if (!dateConnectedInput.value) {
+                    dateConnectedInput.value = getCurrentDateTimeLocal();
+                }
+                dateDisconnectedInput.value = ''; // Clear disconnect date
+                dateDisconnectedInput.disabled = true;
+                dateConnectedInput.disabled = false;
+            } else {
+                // Inactive/Disconnected - set date_disconnected to current date, clear date_connected
+                if (!dateDisconnectedInput.value) {
+                    dateDisconnectedInput.value = getCurrentDateTimeLocal();
+                }
+                dateConnectedInput.value = ''; // Clear connect date
+                dateConnectedInput.disabled = true;
+                dateDisconnectedInput.disabled = false;
+            }
+        });
+        
+        // Set initial state (inactive by default)
+        if (!connectionStatusCheckbox.checked && !dateDisconnectedInput.value) {
+            dateDisconnectedInput.value = getCurrentDateTimeLocal();
+            dateConnectedInput.disabled = true;
+            dateDisconnectedInput.disabled = false;
+        }
+    }
+
     // Form submission
     form?.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -173,7 +225,9 @@ document.addEventListener('DOMContentLoaded', function() {
             barangayId: getIntValue('barangayId'),
             latitude: getFloatValue('latitude'),
             longitude: getFloatValue('longitude'),
-            connectionStatus: getCheckedValue('connectionStatus')
+            connectionStatus: getCheckedValue('connectionStatus'),
+            dateConnected: getStringValue('dateConnected'),
+            dateDisconnected: getStringValue('dateDisconnected')
         };
 
         fetch('/api/postal-office/insert', {
@@ -208,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <p>Complete the 5-step process to add a new post office.</p>
             <hr>
             <p><small><strong>Steps:</strong></small></p>
-            <p><small>1. Basic Information → 2. Location → 3. Connectivity → 4. Contact → 5. Additional Info</small></p>
+            <p><small>1. Basic Information â†’ 2. Location â†’ 3. Connectivity â†’ 4. Contact â†’ 5. Additional Info</small></p>
         `,
         toast: true,
         position: 'top-end',

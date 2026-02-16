@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Optional;
 
@@ -16,13 +15,15 @@ import java.util.Optional;
  * Controller for viewing Post Office Profiles
  */
 @Controller
-@RequestMapping("/profile")
 public class ProfileController {
 
     @Autowired
     private PostalOfficeService postalOfficeService;
 
-    @GetMapping("/{id}")
+    /**
+     * View profile by ID - accessible via /profile/{id}
+     */
+    @GetMapping("/profile/{id}")
     @Transactional(readOnly = true)
     public String showProfile(@PathVariable Integer id, Model model) {
         Optional<PostalOffice> officeOptional = postalOfficeService.getPostalOfficeById(id);
@@ -38,6 +39,15 @@ public class ProfileController {
         model.addAttribute("canAccessAllAreas", true);
 
         return "profile";
+    }
+
+    /**
+     * Alternative mapping - /postal-office/view/{id}
+     */
+    @GetMapping("/postal-office/view/{id}")
+    @Transactional(readOnly = true)
+    public String showProfileAlt(@PathVariable Integer id, Model model) {
+        return showProfile(id, model);
     }
 
     private java.util.Map<String, Object> buildProfileData(PostalOffice office) {
@@ -57,6 +67,21 @@ public class ProfileController {
         data.put("connectivityStatus", office.getConnectionStatus() ? "Active" : "Inactive");
         data.put("status", office.getConnectionStatus() ? "Active" : "Inactive");
         data.put("internetServiceProvider", office.getInternetServiceProvider());
+        
+        // Add additional fields
+        data.put("noOfEmployees", office.getNoOfEmployees());
+        data.put("noOfPostalTellers", office.getNoOfPostalTellers());
+        data.put("noOfLetterCarriers", office.getNoOfLetterCarriers());
+        data.put("classification", office.getClassification());
+        data.put("serviceProvided", office.getServiceProvided());
+        data.put("typeOfConnection", office.getTypeOfConnection());
+        data.put("speed", office.getSpeed());
+        data.put("staticIpAddress", office.getStaticIpAddress());
+        data.put("postalOfficeContactPerson", office.getPostalOfficeContactPerson());
+        data.put("postalOfficeContactNumber", office.getPostalOfficeContactNumber());
+        data.put("ispContactPerson", office.getIspContactPerson());
+        data.put("ispContactNumber", office.getIspContactNumber());
+        
         return data;
     }
 }

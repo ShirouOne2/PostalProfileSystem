@@ -3,6 +3,9 @@ package com.pps.profilesystem.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Area Entity
+ */
 @Entity
 @Table(name = "area")
 @Data

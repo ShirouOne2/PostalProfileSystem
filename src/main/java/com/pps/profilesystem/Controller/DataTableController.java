@@ -7,8 +7,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.pps.profilesystem.Service.LocationHierarchyService;
 import com.pps.profilesystem.Service.PostalOfficeService;
+import com.pps.profilesystem.Service.LocationHierarchyService;
 
 /**
  * Controller for displaying postal offices in a data table
