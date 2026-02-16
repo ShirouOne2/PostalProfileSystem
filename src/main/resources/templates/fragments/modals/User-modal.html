@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Modal</title>
+</head>
+<body>
+
+<!-- User Modal Fragment -->
+<div th:fragment="userModal">
+    <!-- Add/Edit User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fas fa-user-plus me-2"></i> Add New User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <input type="hidden" id="isEdit">
+
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                Username <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="username" 
+                                   placeholder="Enter username" required minlength="3">
+                            <div class="invalid-feedback">Username must be at least 3 characters</div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                Email <span class="required">*</span>
+                            </label>
+                            <input type="email" class="form-control" id="email" 
+                                   placeholder="Enter email address" required>
+                            <div class="invalid-feedback">Please enter a valid email</div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                Password <span class="required" id="passwordRequired">*</span>
+                            </label>
+                            <input type="password" class="form-control" id="password" 
+                                   placeholder="Enter password" minlength="6">
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                            </div>
+                            <div class="password-strength-text" id="passwordStrengthText"></div>
+                            <div class="invalid-feedback">Password must be at least 6 characters</div>
+                            <small class="text-muted" id="passwordHint" style="display:none;">
+                                Leave blank to keep current password
+                            </small>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="mb-3" id="confirmPasswordGroup">
+                            <label for="confirmPassword" class="form-label">
+                                Confirm Password <span class="required" id="confirmRequired">*</span>
+                            </label>
+                            <input type="password" class="form-control" id="confirmPassword" 
+                                   placeholder="Confirm password">
+                            <div class="invalid-feedback">Passwords do not match</div>
+                        </div>
+
+                        <!-- Role -->
+                        <div class="mb-3">
+                            <label for="role" class="form-label">
+                                Role <span class="required">*</span>
+                            </label>
+                            <select class="form-select" id="role" required>
+                                <option value="">Select role...</option>
+                                <option value="1">Admin</option>
+                                <option value="2">User</option>
+                                <option value="3">Manager</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a role</div>
+                        </div>
+
+                        <!-- Area ID -->
+                        <div class="mb-3">
+                            <label for="areaId" class="form-label">
+                                Area ID <small class="text-muted">(Optional)</small>
+                            </label>
+                            <input type="number" class="form-control" id="areaId" 
+                                   placeholder="Enter area ID">
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="enabled" checked>
+                                <label class="form-check-label" for="enabled">
+                                    Account is active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-modal-save" onclick="saveUser()">
+                        <i class="fas fa-save me-2"></i> Save User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Styles Fragment -->
+<div th:fragment="userModalStyles">
+    <style>
+        /* Modal Styles */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px 30px;
+        }
+
+        .modal-header .modal-title {
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Form Styles */
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 14px;
+        }
+
+        .form-label .required {
+            color: #e74a3b;
+            margin-left: 3px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+        }
+
+        .form-control.is-invalid {
+            border-color: #e74a3b;
+        }
+
+        .invalid-feedback {
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        /* Modal Buttons */
+        .btn-modal-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-modal-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-modal-cancel {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #666;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #f8f9fc;
+            border-color: #4e73df;
+            color: #4e73df;
+        }
+
+        /* Password Strength Indicator */
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 8px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s ease;
+            width: 0%;
+        }
+
+        .password-strength-bar.weak {
+            background: #e74a3b;
+            width: 33%;
+        }
+
+        .password-strength-bar.medium {
+            background: #f6c23e;
+            width: 66%;
+        }
+
+        .password-strength-bar.strong {
+            background: #1cc88a;
+            width: 100%;
+        }
+
+        .password-strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .form-check {
+            padding-left: 1.8em;
+        }
+
+        .form-check-input {
+            width: 1.2em;
+            height: 1.2em;
+            margin-top: 0.15em;
+        }
+
+        .form-check-label {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</div>
+
+</body>
+</html>
