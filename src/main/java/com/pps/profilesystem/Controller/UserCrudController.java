@@ -267,6 +267,53 @@ public class UserCrudController {
     /**
      * DTO class for User requests
      */
+
+    /**
+     * Change password for a user (self-service from profile page)
+     * PUT /api/users/{id}/change-password
+     */
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        String currentPassword = body.get("currentPassword");
+        String newPassword     = body.get("newPassword");
+
+        if (currentPassword == null || newPassword == null || newPassword.length() < 6) {
+            response.put("success", false);
+            response.put("message", "Invalid password data. New password must be at least 6 characters.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "User not found.");
+            return ResponseEntity.status(404).body(response);
+        }
+
+        User user = userOpt.get();
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            response.put("success", false);
+            response.put("message", "Current password is incorrect.");
+            return ResponseEntity.status(400).body(response);
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        response.put("success", true);
+        response.put("message", "Password changed successfully.");
+        return ResponseEntity.ok(response);
+    }
+
+
     public static class UserDTO {
         private String username;
         private String email;

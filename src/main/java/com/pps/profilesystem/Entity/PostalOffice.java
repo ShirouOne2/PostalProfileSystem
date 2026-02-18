@@ -113,8 +113,28 @@ public class PostalOffice {
 
     @Column(name = "isp_contact_number")
     private String ispContactNumber;
+    
+   // --- Archive ---
+    @Column(name = "is_archived", nullable = false)
+    private Boolean isArchived = false;
 
-    // --- Getters & Setters ---
+    @Column(name = "archived_at")
+    private java.time.LocalDateTime archivedAt;
+
+    @Column(name = "archive_reason", columnDefinition = "TEXT")
+    private String archiveReason;
+
+    // Getters & Setters
+    public Boolean getIsArchived() { return isArchived; }
+    public void setIsArchived(Boolean isArchived) { this.isArchived = isArchived; }
+
+    public java.time.LocalDateTime getArchivedAt() { return archivedAt; }
+    public void setArchivedAt(java.time.LocalDateTime archivedAt) { this.archivedAt = archivedAt; }
+
+    public String getArchiveReason() { return archiveReason; }
+    public void setArchiveReason(String archiveReason) { this.archiveReason = archiveReason; }
+
+     // --- Getters & Setters ---
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

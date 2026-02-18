@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+
+<head>
+    <title>My Profile - PHLPost</title>
+    <link rel="stylesheet" th:href="@{/css/user-profile.css}">
+</head>
+
+<body>
+<div th:fragment="content">
+
+    <!-- Cover Banner -->
+    <div class="up-cover"></div>
+
+    <!-- Page Wrapper -->
+    <div class="up-wrapper">
+
+        <!-- ── Avatar Card ─────────────────────────────────────── -->
+        <div class="up-avatar-card">
+
+            <!-- Avatar initials -->
+            <div class="up-avatar"
+                 th:text="${#strings.substring(user.username, 0, 1)}">U</div>
+
+            <!-- Name / email / badges -->
+            <div>
+                <h1 class="up-name" th:text="${user.username}">Username</h1>
+                <p class="up-email">
+                    <i class="fas fa-envelope mr-1"></i>
+                    <span th:text="${user.email ?: 'No email on file'}">email@example.com</span>
+                </p>
+                <div class="up-badges">
+                    <span class="badge"
+                          th:classappend="'badge-' + ${roleColor}"
+                          th:text="${roleName}">Role</span>
+                    <span th:if="${user.enabled}"
+                          class="badge badge-success">
+                        <span class="up-status-dot active"></span> Active
+                    </span>
+                    <span th:unless="${user.enabled}"
+                          class="badge badge-danger">
+                        <span class="up-status-dot inactive"></span> Inactive
+                    </span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="up-actions">
+                <a href="/dashboard" class="btn btn-outline-secondary up-btn-back btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- ── Info Grid ───────────────────────────────────────── -->
+        <div class="up-grid">
+
+            <!-- Account Information -->
+            <div class="up-card">
+                <div class="up-card-title">
+                    <i class="fas fa-id-card"></i> Account Information
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-hashtag"></i></div>
+                    <div>
+                        <div class="up-field-label">User ID</div>
+                        <div class="up-field-value" th:text="${user.id}">#1</div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-user"></i></div>
+                    <div>
+                        <div class="up-field-label">Username</div>
+                        <div class="up-field-value" th:text="${user.username}">username</div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <div class="up-field-label">Email Address</div>
+                        <div class="up-field-value"
+                             th:text="${user.email ?: 'Not set'}"
+                             th:classappend="${user.email == null} ? 'muted' : ''">
+                            email@example.com
+                        </div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <div class="up-field-label">Role</div>
+                        <div class="up-field-value">
+                            <span class="badge"
+                                  th:classappend="'badge-' + ${roleColor}"
+                                  th:text="${roleName}">User</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-toggle-on"></i></div>
+                    <div>
+                        <div class="up-field-label">Account Status</div>
+                        <div class="up-field-value">
+                            <span th:if="${user.enabled}">
+                                <span class="up-status-dot active"></span>
+                                <span class="text-success font-weight-bold">Active</span>
+                            </span>
+                            <span th:unless="${user.enabled}">
+                                <span class="up-status-dot inactive"></span>
+                                <span class="text-danger font-weight-bold">Inactive</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area & Access -->
+            <div class="up-card">
+                <div class="up-card-title">
+                    <i class="fas fa-map-marked-alt"></i> Access & Area
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-map"></i></div>
+                    <div>
+                        <div class="up-field-label">Assigned Area</div>
+                        <div class="up-field-value"
+                             th:if="${user.areaId != null}"
+                             th:text="'Area ' + ${user.areaId}">Area 1</div>
+                        <div class="up-field-value muted"
+                             th:unless="${user.areaId != null}">All Areas</div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-key"></i></div>
+                    <div>
+                        <div class="up-field-label">Access Level</div>
+                        <div class="up-field-value">
+                            <span th:if="${roleName == 'Administrator'}" class="text-danger font-weight-bold">
+                                <i class="fas fa-crown mr-1"></i> Full Access
+                            </span>
+                            <span th:if="${roleName == 'Area Admin'}" class="text-warning font-weight-bold">
+                                <i class="fas fa-map-marker-alt mr-1"></i> Area Access
+                            </span>
+                            <span th:if="${roleName == 'User'}" class="text-primary font-weight-bold">
+                                <i class="fas fa-eye mr-1"></i> View Only
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="up-field">
+                    <div class="up-field-icon"><i class="fas fa-sign-in-alt"></i></div>
+                    <div>
+                        <div class="up-field-label">Login Identifier</div>
+                        <div class="up-field-value"
+                             th:text="${user.email ?: user.username}">login@example.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="up-card up-card-full">
+                <div class="up-card-title">
+                    <i class="fas fa-lock"></i> Change Password
+                </div>
+
+                <div id="pwAlert" class="alert" style="display:none;border-radius:10px;"></div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="up-form-label">Current Password</label>
+                        <input type="password" id="currentPassword"
+                               class="form-control up-input"
+                               placeholder="Enter current password">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="up-form-label">New Password</label>
+                        <input type="password" id="newPassword"
+                               class="form-control up-input"
+                               placeholder="Min. 6 characters">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="up-form-label">Confirm New Password</label>
+                        <input type="password" id="confirmPassword"
+                               class="form-control up-input"
+                               placeholder="Repeat new password">
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <button class="btn up-btn-save" id="savePasswordBtn">
+                        <i class="fas fa-save mr-1"></i> Save Password
+                    </button>
+                    <small class="text-muted ml-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Password must be at least 6 characters.
+                    </small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Password Change Script ────────────────────────────────── -->
+    <script th:src="@{/js/user-profile.js}"></script>
+
+</div>
+</body>
+</html>
+```
+
+**user-profile.css**
+```css
+/* ── Cover ───────────────────────────────────────────────── */
+.up-cover {
+    height: 220px;
+    background: linear-gradient(135deg, #002868 0%, #C1272D 60%, #FFD700 100%);
+    border-radius: 0 0 0 0;
+    position: relative;
+    overflow: hidden;
+}
+.up-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── Profile card wrapper ────────────────────────────────── */
+.up-wrapper {
+    max-width: 900px;
+    margin: -70px auto 40px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── Avatar card ─────────────────────────────────────────── */
+.up-avatar-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.up-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #002868, #C1272D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    border: 5px solid #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+.up-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a2035;
+    margin: 0 0 4px;
+}
+.up-email {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0 0 10px;
+}
+.up-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.up-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Info sections ───────────────────────────────────────── */
+.up-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .up-grid { grid-template-columns: 1fr; }
+    .up-avatar-card { flex-direction: column; text-align: center; }
+    .up-actions { margin-left: 0; }
+}
+
+.up-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    padding: 24px;
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.up-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.11);
+}
+.up-card-full {
+    grid-column: 1 / -1;
+}
+.up-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #002868;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f2f5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.up-card-title i {
+    color: #C1272D;
+    width: 20px;
+}
+
+.up-field {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+.up-field:last-child { border-bottom: none; }
+.up-field-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff, #e8f4fd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+.up-field-icon i { color: #002868; font-size: 14px; }
+.up-field-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #9aa0ac;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.up-field-value {
+    font-size: 0.95rem;
+    color: #1a2035;
+    font-weight: 500;
+}
+.up-field-value.muted { color: #9aa0ac; font-style: italic; }
+
+/* ── Password change form ────────────────────────────────── */
+.up-form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+.up-input {
+    border-radius: 10px;
+    border: 1.5px solid #e0e4ea;
+    font-size: 0.9rem;
+    padding: 9px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.up-input:focus {
+    border-color: #002868;
+    box-shadow: 0 0 0 3px rgba(0,40,104,0.1);
+    outline: none;
+}
+.up-btn-save {
+    background: linear-gradient(135deg, #002868, #1a4fa8);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: opacity 0.2s, transform 0.15s;
+}
+.up-btn-save:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    color: #fff;
+}
+.up-btn-back {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+}
+
+/* ── Status indicator ────────────────────────────────────── */
+.up-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+.up-status-dot.active { background: #28a745; box-shadow: 0 0 0 3px rgba(40,167,69,0.2); }
+.up-status-dot.inactive { background: #dc3545; }
+```
+
+**user-profile.js**
+```javascript
+$(document).ready(function () {
+    var userId = /*[[${user.id}]]*/ 0;
+
+    $('#savePasswordBtn').on('click', function () {
+        var current = $('#currentPassword').val().trim();
+        var newPw   = $('#newPassword').val().trim();
+        var confirm = $('#confirmPassword').val().trim();
+        var $btn    = $(this);
+
+        // Clear previous alert
+        $('#pwAlert').hide().removeClass('alert-success alert-danger');
+
+        // Validate
+        if (!current || !newPw || !confirm) {
+            showAlert('danger', 'Please fill in all password fields.');
+            return;
+        }
+        if (newPw.length < 6) {
+            showAlert('danger', 'New password must be at least 6 characters.');
+            return;
+        }
+        if (newPw !== confirm) {
+            showAlert('danger', 'New password and confirmation do not match.');
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+        $.ajax({
+            url: '/api/users/' + userId + '/change-password',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                currentPassword: current,
+                newPassword:     newPw
+            }),
+            success: function (res) {
+                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Password');
+                if (res.success) {
+                    showAlert('success', '<i class="fas fa-check-circle mr-1"></i> Password changed successfully!');
+                    $('#currentPassword, #newPassword, #confirmPassword').val('');
+                } else {
+                    showAlert('danger', res.message || 'Failed to change password.');
+                }
+            },
+            error: function (xhr) {
+                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Password');
+                var msg = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
+                showAlert('danger', msg);
+            }
+        });
+    });
+
+    function showAlert(type, msg) {
+        $('#pwAlert')
+            .addClass('alert-' + type)
+            .html(msg)
+            .slideDown(200);
+    }
+});

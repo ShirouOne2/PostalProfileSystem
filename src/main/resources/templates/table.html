@@ -13,9 +13,14 @@
     <div class="container-fluid py-4">
             
         <!-- Header -->
-        <div class="mb-4">
-            <h3 class="mb-1">Post Office Inventory</h3>
-            <p class="text-muted mb-0">Manage and view all post office records</p>
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-1">Post Office Inventory</h3>
+                <p class="text-muted mb-0">Manage and view all post office records</p>
+            </div>
+            <a href="/archive" class="btn btn-outline-warning btn-sm">
+                <i class="fas fa-archive mr-1"></i> View Archive
+            </a>
         </div>
 
         <!-- Statistics Cards -->
@@ -97,12 +102,20 @@
                                             title="Edit Office">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger btn-delete"
+                                    <button class="btn btn-sm btn-archive"
+                                            style="background:#fd7e14;color:white;"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            title="Archive Office">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                    <!-- Delete button hidden -->
+                                    <!-- <button class="btn btn-sm btn-danger btn-delete"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
                                             title="Delete Office">
                                         <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    </button> -->
                                 </td>
                             </tr>
                         </tbody>
@@ -112,6 +125,39 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Archive Reason Modal -->
+    <div class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        You are about to archive <strong id="archiveOfficeName"></strong>.
+                        This office will be hidden from all views but can be restored later.
+                    </p>
+                    <div class="form-group">
+                        <label for="archiveReasonInput">Reason for archiving <small class="text-muted">(optional)</small></label>
+                        <textarea id="archiveReasonInput" class="form-control" rows="3"
+                                  placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
+                        <i class="fas fa-archive mr-1"></i> Archive
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
