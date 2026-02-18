@@ -46,4 +46,35 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "c.dateConnected <= :quarterEnd AND " +
            "(c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
     long countActiveAtQuarterEnd(@Param("quarterEnd") LocalDateTime quarterEnd);
+
+    // NEW: Date filtering methods for table data
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "JOIN Connectivity c ON po.id = c.postalOffice.id " +
+           "WHERE c.dateConnected BETWEEN :startDate AND :endDate")
+    List<PostalOffice> findByDateConnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "JOIN Connectivity c ON po.id = c.postalOffice.id " +
+           "WHERE c.dateDisconnected BETWEEN :startDate AND :endDate")
+    List<PostalOffice> findByDateDisconnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+      // Find all non-archived offices (use these in your existing service calls)
+    List<PostalOffice> findByIsArchivedFalse();
+
+    // Find all archived offices
+    List<PostalOffice> findByIsArchivedTrue();
+
+    // Count archived
+    long countByIsArchivedTrue();
+
+    // Count non-archived by connection status
+    long countByConnectionStatusAndIsArchivedFalse(Boolean status);
+
+    // Count distinct areas for non-archived offices
+    @Query("SELECT COUNT(DISTINCT po.area.id) FROM PostalOffice po WHERE po.area IS NOT NULL AND po.isArchived = false")
+    long countDistinctAreasNonArchived();
+
+    // Map query — only non-archived offices with coordinates
+    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL AND po.isArchived = false")
+    List<PostalOffice> findAllWithAreaForMapNonArchived();
 }

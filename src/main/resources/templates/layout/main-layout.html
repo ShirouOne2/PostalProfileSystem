@@ -26,8 +26,8 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
-    <!-- DataTables CSS - Only load on table page -->
-    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users'}" 
+    <!-- DataTables CSS - Only load on table / quarters / users / archive pages -->
+    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
     <!-- Custom CSS -->
@@ -189,6 +189,9 @@
     <!-- Insert Postal Office Modal -->
     <div th:replace="~{fragments/modals/insert-modal :: insertModal}"></div>
 
+    <!-- Edit Postal Office Modal -->
+    <div th:if="${activePage == 'table'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
+
     <!-- ============================================ -->
     <!-- SCRIPTS - LOAD IN CORRECT ORDER -->
     <!-- ============================================ -->
@@ -236,16 +239,25 @@
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
     <!-- 9. DataTables JS - AFTER jQuery! Use compatible version 2.1.8 -->
-    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users'}" 
+    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive'}" 
             src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
     
     <!-- 10. Table JS - Load LAST -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
+   
+   <!-- 10.1. Edit Modal JS - Load with table page -->
+   <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal.js}"></script>
    
    <!-- 11. Quarters JS - Load AFTER jQuery and DataTables -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
    
    <!-- 12. Users Management JS - Load AFTER jQuery and DataTables -->
    <script th:if="${activePage == 'users'}" th:src="@{/js/users-management.js}"></script>
+
+   <!-- 13. Archive JS - Loads on archive page AND table page (for the archive button) -->
+   <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
+
+   <!-- 14. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
+   <script th:src="@{/js/session-timeout.js}"></script>
 </body>
 </html>

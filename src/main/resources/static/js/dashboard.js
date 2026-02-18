@@ -227,6 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const areaFilter = document.getElementById('areaFilter')?.value;
         const statusFilter = document.getElementById('statusFilter')?.value;
 
+        console.log('Applying filters:', { searchTerm, areaFilter, statusFilter });
+
         markerClusterGroup.clearLayers();
 
         let visibleCount = 0;
@@ -242,11 +244,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
-            .fire({ icon: 'info', title: `Showing ${visibleCount} of ${markers.length} offices` });
+        Swal.mixin({ 
+            toast: true, 
+            position: 'top-end', 
+            showConfirmButton: false, 
+            timer: 2000, 
+            timerProgressBar: true 
+        }).fire({ 
+            icon: 'info', 
+            title: `Showing ${visibleCount} of ${markers.length} offices` 
+        });
     }
 
     function clearFilters() {
+        console.log('Clearing filters');
         document.getElementById('searchInput') && (document.getElementById('searchInput').value = '');
         document.getElementById('areaFilter') && (document.getElementById('areaFilter').value = '');
         document.getElementById('statusFilter') && (document.getElementById('statusFilter').value = '');
@@ -254,16 +265,59 @@ document.addEventListener('DOMContentLoaded', function() {
         markerClusterGroup.clearLayers();
         markers.forEach(marker => markerClusterGroup.addLayer(marker));
 
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
-            .fire({ icon: 'success', title: 'Filters cleared - showing all offices' });
+        Swal.mixin({ 
+            toast: true, 
+            position: 'top-end', 
+            showConfirmButton: false, 
+            timer: 2000, 
+            timerProgressBar: true 
+        }).fire({ 
+            icon: 'success', 
+            title: 'Filters cleared - showing all offices' 
+        });
     }
 
-    // Event listeners
-    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
-    document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
-    document.getElementById('searchInput')?.addEventListener('keypress', e => {
-        if (e.key === 'Enter') applyFilters();
-    });
+    // Event listeners - ensure they're attached after DOM is loaded
+    function attachEventListeners() {
+        const applyBtn = document.getElementById('applyFilters');
+        const clearBtn = document.getElementById('clearFilters');
+        const searchInput = document.getElementById('searchInput');
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Apply Filters button clicked');
+                applyFilters();
+            });
+        } else {
+            console.error('Apply Filters button not found!');
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Clear Filters button clicked');
+                clearFilters();
+            });
+        } else {
+            console.error('Clear Filters button not found!');
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    console.log('Enter key pressed in search');
+                    applyFilters();
+                }
+            });
+        }
+
+        console.log('Event listeners attached successfully');
+    }
+
+    // Call after DOM is loaded
+    attachEventListeners();
 
     console.log('Dashboard initialization complete');
 });

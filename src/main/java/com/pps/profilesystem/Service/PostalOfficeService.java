@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -311,6 +312,56 @@ public class PostalOfficeService {
     }
 
     /**
+     * Get post offices filtered by date range and type
+     * @param startDate Start date for filtering
+     * @param endDate End date for filtering
+     * @param dateType Type of date to filter by ("connected" or "disconnected")
+     * @param statusFilter Additional status filter (includes "newly_connected" and "newly_disconnected")
+     * @return List of filtered post offices
+     */
+    public List<Map<String, Object>> getPostOfficesByDateRange(
+            LocalDateTime startDate, 
+            LocalDateTime endDate, 
+            String dateType, 
+            String statusFilter) {
+        
+        List<PostalOffice> offices;
+        
+        // Handle newly connected/disconnected status filters
+        if ("newly_connected".equals(statusFilter)) {
+            // Filter by connection date
+            offices = postalOfficeRepository.findByDateConnectedBetween(startDate, endDate);
+        } else if ("newly_disconnected".equals(statusFilter)) {
+            // Filter by disconnection date
+            offices = postalOfficeRepository.findByDateDisconnectedBetween(startDate, endDate);
+        } else if ("connected".equals(dateType)) {
+            // Filter by connection date
+            offices = postalOfficeRepository.findByDateConnectedBetween(startDate, endDate);
+        } else if ("disconnected".equals(dateType)) {
+            // Filter by disconnection date
+            offices = postalOfficeRepository.findByDateDisconnectedBetween(startDate, endDate);
+        } else {
+            // Default to all offices if no specific date type
+            offices = postalOfficeRepository.findAll();
+        }
+        
+        // Apply additional status filter if specified (but not newly_connected/disconnected which are already handled)
+        if ("active".equals(statusFilter)) {
+            offices = offices.stream()
+                .filter(office -> Boolean.TRUE.equals(office.getConnectionStatus()))
+                .collect(Collectors.toList());
+        } else if ("inactive".equals(statusFilter)) {
+            offices = offices.stream()
+                .filter(office -> !Boolean.TRUE.equals(office.getConnectionStatus()))
+                .collect(Collectors.toList());
+        }
+        
+        return offices.stream()
+            .map(this::convertToMapDTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Convert PostalOffice entity to Map for API response
      */
     private Map<String, Object> convertToMapDTO(PostalOffice po) {
@@ -329,7 +380,85 @@ public class PostalOfficeService {
         map.put("noOfEmployees", po.getNoOfEmployees());
         map.put("postalOfficeContactPerson", po.getPostalOfficeContactPerson());
         map.put("postalOfficeContactNumber", po.getPostalOfficeContactNumber());
+        
+        // Add newThisQuarter flag if the office has connectivity data
+        boolean newThisQuarter = isNewThisQuarter(po);
+        map.put("newThisQuarter", newThisQuarter);
+        
         return map;
+    }
+    
+    /**
+     * Check if the office was newly connected or disconnected in the current quarter
+     */
+    private boolean isNewThisQuarter(PostalOffice po) {
+        if (po.getActiveConnectivity() == null) {
+            return false;
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        int currentYear = now.getYear();
+        int currentQuarter = (now.getMonthValue() - 1) / 3 + 1;
+        
+        LocalDateTime[] quarterDates = getQuarterDateRange(currentYear, currentQuarter);
+        LocalDateTime quarterStart = quarterDates[0];
+        LocalDateTime quarterEnd = quarterDates[1];
+        
+        Connectivity connectivity = po.getActiveConnectivity();
+        
+        // Check if connected this quarter
+        if (connectivity.getDateConnected() != null && 
+            !connectivity.getDateConnected().isBefore(quarterStart) && 
+            !connectivity.getDateConnected().isAfter(quarterEnd)) {
+            return true;
+        }
+        
+        // Check if disconnected this quarter
+        if (connectivity.getDateDisconnected() != null && 
+            !connectivity.getDateDisconnected().isBefore(quarterStart) && 
+            !connectivity.getDateDisconnected().isAfter(quarterEnd)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Helper method to get the date range for a specific quarter
+     */
+    private LocalDateTime[] getQuarterDateRange(int year, int quarter) {
+        Month startMonth;
+        Month endMonth;
+
+        switch (quarter) {
+            case 1:
+                startMonth = Month.JANUARY;
+                endMonth = Month.MARCH;
+                break;
+            case 2:
+                startMonth = Month.APRIL;
+                endMonth = Month.JUNE;
+                break;
+            case 3:
+                startMonth = Month.JULY;
+                endMonth = Month.SEPTEMBER;
+                break;
+            case 4:
+                startMonth = Month.OCTOBER;
+                endMonth = Month.DECEMBER;
+                break;
+            default:
+                throw new IllegalArgumentException("Quarter must be 1-4");
+        }
+
+        LocalDateTime start = LocalDateTime.of(year, startMonth, 1, 0, 0, 0);
+        LocalDateTime end = LocalDateTime.of(year, endMonth, endMonth.length(isLeapYear(year)), 23, 59, 59);
+
+        return new LocalDateTime[]{start, end};
+    }
+    
+    private boolean isLeapYear(int year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
 
     /**

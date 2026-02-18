@@ -1,11 +1,11 @@
 /**
  * Quarters Management Page
- * Includes full filter support: Year, Quarter (Q1–Q4), Area, Status (Active/Inactive)
+ * Includes full filter support: Year, Quarter (Q1â€“Q4), Area, Status (Active/Inactive)
  * WITH EDIT FUNCTIONALITY
  */
 
 $(document).ready(function () {
-    console.log('✓ Quarters.js loaded');
+    console.log('âœ“ Quarters.js loaded');
 
     createMapModal();
     createEditModal();
@@ -15,6 +15,15 @@ $(document).ready(function () {
     initializeClickableCards();
     initializeMapModal();
     initializeFilterPanel();
+
+    // Archive modal confirm button
+    $('#quartersConfirmArchiveBtn').on('click', function () {
+        const id     = $('#quartersArchiveModal').data('office-id');
+        const name   = $('#quartersArchiveOfficeName').text();
+        const reason = $('#quartersArchiveReasonInput').val().trim();
+        $('#quartersArchiveModal').modal('hide');
+        performArchive(id, name, reason);
+    });
 });
 
 
@@ -23,7 +32,7 @@ $(document).ready(function () {
 ===================================================== */
 function initializeFilterPanel() {
 
-    // –– Collapse / expand toggle ––
+    // â€“â€“ Collapse / expand toggle â€“â€“
     $('#toggleFiltersBtn').on('click', function () {
         const body    = $('#filterBody');
         const chevron = $('#filterChevron');
@@ -32,29 +41,29 @@ function initializeFilterPanel() {
         chevron.toggleClass('fa-chevron-up fa-chevron-down');
     });
 
-    // –– Highlight selects that already have a value (page load) ––
+    // â€“â€“ Highlight selects that already have a value (page load) â€“â€“
     highlightActiveSelects();
 
-    // –– Render any pre-selected tags from URL params ––
+    // â€“â€“ Render any pre-selected tags from URL params â€“â€“
     renderFilterTags();
 
-    // –– Apply button ––
+    // â€“â€“ Apply button â€“â€“
     $('#applyFiltersBtn').off('click').on('click', function () {
         applyFilters();
     });
 
-    // –– Clear button ––
+    // â€“â€“ Clear button â€“â€“
     $('#clearFiltersBtn').off('click').on('click', function () {
         clearFilters();
     });
 
-    // –– Live highlight on change ––
+    // â€“â€“ Live highlight on change â€“â€“
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('change', function () {
         highlightActiveSelects();
         renderFilterTags();
     });
 
-    // –– Allow pressing Enter in any select to apply ––
+    // â€“â€“ Allow pressing Enter in any select to apply â€“â€“
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('keypress', function (e) {
         if (e.key === 'Enter') applyFilters();
     });
@@ -136,20 +145,24 @@ function renderFilterTags() {
         container.append(buildTag('tag-area', 'fas fa-map-marker-alt', 'Area: ' + area, 'areaFilter'));
     }
     if (status) {
-        const isActive = status === 'active';
-        const cls      = isActive ? 'tag-status-active' : 'tag-status-inactive';
-        const icon     = isActive ? 'fas fa-check-circle' : 'fas fa-times-circle';
-        const label    = isActive ? 'Active' : 'Inactive';
-        container.append(buildTag(cls, icon, label, 'statusFilter'));
+        if (status === 'active') {
+            container.append(buildTag('tag-status-active', 'fas fa-check-circle', 'Active', 'statusFilter'));
+        } else if (status === 'inactive') {
+            container.append(buildTag('tag-status-inactive', 'fas fa-times-circle', 'Inactive', 'statusFilter'));
+        } else if (status === 'newly_connected') {
+            container.append(buildTag('tag-status-newly-connected', 'fas fa-plus-circle', 'Newly Connected', 'statusFilter'));
+        } else if (status === 'newly_disconnected') {
+            container.append(buildTag('tag-status-newly-disconnected', 'fas fa-minus-circle', 'Newly Disconnected', 'statusFilter'));
+        }
     }
 }
 
 function getQuarterLabel(q) {
     const map = {
-        Q1: 'Q1 (Jan–Mar)',
-        Q2: 'Q2 (Apr–Jun)',
-        Q3: 'Q3 (Jul–Sep)',
-        Q4: 'Q4 (Oct–Dec)'
+        Q1: 'Q1 (Janâ€“Mar)',
+        Q2: 'Q2 (Aprâ€“Jun)',
+        Q3: 'Q3 (Julâ€“Sep)',
+        Q4: 'Q4 (Octâ€“Dec)'
     };
     return map[q] || q;
 }
@@ -183,14 +196,39 @@ function initializeTable() {
     }
 
     // Read filter values set by the current URL / selects
-    const areaFilter   = $('#areaFilter').val()   || '';
-    const statusFilter = $('#statusFilter').val() || '';
+    const yearFilter    = $('#yearSelector').val()   || '';
+    const quarterFilter = $('#quarterFilter').val()  || '';
+    const areaFilter    = $('#areaFilter').val()     || '';
+    const statusFilter  = $('#statusFilter').val()   || '';
+
+    // Debug logging
+    console.log('Table filters:', {
+        year: yearFilter,
+        quarter: quarterFilter,
+        area: areaFilter,
+        status: statusFilter
+    });
+
+    // Build AJAX URL with filter parameters
+    let ajaxUrl = '/api/post-offices/all';
+    const params = [];
+    
+    if (yearFilter)    params.push('year=' + encodeURIComponent(yearFilter));
+    if (quarterFilter) params.push('quarter=' + encodeURIComponent(quarterFilter));
+    if (areaFilter)    params.push('area=' + encodeURIComponent(areaFilter));
+    if (statusFilter)  params.push('status=' + encodeURIComponent(statusFilter));
+    
+    if (params.length > 0) {
+        ajaxUrl += '?' + params.join('&');
+    }
+
+    console.log('AJAX URL:', ajaxUrl);
 
     const table = $('#postOfficeTable').DataTable({
         processing: true,
         serverSide: false,
         ajax: {
-            url: '/api/post-offices/all',
+            url: ajaxUrl,
             dataSrc: ''
         },
         columns: [
@@ -206,9 +244,18 @@ function initializeTable() {
             },
             {
                 data: 'status',
-                render: d => d
-                    ? '<span class="badge badge-success">Active</span>'
-                    : '<span class="badge badge-danger">Inactive</span>'
+                render: function(data, type, row) {
+                    let statusBadge = data
+                        ? '<span class="badge badge-success">Active</span>'
+                        : '<span class="badge badge-danger">Inactive</span>';
+                    
+                    // Add "New This Quarter" badge if applicable
+                    if (row.newThisQuarter) {
+                        statusBadge += ' <span class="badge badge-info ml-1">New This Quarter</span>';
+                    }
+                    
+                    return statusBadge;
+                }
             },
             { data: 'postmaster', defaultContent: 'N/A' },
             {
@@ -220,8 +267,9 @@ function initializeTable() {
                     <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}" data-name="${row.name || 'Office'}">
-                        <i class="fas fa-trash"></i>
+                    <button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;"
+                            data-id="${row.id}" data-name="${row.name || 'Office'}" title="Archive Office">
+                        <i class="fas fa-archive"></i>
                     </button>
                 `
             }
@@ -232,7 +280,7 @@ function initializeTable() {
 
         // Apply server-side resolved filters after data loads
         initComplete: function () {
-            applyTableFilters(this.api(), areaFilter, statusFilter);
+            // No client-side filtering needed - handled by server-side AJAX URL
             updateTableSummary(this.api());
         }
     });
@@ -249,8 +297,8 @@ function initializeTable() {
     $('#postOfficeTable').on('click', '.edit-btn',   function () { 
         editOffice($(this).data('id'));
     });
-    $('#postOfficeTable').on('click', '.delete-btn', function () { 
-        deleteOffice($(this).data('id'), $(this).data('name'));
+    $('#postOfficeTable').on('click', '.btn-archive-quarter', function () {
+        archiveOfficeFromQuarters($(this).data('id'), $(this).data('name'));
     });
 }
 
@@ -260,7 +308,7 @@ function initializeTable() {
 function applyTableFilters(api, areaFilter, statusFilter) {
     if (!api) return;
 
-    // Area column = index 1 – search 'Area X'
+    // Area column = index 1 â€“ search 'Area X'
     if (areaFilter) {
         api.column(1).search('Area ' + areaFilter);
     }
@@ -294,7 +342,7 @@ function initializeFilters() {
 
 
 /* =====================================================
-   YEAR SELECTOR  (standalone dropdown – navigate)
+   YEAR SELECTOR  (standalone dropdown â€“ navigate)
 ===================================================== */
 function initializeYearSelector() {
     // The year selector is now part of the filter panel.
@@ -353,7 +401,7 @@ function initializeMap() {
     const map = L.map('leafletMap').setView([12.8797, 121.7740], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: 'Â© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(map);
 
@@ -732,6 +780,55 @@ function saveOfficeChanges() {
                 text: xhr.responseJSON?.message || 'Failed to update post office',
                 confirmButtonText: 'OK'
             });
+        }
+    });
+}
+
+
+/**
+ * Archive office from Quarters page
+ */
+function archiveOfficeFromQuarters(id, officeName) {
+    // Populate and show the archive modal
+    $('#quartersArchiveOfficeName').text(officeName);
+    $('#quartersArchiveReasonInput').val('');
+    $('#quartersArchiveModal').data('office-id', id);
+    $('#quartersArchiveModal').modal('show');
+}
+
+/**
+ * Execute the archive operation
+ */
+function performArchive(id, officeName, reason) {
+    Swal.fire({
+        title: 'Archiving...',
+        html: `Archiving <strong>${officeName || 'post office'}</strong>`,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    $.ajax({
+        url: '/api/archive/' + id,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ reason: reason }),
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Archived!',
+                    text: response.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => { location.reload(); });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Archive Failed', text: response.message || 'Failed to archive post office' });
+            }
+        },
+        error: function (xhr) {
+            Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'An error occurred' });
         }
     });
 }

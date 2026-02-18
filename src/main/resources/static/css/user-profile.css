@@ -1,0 +1,153 @@
+/* ── User Profile Page Styles ────────────────────────────────── */
+
+/* ── Cover ───────────────────────────────────────────────── */
+.up-cover {
+    height: 220px;
+    background: linear-gradient(135deg, #002868 0%, #C1272D 60%, #FFD700 100%);
+    border-radius: 0 0 0 0;
+    position: relative;
+    overflow: hidden;
+}
+.up-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── Profile card wrapper ────────────────────────────────── */
+.up-wrapper {
+    max-width: 900px;
+    margin: -70px auto 40px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── Avatar card ─────────────────────────────────────────── */
+.up-avatar-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.up-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #002868, #C1272D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    border: 5px solid #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+.up-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a2035;
+    margin: 0 0 4px;
+}
+.up-email {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0 0 10px;
+}
+.up-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.up-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Info sections ───────────────────────────────────────── */
+.up-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .up-grid { grid-template-columns: 1fr; }
+    .up-avatar-card { flex-direction: column; text-align: center; }
+    .up-actions { margin-left: 0; }
+}
+
+.up-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    padding: 24px;
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.up-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.11);
+}
+.up-card-full {
+    grid-column: 1 / -1;
+}
+.up-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #002868;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f2f5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.up-card-title i {
+    color: #C1272D;
+    width: 20px;
+}
+
+.up-field {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+.up-field:last-child { border-bottom: none; }
+.up-field-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff, #e8f4fd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+.up-field-icon i { color: #002868; font-size: 14px; }
+.up-field-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #9aa0ac;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.up-field-value {
+    font-size: 0.95rem;
+    color: #1a2035;
+    font-weight: 500;
+}

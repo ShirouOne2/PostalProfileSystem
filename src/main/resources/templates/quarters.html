@@ -57,7 +57,8 @@
                     </div>
 
                     <div id="filterBody">
-                        <div class="row align-items-end">
+                        <!-- First Row: Basic Filters -->
+                        <div class="row align-items-end mb-3">
 
                             <!-- Year Filter -->
                             <div class="col-md-3 col-sm-6 mb-2">
@@ -122,6 +123,14 @@
                                     <option value="inactive"
                                             th:selected="${selectedStatusFilter == 'inactive'}">
                                         <i class="fas fa-times-circle"></i> Inactive
+                                    </option>
+                                    <option value="newly_connected"
+                                            th:selected="${selectedStatusFilter == 'newly_connected'}">
+                                        <i class="fas fa-plus-circle text-success"></i> Newly Connected
+                                    </option>
+                                    <option value="newly_disconnected"
+                                            th:selected="${selectedStatusFilter == 'newly_disconnected'}">
+                                        <i class="fas fa-minus-circle text-danger"></i> Newly Disconnected
                                     </option>
                                 </select>
                             </div>

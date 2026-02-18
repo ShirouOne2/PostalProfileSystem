@@ -1,12 +1,21 @@
 package com.pps.profilesystem.Controller;
 
+import com.pps.profilesystem.Service.PostalOfficeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/quarters")  // Changed from "/quarters" to "/api/quarters"
+@RequestMapping("/api/quarters")
 public class QuartersApiController {
+
+    @Autowired
+    private PostalOfficeService postalOfficeService;
 
     @GetMapping("/export")
     public void exportReport(
@@ -20,5 +29,24 @@ public class QuartersApiController {
         // Placeholder for export functionality
         response.setContentType("text/plain");
         response.getWriter().write("Export feature coming soon for type: " + type);
+    }
+
+    /**
+     * Get post offices filtered by date range and status
+     * Supports filtering by connection/disconnection dates
+     */
+    @GetMapping("/post-offices/filtered")
+    public List<Map<String, Object>> getFilteredPostOffices(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @RequestParam(required = false) String dateType,
+            @RequestParam(required = false) String statusFilter) {
+        
+        if (startDate == null && endDate == null) {
+            // If no date filters provided, return all offices
+            return postalOfficeService.getAllPostalOfficesForTable();
+        }
+        
+        return postalOfficeService.getPostOfficesByDateRange(startDate, endDate, dateType, statusFilter);
     }
 }

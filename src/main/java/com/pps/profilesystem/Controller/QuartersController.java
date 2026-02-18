@@ -42,7 +42,7 @@ public class QuartersController {
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
         model.addAttribute("connectivityStats", getConnectivityStats());
         model.addAttribute("areas", getAreas());
-        model.addAttribute("quartersData", getQuartersData(currentYear));
+        model.addAttribute("quartersData", getQuartersData(currentYear, statusFilter, quarterFilter, areaFilter));
         model.addAttribute("selectedAreaFilter", areaFilter);
         model.addAttribute("selectedQuarterFilter", quarterFilter);
         model.addAttribute("selectedStatusFilter", statusFilter);
@@ -126,10 +126,10 @@ public class QuartersController {
     }
 
     /**
-     * Get quarters data for a specific year
+     * Get quarters data for a specific year with optional filters
      * Now uses historical connectivity data to show actual counts per quarter
      */
-    private List<Map<String, Object>> getQuartersData(int year) {
+    private List<Map<String, Object>> getQuartersData(int year, String statusFilter, String quarterFilter, String areaFilter) {
         List<Map<String, Object>> quartersData = new ArrayList<>();
         
         try {
@@ -146,6 +146,11 @@ public class QuartersController {
             };
             
             for (int i = 0; i < quarters.length; i++) {
+                // Skip if quarter filter is set and doesn't match current quarter
+                if (quarterFilter != null && !quarterFilter.isEmpty() && !quarters[i].equals(quarterFilter)) {
+                    continue;
+                }
+                
                 Map<String, Object> quarterData = new HashMap<>();
                 
                 quarterData.put("quarter", quarters[i]);
@@ -166,10 +171,26 @@ public class QuartersController {
                 long totalConnected = postalOfficeRepository.countActiveAtQuarterEnd(quarterEnd);
                 long totalDisconnected = postalOfficeRepository.count() - totalConnected;
                 
-                quarterData.put("connected", totalConnected);
-                quarterData.put("disconnected", totalDisconnected);
-                quarterData.put("newlyConnected", newlyConnected);
-                quarterData.put("newlyDisconnected", newlyDisconnected);
+                // Apply status filter logic
+                if ("newly_connected".equals(statusFilter)) {
+                    // For newly connected filter, only show the newly connected count
+                    quarterData.put("connected", newlyConnected);
+                    quarterData.put("disconnected", 0L);
+                    quarterData.put("newlyConnected", newlyConnected);
+                    quarterData.put("newlyDisconnected", 0L);
+                } else if ("newly_disconnected".equals(statusFilter)) {
+                    // For newly disconnected filter, only show the newly disconnected count
+                    quarterData.put("connected", 0L);
+                    quarterData.put("disconnected", newlyDisconnected);
+                    quarterData.put("newlyConnected", 0L);
+                    quarterData.put("newlyDisconnected", newlyDisconnected);
+                } else {
+                    // Normal display (active, inactive, or no filter)
+                    quarterData.put("connected", totalConnected);
+                    quarterData.put("disconnected", totalDisconnected);
+                    quarterData.put("newlyConnected", newlyConnected);
+                    quarterData.put("newlyDisconnected", newlyDisconnected);
+                }
                 
                 // Mark current quarter
                 quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
@@ -183,6 +204,11 @@ public class QuartersController {
             int currentQuarter = (now.getMonthValue() - 1) / 3;
             
             for (int i = 0; i < quarters.length; i++) {
+                // Skip if quarter filter is set and doesn't match current quarter
+                if (quarterFilter != null && !quarterFilter.isEmpty() && !quarters[i].equals(quarterFilter)) {
+                    continue;
+                }
+                
                 Map<String, Object> quarterData = new HashMap<>();
                 quarterData.put("quarter", quarters[i]);
                 quarterData.put("year", year);
