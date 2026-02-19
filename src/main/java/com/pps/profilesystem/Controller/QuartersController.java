@@ -1,8 +1,10 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * Controller for Quarters Management Page
  * Displays connectivity status across quarters using historical connectivity data
@@ -27,6 +31,9 @@ public class QuartersController {
 
     @Autowired
     private AreaRepository areaRepository;
+
+    @Autowired
+    private PostalOfficeService postalOfficeService;
 
     @GetMapping
     public String showQuartersPage(
@@ -49,9 +56,16 @@ public class QuartersController {
 
         model.addAttribute("activePage", "quarters");
 
-        Map<String, Boolean> userAccess = new HashMap<>();
-        userAccess.put("can_access_all_areas", true);
-        model.addAttribute("userAccess", userAccess);
+        // Add user access information
+        model.addAttribute("userAccess", postalOfficeService.getCurrentUserInfo());
+        
+        // Add current user information for header
+        User currentUser = postalOfficeService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            model.addAttribute("roleName", getRoleName(currentUser.getRole()));
+            model.addAttribute("roleColor", getRoleColor(currentUser.getRole()));
+        }
 
         return "quarters";
     }
@@ -90,19 +104,42 @@ public class QuartersController {
     }
 
     /**
-     * Get connectivity statistics
+     * Get connectivity statistics (non-archived only)
+     * Filtered by user's area if not admin
      */
     private Map<String, Long> getConnectivityStats() {
         Map<String, Long> stats = new HashMap<>();
         
         try {
-            long totalConnected = postalOfficeRepository.countByConnectionStatus(true);
-            long totalDisconnected = postalOfficeRepository.countByConnectionStatus(false);
-            long totalOffices = postalOfficeRepository.count();
+            Integer userAreaId = getCurrentUserAreaId();
             
-            stats.put("totalConnected", totalConnected);
-            stats.put("totalDisconnected", totalDisconnected);
-            stats.put("totalOffices", totalOffices);
+            if (userAreaId == null) {
+                // Admin - get all statistics
+                long totalConnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(true);
+                long totalDisconnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(false);
+                long totalOffices = postalOfficeRepository.count() - postalOfficeRepository.countByIsArchivedTrue();
+                
+                stats.put("totalConnected", totalConnected);
+                stats.put("totalDisconnected", totalDisconnected);
+                stats.put("totalOffices", totalOffices);
+            } else {
+                // Non-admin user - filter by their area
+                long totalConnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                    .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                    .filter(office -> Boolean.TRUE.equals(office.getConnectionStatus()))
+                    .count();
+                    
+                long totalDisconnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                    .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                    .filter(office -> !Boolean.TRUE.equals(office.getConnectionStatus()))
+                    .count();
+                    
+                long totalOffices = totalConnected + totalDisconnected;
+                
+                stats.put("totalConnected", totalConnected);
+                stats.put("totalDisconnected", totalDisconnected);
+                stats.put("totalOffices", totalOffices);
+            }
         } catch (Exception e) {
             // Handle database connection issues gracefully
             stats.put("totalConnected", 0L);
@@ -114,11 +151,20 @@ public class QuartersController {
     }
 
     /**
-     * Get list of Area objects
+     * Get list of Area objects (filtered by user's area if not admin)
      */
     private List<Area> getAreas() {
         try {
-            return areaRepository.findAll();
+            Integer userAreaId = getCurrentUserAreaId();
+            if (userAreaId == null) {
+                // Admin - show all areas
+                return areaRepository.findAll();
+            } else {
+                // Non-admin user - show only their assigned area
+                return areaRepository.findAll().stream()
+                    .filter(area -> area.getId().equals(userAreaId))
+                    .collect(Collectors.toList());
+            }
         } catch (Exception e) {
             // Handle database connection issues gracefully
             return new ArrayList<>();
@@ -128,11 +174,13 @@ public class QuartersController {
     /**
      * Get quarters data for a specific year with optional filters
      * Now uses historical connectivity data to show actual counts per quarter
+     * Filtered by user's area if not admin
      */
     private List<Map<String, Object>> getQuartersData(int year, String statusFilter, String quarterFilter, String areaFilter) {
         List<Map<String, Object>> quartersData = new ArrayList<>();
         
         try {
+            Integer userAreaId = getCurrentUserAreaId();
             String[] quarters = {"Q1", "Q2", "Q3", "Q4"};
             LocalDate now = LocalDate.now();
             int currentQuarter = (now.getMonthValue() - 1) / 3;
@@ -160,16 +208,53 @@ public class QuartersController {
                 int startMonth = quarterMonths[i][0];
                 int endMonth = quarterMonths[i][1];
                 
-                // Count new connections in this quarter
-                long newlyConnected = postalOfficeRepository.countConnectedInQuarter(year, startMonth, endMonth);
+                long newlyConnected, newlyDisconnected, totalConnected, totalDisconnected;
                 
-                // Count new disconnections in this quarter
-                long newlyDisconnected = postalOfficeRepository.countDisconnectedInQuarter(year, startMonth, endMonth);
-                
-                // Calculate totals as of the end of this quarter
-                LocalDateTime quarterEnd = LocalDateTime.of(year, endMonth, getLastDayOfMonth(year, endMonth), 23, 59, 59);
-                long totalConnected = postalOfficeRepository.countActiveAtQuarterEnd(quarterEnd);
-                long totalDisconnected = postalOfficeRepository.count() - totalConnected;
+                if (userAreaId == null) {
+                    // Admin - get all data
+                    newlyConnected = postalOfficeRepository.countConnectedInQuarter(year, startMonth, endMonth);
+                    newlyDisconnected = postalOfficeRepository.countDisconnectedInQuarter(year, startMonth, endMonth);
+                    
+                    LocalDateTime quarterEnd = LocalDateTime.of(year, endMonth, getLastDayOfMonth(year, endMonth), 23, 59, 59);
+                    totalConnected = postalOfficeRepository.countActiveAtQuarterEndNonArchived(quarterEnd);
+                    totalDisconnected = (postalOfficeRepository.count() - postalOfficeRepository.countByIsArchivedTrue()) - totalConnected;
+                } else {
+                    // Non-admin user - filter by their area
+                    // For area-filtered quarterly data, we need to manually filter since repository methods don't support area filtering
+                    newlyConnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                        .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                        .filter(office -> office.getActiveConnectivity() != null && 
+                                       office.getActiveConnectivity().getDateConnected() != null)
+                        .filter(office -> {
+                            LocalDateTime dateConnected = office.getActiveConnectivity().getDateConnected();
+                            return dateConnected.getYear() == year && 
+                                   dateConnected.getMonthValue() >= startMonth && 
+                                   dateConnected.getMonthValue() <= endMonth;
+                        })
+                        .count();
+                    
+                    newlyDisconnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                        .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                        .filter(office -> office.getActiveConnectivity() != null && 
+                                       office.getActiveConnectivity().getDateDisconnected() != null)
+                        .filter(office -> {
+                            LocalDateTime dateDisconnected = office.getActiveConnectivity().getDateDisconnected();
+                            return dateDisconnected.getYear() == year && 
+                                   dateDisconnected.getMonthValue() >= startMonth && 
+                                   dateDisconnected.getMonthValue() <= endMonth;
+                        })
+                        .count();
+                    
+                    totalConnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                        .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                        .filter(office -> Boolean.TRUE.equals(office.getConnectionStatus()))
+                        .count();
+                    
+                    totalDisconnected = postalOfficeRepository.findByIsArchivedFalse().stream()
+                        .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                        .filter(office -> !Boolean.TRUE.equals(office.getConnectionStatus()))
+                        .count();
+                }
                 
                 // Apply status filter logic
                 if ("newly_connected".equals(statusFilter)) {
@@ -225,9 +310,53 @@ public class QuartersController {
     }
     
     /**
+     * Get current user's area ID (same as in PostalOfficeService)
+     * Returns null for admin users (no area restriction)
+     */
+    private Integer getCurrentUserAreaId() {
+        try {
+            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return null;
+            }
+            
+            // Use the service to get user area
+            Map<String, Object> userInfo = postalOfficeService.getCurrentUserInfo();
+            if (userInfo != null && Boolean.TRUE.equals(userInfo.get("canAccessAllAreas"))) {
+                return null; // Admin user
+            }
+            return userInfo != null ? (Integer) userInfo.get("areaId") : null;
+        } catch (Exception e) {
+            // Log error but don't break the application
+            System.err.println("Error getting current user area: " + e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
      * Helper method to get the last day of a month
      */
     private int getLastDayOfMonth(int year, int month) {
         return java.time.YearMonth.of(year, month).lengthOfMonth();
     }
-}  
+    
+    private String getRoleName(Integer roleId) {
+        if (roleId == null) return "Unknown";
+        switch (roleId) {
+            case 1: return "Administrator";
+            case 2: return "User";
+            case 3: return "Area Admin";
+            default: return "Unknown";
+        }
+    }
+    
+    private String getRoleColor(Integer roleId) {
+        if (roleId == null) return "secondary";
+        switch (roleId) {
+            case 1: return "danger";
+            case 2: return "primary";
+            case 3: return "warning";
+            default: return "secondary";
+        }
+    }
+}

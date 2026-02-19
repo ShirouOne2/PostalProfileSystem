@@ -1,14 +1,15 @@
 /**
  * Quarters Management Page
- * Includes full filter support: Year, Quarter (Q1â€“Q4), Area, Status (Active/Inactive)
+ * Includes full filter support: Year, Quarter (Q1Ã¢â‚¬â€œQ4), Area, Status (Active/Inactive)
  * WITH EDIT FUNCTIONALITY
  */
 
 $(document).ready(function () {
-    console.log('âœ“ Quarters.js loaded');
+    console.log('Ã¢Å“â€œ Quarters.js loaded');
 
     createMapModal();
     createEditModal();
+    createArchiveModal();
     initializeTable();
     initializeFilters();
     initializeYearSelector();
@@ -16,23 +17,99 @@ $(document).ready(function () {
     initializeMapModal();
     initializeFilterPanel();
 
+    // Print button
+    $('#printReportBtn').on('click', function () {
+        const year    = $('#yearSelector option:selected').text().trim()  || 'All Years';
+        const quarter = $('#quarterFilter option:selected').text().trim() || 'All Quarters';
+        const area    = $('#areaFilter option:selected').text().trim()    || 'All Areas';
+        const status  = $('#statusFilter option:selected').text().trim()  || 'All Status';
+
+        const rows = [];
+        $('#postOfficeTable tbody tr').each(function () {
+            const cols = $(this).find('td');
+            if (cols.length >= 8) {
+                rows.push(
+                    '<tr>' +
+                    '<td>' + $(cols[0]).text() + '</td>' +
+                    '<td>' + $(cols[1]).text() + '</td>' +
+                    '<td>' + $(cols[2]).text() + '</td>' +
+                    '<td>' + $(cols[3]).text() + '</td>' +
+                    '<td>' + $(cols[4]).text() + '</td>' +
+                    '<td>' + $(cols[5]).text() + '</td>' +
+                    '<td>' + $(cols[6]).text() + '</td>' +
+                    '<td>' + $(cols[7]).text() + '</td>' +
+                    '</tr>'
+                );
+            }
+        });
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html><html><head>
+            <title>PHLPost Quarters Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12px; margin: 24px; color: #333; }
+                h2 { text-align: center; margin-bottom: 4px; color: #2c3e50; }
+                .subtitle { text-align: center; color: #777; margin-bottom: 10px; font-size: 11px; }
+                .filters { text-align: center; margin-bottom: 16px; }
+                .filters span { display: inline-block; margin: 2px 4px; background: #f0f0f0; padding: 2px 10px; border-radius: 10px; font-size: 11px; }
+                table { width: 100%; border-collapse: collapse; }
+                th { background: #2c3e50; color: white; padding: 7px 8px; text-align: left; font-size: 11px; }
+                td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }
+                tr:nth-child(even) td { background: #f9f9f9; }
+                @media print { body { margin: 10px; } }
+            </style>
+            </head><body>
+            <h2>PHLPost Quarters Report</h2>
+            <div class="subtitle">Printed: ${new Date().toLocaleString()}</div>
+            <div class="filters">
+                <span>Year: ${year}</span>
+                <span>Quarter: ${quarter}</span>
+                <span>Area: ${area}</span>
+                <span>Status: ${status}</span>
+            </div>
+            <table>
+                <thead><tr>
+                    <th>#</th><th>AREA</th><th>POSTAL OFFICE</th><th>ADDRESS</th>
+                    <th>ZIP CODE</th><th>SPEED</th><th>STATUS</th><th>POSTMASTER</th>
+                </tr></thead>
+                <tbody>${rows.join('')}</tbody>
+            </table>
+            </body></html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function() { printWindow.print(); }, 400);
+    });
+
     // Archive modal confirm button
     $('#quartersConfirmArchiveBtn').on('click', function () {
         const id     = $('#quartersArchiveModal').data('office-id');
         const name   = $('#quartersArchiveOfficeName').text();
         const reason = $('#quartersArchiveReasonInput').val().trim();
+        
+        // Validate reason field
+        if (!reason) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validation Error',
+                text: 'Please provide a reason for archiving this post office.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
         $('#quartersArchiveModal').modal('hide');
         performArchive(id, name, reason);
     });
 });
-
 
 /* =====================================================
    FILTER PANEL
 ===================================================== */
 function initializeFilterPanel() {
 
-    // â€“â€“ Collapse / expand toggle â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Collapse / expand toggle Ã¢â‚¬â€œÃ¢â‚¬â€œ
     $('#toggleFiltersBtn').on('click', function () {
         const body    = $('#filterBody');
         const chevron = $('#filterChevron');
@@ -41,29 +118,29 @@ function initializeFilterPanel() {
         chevron.toggleClass('fa-chevron-up fa-chevron-down');
     });
 
-    // â€“â€“ Highlight selects that already have a value (page load) â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Highlight selects that already have a value (page load) Ã¢â‚¬â€œÃ¢â‚¬â€œ
     highlightActiveSelects();
 
-    // â€“â€“ Render any pre-selected tags from URL params â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Render any pre-selected tags from URL params Ã¢â‚¬â€œÃ¢â‚¬â€œ
     renderFilterTags();
 
-    // â€“â€“ Apply button â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Apply button Ã¢â‚¬â€œÃ¢â‚¬â€œ
     $('#applyFiltersBtn').off('click').on('click', function () {
         applyFilters();
     });
 
-    // â€“â€“ Clear button â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Clear button Ã¢â‚¬â€œÃ¢â‚¬â€œ
     $('#clearFiltersBtn').off('click').on('click', function () {
         clearFilters();
     });
 
-    // â€“â€“ Live highlight on change â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Live highlight on change Ã¢â‚¬â€œÃ¢â‚¬â€œ
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('change', function () {
         highlightActiveSelects();
         renderFilterTags();
     });
 
-    // â€“â€“ Allow pressing Enter in any select to apply â€“â€“
+    // Ã¢â‚¬â€œÃ¢â‚¬â€œ Allow pressing Enter in any select to apply Ã¢â‚¬â€œÃ¢â‚¬â€œ
     $('#yearSelector, #quarterFilter, #areaFilter, #statusFilter').on('keypress', function (e) {
         if (e.key === 'Enter') applyFilters();
     });
@@ -159,10 +236,10 @@ function renderFilterTags() {
 
 function getQuarterLabel(q) {
     const map = {
-        Q1: 'Q1 (Janâ€“Mar)',
-        Q2: 'Q2 (Aprâ€“Jun)',
-        Q3: 'Q3 (Julâ€“Sep)',
-        Q4: 'Q4 (Octâ€“Dec)'
+        Q1: 'Q1 (JanÃ¢â‚¬â€œMar)',
+        Q2: 'Q2 (AprÃ¢â‚¬â€œJun)',
+        Q3: 'Q3 (JulÃ¢â‚¬â€œSep)',
+        Q4: 'Q4 (OctÃ¢â‚¬â€œDec)'
     };
     return map[q] || q;
 }
@@ -308,7 +385,7 @@ function initializeTable() {
 function applyTableFilters(api, areaFilter, statusFilter) {
     if (!api) return;
 
-    // Area column = index 1 â€“ search 'Area X'
+    // Area column = index 1 Ã¢â‚¬â€œ search 'Area X'
     if (areaFilter) {
         api.column(1).search('Area ' + areaFilter);
     }
@@ -342,7 +419,7 @@ function initializeFilters() {
 
 
 /* =====================================================
-   YEAR SELECTOR  (standalone dropdown â€“ navigate)
+   YEAR SELECTOR  (standalone dropdown Ã¢â‚¬â€œ navigate)
 ===================================================== */
 function initializeYearSelector() {
     // The year selector is now part of the filter panel.
@@ -377,12 +454,38 @@ function createMapModal() {
         <div class="modal fade" id="mapmodal" tabindex="-1">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title font-weight-bold">Map View</h5>
-                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <h5 class="modal-title font-weight-bold text-white">
+                            <i class="fas fa-map mr-2"></i>Map View
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
                     </div>
                     <div class="modal-body p-0">
-                        <div id="leafletMap" style="height: 500px;"></div>
+                        <!-- Filter Bar -->
+                        <div class="d-flex align-items-center px-3 py-2 bg-light border-bottom" style="gap:10px; flex-wrap:wrap;">
+                            <span class="font-weight-bold text-muted small"><i class="fas fa-filter mr-1"></i>Filter:</span>
+                            <select id="mapStatusFilter" class="form-control form-control-sm" style="width:140px;">
+                                <option value="">All Status</option>
+                                <option value="active">● Active</option>
+                                <option value="inactive">● Inactive</option>
+                            </select>
+                            <select id="mapAreaFilter" class="form-control form-control-sm" style="width:160px;">
+                                <option value="">All Areas</option>
+                            </select>
+                            <button id="applyMapFilter" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search mr-1"></i>Apply
+                            </button>
+                            <button id="clearMapFilter" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times mr-1"></i>Clear
+                            </button>
+                            <span id="mapFilterSummary" class="ml-auto small text-muted"></span>
+                        </div>
+                        <!-- Legend -->
+                        <div class="d-flex align-items-center px-3 py-1 bg-white border-bottom" style="gap:16px;">
+                            <span class="small"><span style="color:#1cc88a; font-size:16px;">●</span> Active</span>
+                            <span class="small"><span style="color:#e74a3b; font-size:16px;">●</span> Inactive</span>
+                        </div>
+                        <div id="quartersLeafletMap" style="height: 480px;"></div>
                     </div>
                 </div>
             </div>
@@ -391,43 +494,102 @@ function createMapModal() {
     $('body').append(modalHTML);
 }
 
+window._quartersMap     = null;
+window._quartersMarkers = [];
+
 function initializeMapModal() {
+    // Copy area options from page filter on open
+    $('#mapmodal').on('show.bs.modal', function () {
+        const $mapArea = $('#mapAreaFilter');
+        if ($mapArea.find('option').length <= 1) {
+            $('#areaFilter option').each(function () {
+                if ($(this).val()) {
+                    $mapArea.append($('<option>', { value: $(this).val(), text: $(this).text() }));
+                }
+            });
+        }
+    });
+
+    // Initialize or resize map after modal animation finishes
     $('#mapmodal').on('shown.bs.modal', function () {
-        if (!window.leafletMap) initializeMap();
+        if (!window._quartersMap) {
+            initializeMap();
+        } else {
+            window._quartersMap.invalidateSize();
+        }
+    });
+
+    $('#applyMapFilter').on('click', function () { applyMapFilters(); });
+    $('#clearMapFilter').on('click', function () {
+        $('#mapStatusFilter').val('');
+        $('#mapAreaFilter').val('');
+        applyMapFilters();
     });
 }
 
+function applyMapFilters() {
+    const status = $('#mapStatusFilter').val();
+    const area   = $('#mapAreaFilter').val();
+    let visible  = 0;
+
+    window._quartersMarkers.forEach(function (item) {
+        const statusMatch = !status ||
+            (status === 'active'   &&  item.office.status) ||
+            (status === 'inactive' && !item.office.status);
+        const areaMatch = !area || String(item.office.areaId) === String(area);
+
+        if (statusMatch && areaMatch) {
+            item.marker.addTo(window._quartersMap);
+            visible++;
+        } else {
+            item.marker.remove();
+        }
+    });
+
+    const total   = window._quartersMarkers.length;
+    const summary = (status || area)
+        ? 'Showing <strong>' + visible + '</strong> of <strong>' + total + '</strong> offices'
+        : 'Showing all <strong>' + total + '</strong> offices';
+    $('#mapFilterSummary').html(summary);
+}
+
 function initializeMap() {
-    const map = L.map('leafletMap').setView([12.8797, 121.7740], 6);
+    const map = L.map('quartersLeafletMap').setView([12.8797, 121.7740], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Â© OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(map);
 
+    // shown.bs.modal fires after animation — safe to invalidate immediately
+    map.invalidateSize();
+    window._quartersMap     = map;
+    window._quartersMarkers = [];
+
     $.get('/api/post-offices', function (offices) {
-        offices.forEach(office => {
+        offices.forEach(function (office) {
             if (office.lat && office.lng) {
                 const marker = L.circleMarker([office.lat, office.lng], {
                     radius: 8,
-                    fillColor: office.status ? 'green' : 'red',
+                    fillColor: office.status ? '#1cc88a' : '#e74a3b',
                     color: '#fff',
                     weight: 2,
-                    fillOpacity: 0.8
+                    fillOpacity: 0.85
                 }).addTo(map);
 
-                marker.bindPopup(`
-                    <strong>${office.name}</strong><br>
-                    <span class="badge badge-${office.status ? 'success' : 'danger'}">
-                        ${office.status ? 'Active' : 'Inactive'}
-                    </span><br>
-                    ${office.address || 'No address'}
-                `);
+                marker.bindPopup(
+                    '<strong>' + office.name + '</strong><br>' +
+                    '<span style="color:' + (office.status ? '#1cc88a' : '#e74a3b') + ';font-weight:bold;">' +
+                        (office.status ? '● Active' : '● Inactive') +
+                    '</span><br>' +
+                    (office.address || 'No address')
+                );
+
+                window._quartersMarkers.push({ marker: marker, office: office });
             }
         });
+        $('#mapFilterSummary').html('Showing all <strong>' + window._quartersMarkers.length + '</strong> offices');
     });
-
-    window.leafletMap = map;
 }
 
 
@@ -610,6 +772,48 @@ function createEditModal() {
                         </button>
                         <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
                             <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    $('body').append(modalHTML);
+}
+
+function createArchiveModal() {
+    const modalHTML = `
+        <div class="modal fade" id="quartersArchiveModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-archive"></i> Archive Post Office
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Warning:</strong> Archiving this post office will remove it from the active list.
+                        </div>
+                        
+                        <p>Are you sure you want to archive <strong id="quartersArchiveOfficeName"></strong>?</p>
+                        
+                        <div class="form-group">
+                            <label for="quartersArchiveReasonInput">Reason for archiving <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="quartersArchiveReasonInput" rows="3" 
+                                      placeholder="Please provide a reason for archiving this post office..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger" id="quartersConfirmArchiveBtn">
+                            <i class="fas fa-archive"></i> Archive Office
                         </button>
                     </div>
                 </div>

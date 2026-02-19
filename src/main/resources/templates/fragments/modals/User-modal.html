@@ -93,15 +93,17 @@
                                    placeholder="Enter area ID">
                         </div>
 
-                        <!-- Active Status -->
+                        <!-- Status -->
                         <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" 
-                                       id="enabled" checked>
-                                <label class="form-check-label" for="enabled">
-                                    Account is active
-                                </label>
-                            </div>
+                            <label for="status" class="form-label">
+                                Status <span class="required">*</span>
+                            </label>
+                            <select class="form-select" id="status" required>
+                                <option value="">Select status...</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a status</div>
                         </div>
                     </form>
                 </div>

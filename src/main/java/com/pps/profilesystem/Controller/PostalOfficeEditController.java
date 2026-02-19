@@ -87,14 +87,23 @@ public class PostalOfficeEditController {
             // Source of truth: connectionStatus boolean sa postal_offices table
             // ============================================================
             if (requestData.containsKey("connectionStatus")) {
-                Boolean newStatus = (Boolean) requestData.get("connectionStatus");
+                Object statusVal = requestData.get("connectionStatus");
+                Boolean newStatus;
+                if (statusVal instanceof Boolean) {
+                    newStatus = (Boolean) statusVal;
+                } else if (statusVal instanceof String) {
+                    String s = (String) statusVal;
+                    newStatus = s.equalsIgnoreCase("true") || s.equalsIgnoreCase("Active");
+                } else {
+                    newStatus = false;
+                }
                 Boolean oldStatus = office.getConnectionStatus(); // boolean sa postal_offices table
 
                 office.setConnectionStatus(newStatus);
 
                 if (!Boolean.TRUE.equals(oldStatus) && Boolean.TRUE.equals(newStatus)) {
                     // -------------------------
-                    // INACTIVE → ACTIVE
+                    // INACTIVE â†’ ACTIVE
                     // Reuse existing connectivity record instead of creating new one
                     // Find the most recent connectivity record and reactivate it
                     // -------------------------
@@ -134,7 +143,7 @@ public class PostalOfficeEditController {
                     }
                 } else if (Boolean.TRUE.equals(oldStatus) && !Boolean.TRUE.equals(newStatus)) {
                     // -------------------------
-                    // ACTIVE → INACTIVE
+                    // ACTIVE â†’ INACTIVE
                     // dateConnected = null, dateDisconnected = now
                     // connectivity_id = NULL
                     // -------------------------
@@ -155,9 +164,21 @@ public class PostalOfficeEditController {
             if (requestData.containsKey("staticIpAddress")) office.setStaticIpAddress((String) requestData.get("staticIpAddress"));
 
             // Update staff information
-            if (requestData.containsKey("noOfEmployees")) office.setNoOfEmployees((Integer) requestData.get("noOfEmployees"));
-            if (requestData.containsKey("noOfPostalTellers")) office.setNoOfPostalTellers((Integer) requestData.get("noOfPostalTellers"));
-            if (requestData.containsKey("noOfLetterCarriers")) office.setNoOfLetterCarriers((Integer) requestData.get("noOfLetterCarriers"));
+            if (requestData.containsKey("noOfEmployees")) {
+                Object val = requestData.get("noOfEmployees");
+                if (val instanceof Number) office.setNoOfEmployees(((Number) val).intValue());
+                else if (val instanceof String && !((String) val).isBlank()) office.setNoOfEmployees(Integer.parseInt((String) val));
+            }
+            if (requestData.containsKey("noOfPostalTellers")) {
+                Object val = requestData.get("noOfPostalTellers");
+                if (val instanceof Number) office.setNoOfPostalTellers(((Number) val).intValue());
+                else if (val instanceof String && !((String) val).isBlank()) office.setNoOfPostalTellers(Integer.parseInt((String) val));
+            }
+            if (requestData.containsKey("noOfLetterCarriers")) {
+                Object val = requestData.get("noOfLetterCarriers");
+                if (val instanceof Number) office.setNoOfLetterCarriers(((Number) val).intValue());
+                else if (val instanceof String && !((String) val).isBlank()) office.setNoOfLetterCarriers(Integer.parseInt((String) val));
+            }
 
             // Update contact information
             if (requestData.containsKey("postalOfficeContactPerson")) office.setPostalOfficeContactPerson((String) requestData.get("postalOfficeContactPerson"));
@@ -169,10 +190,12 @@ public class PostalOfficeEditController {
             if (requestData.containsKey("latitude")) {
                 Object latObj = requestData.get("latitude");
                 if (latObj instanceof Number) office.setLatitude(((Number) latObj).doubleValue());
+                else if (latObj instanceof String && !((String) latObj).isBlank()) office.setLatitude(Double.parseDouble((String) latObj));
             }
             if (requestData.containsKey("longitude")) {
                 Object lngObj = requestData.get("longitude");
                 if (lngObj instanceof Number) office.setLongitude(((Number) lngObj).doubleValue());
+                else if (lngObj instanceof String && !((String) lngObj).isBlank()) office.setLongitude(Double.parseDouble((String) lngObj));
             }
 
             // Update classification and services

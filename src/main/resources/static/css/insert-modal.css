@@ -1,0 +1,26 @@
+.form-section h6 {
+    font-weight: 600;
+}
+
+.custom-control-label {
+    cursor: pointer;
+}
+
+#insertPostalOfficeModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#insertPostalOfficeModal label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+#insertPostalOfficeModal .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#insertPostalOfficeModal .text-danger {
+    font-weight: bold;
+}

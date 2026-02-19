@@ -3,61 +3,46 @@
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
 <head>
-  <style>
-    .custom-popup .leaflet-popup-content-wrapper {
-        padding: 0;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .custom-popup .leaflet-popup-content {
-        margin: 0;
-    }
-    .custom-popup .leaflet-popup-tip {
-        display: none;
-    }
-  </style>
+  <title>Dashboard</title>
 </head>
 
 <body>
 
 <div th:fragment="content">
-
-
-    <title>Dashboard</title>
-
     <!-- Boxicons for icons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
     <div class="bg-white rounded shadow-sm p-4">
 
         <!-- QUICK STATS -->
         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-buildings' style="font-size: 2rem; color: #6c757d;"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class='bx bxs-buildings' style="color: #6c757d;"></i>
                     <h5 class="mb-0 mt-2" id="totalOffices">0</h5>
                     <small class="text-muted">Total Post Offices</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-check-circle' style="font-size: 2rem; color: #28a745;"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class='bx bxs-check-circle' style="color: #28a745;"></i>
                     <h5 class="mb-0 mt-2" id="activeOffices">0</h5>
                     <small class="text-muted">Active Locations</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-x-circle' style="font-size: 2rem; color: #dc3545;"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class='bx bxs-x-circle' style="color: #dc3545;"></i>
                     <h5 class="mb-0 mt-2" id="inactiveOffices">0</h5>
                     <small class="text-muted">Inactive Locations</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-map' style="font-size: 2rem; color: #6c757d;"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class='bx bxs-map' style="color: #6c757d;"></i>
                     <h5 class="mb-0 mt-2" id="coverageAreas">0</h5>
                     <small class="text-muted">Coverage Areas</small>
                 </div>
@@ -69,25 +54,25 @@
 
             <!-- MAP -->
             <div class="col-md-8 mb-4">
-                <div class="border rounded p-3">
+                <div class="map-section">
                     <h5 class="mb-3">
                         <i class='bx bxs-map-alt'></i> Geographic Distribution
                     </h5>
                     <div id="map" style="height: 400px; border-radius: 8px;"></div>
 
                     <!-- LEGEND -->
-                    <div class="mt-3 p-2 bg-light rounded">
-                        <small class="text-muted d-block mb-2"><strong>Area Legend:</strong></small>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span><span style="background:#FF6B6B;width:12px;height:12px;display:inline-block"></span> Area 1</span>
-                            <span><span style="background:#4ECDC4;width:12px;height:12px;display:inline-block"></span> Area 2</span>
-                            <span><span style="background:#45B7D1;width:12px;height:12px;display:inline-block"></span> Area 3</span>
-                            <span><span style="background:#FFA07A;width:12px;height:12px;display:inline-block"></span> Area 4</span>
-                            <span><span style="background:#98D8C8;width:12px;height:12px;display:inline-block"></span> Area 5</span>
-                            <span><span style="background:#F7DC6F;width:12px;height:12px;display:inline-block"></span> Area 6</span>
-                            <span><span style="background:#BB8FCE;width:12px;height:12px;display:inline-block"></span> Area 7</span>
-                            <span><span style="background:#F8B739;width:12px;height:12px;display:inline-block"></span> Area 8</span>
-                            <span><span style="background:#85C1E2;width:12px;height:12px;display:inline-block"></span> Area 9</span>
+                    <div class="area-legend">
+                        <span class="area-legend-title">Area Legend:</span>
+                        <div class="area-legend-items">
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#FF6B6B;"></span> Area 1</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#4ECDC4;"></span> Area 2</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#45B7D1;"></span> Area 3</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#FFA07A;"></span> Area 4</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#98D8C8;"></span> Area 5</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#F7DC6F;"></span> Area 6</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#BB8FCE;"></span> Area 7</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#F8B739;"></span> Area 8</span>
+                            <span class="area-legend-item"><span class="legend-color-box" style="background:#85C1E2;"></span> Area 9</span>
                         </div>
                     </div>
                 </div>
@@ -95,19 +80,26 @@
 
             <!-- FILTER -->
             <div class="col-md-4 mb-4">
-                <div class="border rounded p-3">
+                <div class="filter-section">
                     <h5 class="mb-3">
                         <i class='bx bx-filter-alt'></i> Search & Filter
                     </h5>
 
-                    <div class="mb-3">
-                        <label class="text-muted small mb-1">Search Location</label>
-                        <input type="text" id="searchInput" class="form-control" placeholder="Enter post office name...">
+                    <div class="form-group mb-3">
+                        <label for="searchInput" class="form-label">Search Location</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class='bx bx-search'></i>
+                            </span>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Enter post office name...">
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="text-muted small mb-1">Filter by Area</label>
-                        <select id="areaFilter" class="form-control">
+                    <div class="form-group mb-3">
+                        <label for="areaFilter" class="form-label">
+                            <i class='bx bx-map-pin text-primary'></i> Filter by Area
+                        </label>
+                        <select id="areaFilter" class="form-select">
                             <option value="">All Areas</option>
                             <option value="1">Area 1</option>
                             <option value="2">Area 2</option>
@@ -121,9 +113,11 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="text-muted small mb-1">Status</label>
-                        <select id="statusFilter" class="form-control">
+                    <div class="form-group mb-3">
+                        <label for="statusFilter" class="form-label">
+                            <i class='bx bx-toggle-left text-success'></i> Status
+                        </label>
+                        <select id="statusFilter" class="form-select">
                             <option value="">All Status</option>
                             <option value="true">Active</option>
                             <option value="false">Inactive</option>
@@ -131,11 +125,11 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button id="applyFilters" class="btn btn-dark">
-                            <i class='bx bx-search'></i> Apply Filters
+                        <button id="applyFilters" class="btn btn-primary">
+                            <i class='bx bx-search me-2'></i> Apply Filters
                         </button>
                         <button id="clearFilters" class="btn btn-outline-secondary">
-                            <i class='bx bx-x'></i> Clear Filters
+                            <i class='bx bx-refresh me-2'></i> Clear Filters
                         </button>
                     </div>
                 </div>

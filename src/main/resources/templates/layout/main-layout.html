@@ -26,6 +26,9 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
+    <!-- Animate.css for SweetAlert animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     <!-- DataTables CSS - Only load on table / quarters / users / archive pages -->
     <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
@@ -190,7 +193,7 @@
     <div th:replace="~{fragments/modals/insert-modal :: insertModal}"></div>
 
     <!-- Edit Postal Office Modal -->
-    <div th:if="${activePage == 'table'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
+    <div th:if="${activePage == 'table' or activePage == 'profile'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
     <!-- ============================================ -->
     <!-- SCRIPTS - LOAD IN CORRECT ORDER -->
@@ -245,8 +248,8 @@
     <!-- 10. Table JS - Load LAST -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
-   <!-- 10.1. Edit Modal JS - Load with table page -->
-   <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal.js}"></script>
+   <!-- 10.1. Edit Modal JS - Load with table page and profile page -->
+   <script th:if="${activePage == 'table' or activePage == 'profile'}" th:src="@{/js/edit-modal.js}"></script>
    
    <!-- 11. Quarters JS - Load AFTER jQuery and DataTables -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
@@ -257,7 +260,10 @@
    <!-- 13. Archive JS - Loads on archive page AND table page (for the archive button) -->
    <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
 
-   <!-- 14. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
+   <!-- 14. Profile JS - Load on profile page -->
+   <script th:if="${activePage == 'profile'}" th:src="@{/js/profile.js}"></script>
+
+   <!-- 15. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
    <script th:src="@{/js/session-timeout.js}"></script>
 </body>
 </html>

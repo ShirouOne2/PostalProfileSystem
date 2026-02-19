@@ -47,6 +47,13 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "(c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
     long countActiveAtQuarterEnd(@Param("quarterEnd") LocalDateTime quarterEnd);
 
+    // Count non-archived offices with active connections as of the end of a quarter
+    @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
+           "c.dateConnected <= :quarterEnd AND " +
+           "(c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
+    long countActiveAtQuarterEndNonArchived(@Param("quarterEnd") LocalDateTime quarterEnd);
+
     // NEW: Date filtering methods for table data
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "JOIN Connectivity c ON po.id = c.postalOffice.id " +

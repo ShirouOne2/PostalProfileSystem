@@ -1,13 +1,15 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Service.ArchiveService;
+import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +29,31 @@ public class ArchiveController {
     @Autowired
     private ArchiveService archiveService;
 
+    @Autowired
+    private PostalOfficeService postalOfficeService;
+
     // ── Page ─────────────────────────────────────────────────────────────────
 
     @GetMapping("/archive")
     public String archivePage(Model model) {
-        model.addAttribute("archivedOffices", archiveService.getAllArchivedOffices());
-        model.addAttribute("archivedCount",   archiveService.getArchivedCount());
-        model.addAttribute("activePage",      "archive");
+        try {
+            model.addAttribute("archivedOffices", archiveService.getAllArchivedOffices());
+            model.addAttribute("archivedCount", archiveService.getArchivedCount());
+        } catch (Exception e) {
+            // Handle database connection issues gracefully
+            model.addAttribute("archivedOffices", new ArrayList<>());
+            model.addAttribute("archivedCount", 0);
+            model.addAttribute("errorMessage", "Unable to connect to database: " + e.getMessage());
+        }
+        model.addAttribute("activePage", "archive");
+        
+        // Add current user information for header
+        User currentUser = postalOfficeService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            model.addAttribute("roleName", getRoleName(currentUser.getRole()));
+        }
+        
         return "archive";
     }
 
@@ -106,6 +126,32 @@ public class ArchiveController {
         }
     }
 
+    // ── Get Archived Offices REST ─────────────────────────────────────────────────
+
+    @GetMapping("/api/archive")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getArchivedOffices() {
+        try {
+            var archivedOffices = archiveService.getArchivedOfficesForTable();
+            return ok(true, "Archived offices retrieved successfully", 
+                   Map.of("data", archivedOffices, "count", archivedOffices.size()));
+        } catch (Exception e) {
+            return err("Failed to retrieve archived offices: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/archive/count")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getArchivedCount() {
+        try {
+            long count = archiveService.getArchivedCount();
+            return ok(true, "Archived count retrieved successfully", 
+                   Map.of("count", count));
+        } catch (Exception e) {
+            return err("Failed to get archived count: " + e.getMessage());
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private ResponseEntity<Map<String, Object>> ok(boolean success, String message, Map<String, Object> extra) {
@@ -121,5 +167,15 @@ public class ArchiveController {
         resp.put("success", false);
         resp.put("message", message);
         return ResponseEntity.status(500).body(resp);
+    }
+    
+    private String getRoleName(Integer roleId) {
+        if (roleId == null) return "Unknown";
+        switch (roleId) {
+            case 1: return "Administrator";
+            case 2: return "User";
+            case 3: return "Area Admin";
+            default: return "Unknown";
+        }
     }
 }

@@ -3,6 +3,8 @@ package com.pps.profilesystem.Service;
 import com.pps.profilesystem.Entity.*;
 import com.pps.profilesystem.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +29,24 @@ public class PostalOfficeService {
     @Autowired
     private ProviderRepository providerRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
-     * Get all postal offices
+     * Get all postal offices (non-archived only)
+     * Filtered by user's area if not admin
      */
     public List<PostalOffice> getAllPostalOffices() {
-        return postalOfficeRepository.findAll();
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            // Admin or no area restriction
+            return postalOfficeRepository.findByIsArchivedFalse();
+        } else {
+            // Filter by user's area
+            return postalOfficeRepository.findByIsArchivedFalse().stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .collect(Collectors.toList());
+        }
     }
 
     /**
@@ -42,21 +57,23 @@ public class PostalOfficeService {
     }
 
     /**
-     * Get all postal offices with area for map display
+     * Get all postal offices for map display (non-archived only)
+     * Filtered by user's area if not admin
      */
     public List<Map<String, Object>> getAllPostalOfficesForMap() {
-        return postalOfficeRepository.findAllWithAreaForMap()
-            .stream()
+        List<PostalOffice> offices = getAllPostalOffices();
+        return offices.stream()
             .map(this::convertToMapDTO)
             .collect(Collectors.toList());
     }
 
     /**
-     * Get all postal offices for table display (includes those without coordinates)
+     * Get all postal offices for table display (non-archived only)
+     * Filtered by user's area if not admin
      */
     public List<Map<String, Object>> getAllPostalOfficesForTable() {
-        return postalOfficeRepository.findAll()
-            .stream()
+        List<PostalOffice> offices = getAllPostalOffices();
+        return offices.stream()
             .map(this::convertToMapDTO)
             .collect(Collectors.toList());
     }
@@ -216,43 +233,102 @@ public class PostalOfficeService {
     }
 
     /**
-     * Get counts
+     * Get counts filtered by user's area if not admin
      */
     public long getTotalCount() {
-        return postalOfficeRepository.count();
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.count() - postalOfficeRepository.countByIsArchivedTrue();
+        } else {
+            return postalOfficeRepository.findByIsArchivedFalse().stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .count();
+        }
     }
 
     public long getActiveCount() {
-        return postalOfficeRepository.countByConnectionStatus(true);
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(true);
+        } else {
+            return postalOfficeRepository.findByIsArchivedFalse().stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .filter(office -> Boolean.TRUE.equals(office.getConnectionStatus()))
+                .count();
+        }
     }
 
     public long getInactiveCount() {
-        return postalOfficeRepository.countByConnectionStatus(false);
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(false);
+        } else {
+            return postalOfficeRepository.findByIsArchivedFalse().stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .filter(office -> !Boolean.TRUE.equals(office.getConnectionStatus()))
+                .count();
+        }
     }
 
     public long getDistinctAreasCount() {
-        return postalOfficeRepository.countDistinctAreas();
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.countDistinctAreasNonArchived();
+        } else {
+            // For non-admin users, they only see their assigned area
+            return 1L;
+        }
     }
 
     /**
-     * Find by connection status
+     * Find by connection status (non-archived only)
      */
     public List<PostalOffice> findByConnectionStatus(Boolean status) {
-        return postalOfficeRepository.findByConnectionStatus(status);
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.findByConnectionStatus(status).stream()
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        } else {
+            return postalOfficeRepository.findByConnectionStatus(status).stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        }
     }
 
     /**
-     * Search by name
+     * Search by name (non-archived only)
      */
     public List<PostalOffice> searchByName(String name) {
-        return postalOfficeRepository.findByNameContainingIgnoreCase(name);
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.findByNameContainingIgnoreCase(name).stream()
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        } else {
+            return postalOfficeRepository.findByNameContainingIgnoreCase(name).stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        }
     }
 
     /**
-     * Find by city
+     * Find by city (non-archived only)
      */
     public List<PostalOffice> findByCityMunicipality(Integer cityId) {
-        return postalOfficeRepository.findByCityMunicipalityId(cityId);
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId == null) {
+            return postalOfficeRepository.findByCityMunicipalityId(cityId).stream()
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        } else {
+            return postalOfficeRepository.findByCityMunicipalityId(cityId).stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
+                .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+                .collect(Collectors.toList());
+        }
     }
 
     // ========== NEW: Connectivity-Specific Methods ==========
@@ -341,8 +417,8 @@ public class PostalOfficeService {
             // Filter by disconnection date
             offices = postalOfficeRepository.findByDateDisconnectedBetween(startDate, endDate);
         } else {
-            // Default to all offices if no specific date type
-            offices = postalOfficeRepository.findAll();
+            // Default to all non-archived offices if no specific date type
+            offices = postalOfficeRepository.findByIsArchivedFalse();
         }
         
         // Apply additional status filter if specified (but not newly_connected/disconnected which are already handled)
@@ -353,6 +429,14 @@ public class PostalOfficeService {
         } else if ("inactive".equals(statusFilter)) {
             offices = offices.stream()
                 .filter(office -> !Boolean.TRUE.equals(office.getConnectionStatus()))
+                .collect(Collectors.toList());
+        }
+        
+        // Filter by user's area if not admin
+        Integer userAreaId = getCurrentUserAreaId();
+        if (userAreaId != null) {
+            offices = offices.stream()
+                .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
                 .collect(Collectors.toList());
         }
         
@@ -462,6 +546,34 @@ public class PostalOfficeService {
     }
 
     /**
+     * Get current user's area ID
+     * Returns null for admin users (no area restriction)
+     */
+    private Integer getCurrentUserAreaId() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return null;
+            }
+            
+            String email = authentication.getName();
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                // Admin (role 1) can see all areas
+                if (user.getRole() != null && user.getRole() == 1) {
+                    return null; // No area restriction for admin
+                }
+                return user.getAreaId(); // Return assigned area for non-admin users
+            }
+        } catch (Exception e) {
+            // Log error but don't break the application
+            System.err.println("Error getting current user area: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Update office fields from another office object
      */
     private void updateOfficeFields(PostalOffice target, PostalOffice source) {
@@ -478,5 +590,46 @@ public class PostalOfficeService {
         if (source.getLongitude() != null) target.setLongitude(source.getLongitude());
         if (source.getConnectionStatus() != null) target.setConnectionStatus(source.getConnectionStatus());
         if (source.getInternetServiceProvider() != null) target.setInternetServiceProvider(source.getInternetServiceProvider());
+    }
+    
+    /**
+     * Get current user information for UI display
+     */
+    public Map<String, Object> getCurrentUserInfo() {
+        Map<String, Object> userInfo = new HashMap<>();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    userInfo.put("email", user.getEmail());
+                    userInfo.put("role", user.getRole());
+                    userInfo.put("areaId", user.getAreaId());
+                    userInfo.put("canAccessAllAreas", user.getRole() != null && user.getRole() == 1);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting current user info: " + e.getMessage());
+        }
+        return userInfo;
+    }
+
+    /**
+     * Get current user entity
+     */
+    public User getCurrentUser() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                Optional<User> userOpt = userRepository.findByEmail(email);
+                return userOpt.orElse(null);
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting current user: " + e.getMessage());
+        }
+        return null;
     }
 }

@@ -23,6 +23,15 @@
             </a>
         </div>
 
+        <!-- Error Message (shown when database connection fails) -->
+        <div th:if="${errorMessage}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>Database Connection Issue:</strong> <span th:text="${errorMessage}"></span>
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+
         <!-- Stats Card -->
         <div class="row mb-4">
             <div class="col-md-3">

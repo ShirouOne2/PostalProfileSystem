@@ -1,6 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -37,6 +38,13 @@ public class ProfileController {
         model.addAttribute("activePage", "profile");
         model.addAttribute("canEdit", true);
         model.addAttribute("canAccessAllAreas", true);
+        
+        // Add current user information for header
+        User currentUser = postalOfficeService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            model.addAttribute("roleName", getRoleName(currentUser.getRole()));
+        }
 
         return "profile";
     }
@@ -47,7 +55,26 @@ public class ProfileController {
     @GetMapping("/postal-office/view/{id}")
     @Transactional(readOnly = true)
     public String showProfileAlt(@PathVariable Integer id, Model model) {
-        return showProfile(id, model);
+        Optional<PostalOffice> officeOptional = postalOfficeService.getPostalOfficeById(id);
+        if (officeOptional.isEmpty()) {
+            return "redirect:/table";
+        }
+
+        PostalOffice office = officeOptional.get();
+        model.addAttribute("office", office);
+        model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("activePage", "profile");
+        model.addAttribute("canEdit", true);
+        model.addAttribute("canAccessAllAreas", true);
+        
+        // Add current user information for header
+        User currentUser = postalOfficeService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            model.addAttribute("roleName", getRoleName(currentUser.getRole()));
+        }
+
+        return "profile";
     }
 
     private java.util.Map<String, Object> buildProfileData(PostalOffice office) {
@@ -83,5 +110,15 @@ public class ProfileController {
         data.put("ispContactNumber", office.getIspContactNumber());
         
         return data;
+    }
+    
+    private String getRoleName(Integer roleId) {
+        if (roleId == null) return "Unknown";
+        switch (roleId) {
+            case 1: return "Administrator";
+            case 2: return "User";
+            case 3: return "Area Admin";
+            default: return "Unknown";
+        }
     }
 }

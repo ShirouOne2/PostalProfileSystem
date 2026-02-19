@@ -8,6 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
         const button = document.querySelector('.login-button');
 
+        // Show loading SweetAlert
+        Swal.fire({
+            title: 'Authenticating...',
+            html: 'Please wait while we verify your credentials',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         button.disabled = true;
         button.textContent = "Authenticating...";
 
@@ -23,15 +35,40 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.redirected) {
-                window.location.href = response.url;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful!',
+                    text: 'Redirecting to dashboard...',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                }).then(() => {
+                    window.location.href = response.url;
+                });
             } else if (response.ok) {
-                window.location.href = '/dashboard';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful!',
+                    text: 'Redirecting to dashboard...',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                }).then(() => {
+                    window.location.href = '/dashboard';
+                });
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Login Failed',
                     text: 'Invalid email or password',
-                    showConfirmButton: true
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Try Again',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                    }
                 });
                 button.disabled = false;
                 button.textContent = "Login";
@@ -41,7 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Server Error',
-                text: 'Please try again later'
+                text: 'Unable to connect to the server. Please try again later.',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'OK',
+                footer: '<a href="/contact" style="color: #6c757d;">Need help? Contact support</a>'
             });
             button.disabled = false;
             button.textContent = "Login";

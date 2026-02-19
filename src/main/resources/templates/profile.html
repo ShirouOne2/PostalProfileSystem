@@ -354,9 +354,9 @@
                 <a th:href="@{/table}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Table
                 </a>
-                <a th:href="@{/postal-office/edit/{id}(id=${postOffice.id})}" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" onclick="openEditModal()">
                     <i class="fas fa-edit"></i> Edit Profile
-                </a>
+                </button>
                 <button onclick="window.print()" class="btn btn-info">
                     <i class="fas fa-print"></i> Print Profile
                 </button>
@@ -402,8 +402,7 @@
                 </div>
             </div>
 
-            <script th:src="@{/js/profile.js}"></script>
-        </div>
+                    </div>
     </div>
 
 </body>

@@ -1,5 +1,6 @@
 package com.pps.profilesystem.Controller;
 
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Service.LocationHierarchyService;
 import com.pps.profilesystem.Service.PostalOfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,38 @@ public class DashboardController {
         model.addAttribute("activeOffices", activeOffices);
         model.addAttribute("inactiveOffices", inactiveOffices);
         model.addAttribute("activePage", "dashboard");
+        
+        // Add user access information
+        model.addAttribute("userAccess", postalOfficeService.getCurrentUserInfo());
+        
+        // Add current user information for header
+        User currentUser = postalOfficeService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("user", currentUser);
+            model.addAttribute("roleName", getRoleName(currentUser.getRole()));
+            model.addAttribute("roleColor", getRoleColor(currentUser.getRole()));
+        }
 
         return "dashboard";
+    }
+    
+    private String getRoleName(Integer roleId) {
+        if (roleId == null) return "Unknown";
+        switch (roleId) {
+            case 1: return "Administrator";
+            case 2: return "User";
+            case 3: return "Area Admin";
+            default: return "Unknown";
+        }
+    }
+    
+    private String getRoleColor(Integer roleId) {
+        if (roleId == null) return "secondary";
+        switch (roleId) {
+            case 1: return "danger";
+            case 2: return "primary";
+            case 3: return "warning";
+            default: return "secondary";
+        }
     }
 }

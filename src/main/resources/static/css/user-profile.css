@@ -151,3 +151,56 @@
     color: #1a2035;
     font-weight: 500;
 }
+.up-field-value.muted { color: #9aa0ac; font-style: italic; }
+
+/* ── Password change form ────────────────────────────────── */
+.up-form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+.up-input {
+    border-radius: 10px;
+    border: 1.5px solid #e0e4ea;
+    font-size: 0.9rem;
+    padding: 9px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.up-input:focus {
+    border-color: #002868;
+    box-shadow: 0 0 0 3px rgba(0,40,104,0.1);
+    outline: none;
+}
+.up-btn-save {
+    background: linear-gradient(135deg, #002868, #1a4fa8);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: opacity 0.2s, transform 0.15s;
+}
+.up-btn-save:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    color: #fff;
+}
+.up-btn-back {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+}
+
+/* ── Status indicator ────────────────────────────────────── */
+.up-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+.up-status-dot.active { background: #28a745; box-shadow: 0 0 0 3px rgba(40,167,69,0.2); }
+.up-status-dot.inactive { background: #dc3545; }

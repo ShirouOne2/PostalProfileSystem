@@ -177,7 +177,7 @@ function showAddModal() {
     $('#passwordStrengthText').text('');
     
     // Set defaults
-    $('#enabled').prop('checked', true);
+    $('#status').val('active');
     
     userModal.show();
 }
@@ -246,7 +246,7 @@ async function editUser(userId) {
         $('#email').val(user.email);
         $('#role').val(user.role);
         $('#areaId').val(user.areaId || '');
-        $('#enabled').prop('checked', user.enabled);
+        $('#status').val(user.enabled ? 'active' : 'inactive');
         
         // Clear password fields
         $('#password').val('');
@@ -304,7 +304,7 @@ async function saveUser() {
         username: $('#username').val().trim(),
         email: $('#email').val().trim(),
         role: parseInt($('#role').val()),
-        enabled: $('#enabled').is(':checked'),
+        status: $('#status').val() === 'active',
         areaId: $('#areaId').val() ? parseInt($('#areaId').val()) : null
     };
     
@@ -452,6 +452,12 @@ function validateForm() {
     // Role validation
     if (!$('#role').val()) {
         $('#role').addClass('is-invalid');
+        isValid = false;
+    }
+    
+    // Status validation
+    if (!$('#status').val()) {
+        $('#status').addClass('is-invalid');
         isValid = false;
     }
     

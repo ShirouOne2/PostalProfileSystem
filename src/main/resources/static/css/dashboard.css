@@ -1,9 +1,17 @@
 /* MAP CONTAINER */
 #map {
-    height: 450px;
+    height: 400px;
     width: 100%;
     border-radius: 8px;
     border: 1px solid #dee2e6;
+    min-height: 300px;
+}
+
+@media (max-width: 768px) {
+    #map {
+        height: 300px;
+        min-height: 250px;
+    }
 }
 
 /* POPUP */
@@ -91,7 +99,7 @@
 }
 
 /* Fix for dropdown text visibility */
-#areaFilter, #statusFilter {
+.filter-select, #editStatus {
     color: #495057 !important;
     background-color: #fff !important;
     height: auto !important;
@@ -101,19 +109,282 @@
     font-size: 14px !important;
     border: 1px solid #ced4da !important;
     border-radius: 4px !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
-#areaFilter option, #statusFilter option {
+.filter-select:hover, #editStatus:hover {
+    border-color: #adb5bd !important;
+}
+
+.filter-select:focus, #editStatus:focus {
+    color: #495057 !important;
+    background-color: #fff !important;
+    border-color: #80bdff !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+.filter-select option, #editStatus option {
     color: #495057 !important;
     background-color: #fff !important;
     padding: 6px 12px !important;
     line-height: 1.4 !important;
 }
 
-#areaFilter:focus, #statusFilter:focus {
-    color: #495057 !important;
-    background-color: #fff !important;
-    border-color: #80bdff !important;
-    outline: 0 !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+/* DASHBOARD SPECIFIC STYLES */
+
+/* Stats Cards */
+.stats-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #007bff;
+}
+
+.stats-card i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover i {
+    transform: scale(1.1);
+}
+
+.stats-card h5 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.stats-card small {
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Filter Section */
+.filter-section {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-section h5 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.filter-section .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.filter-section label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.filter-section .form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.filter-section .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+}
+
+/* Map Section */
+.map-section {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.map-section h5 {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+/* Legend */
+.area-legend {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.area-legend-title {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.area-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.area-legend-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.area-legend-item:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+.legend-color-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons */
+.btn-dark {
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-dark:hover {
+    background: linear-gradient(135deg, #23272b 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-secondary {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stats-card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    .stats-card i {
+        font-size: 2rem;
+    }
+    
+    .stats-card h5 {
+        font-size: 1.5rem;
+    }
+    
+    .filter-section {
+        margin-bottom: 1rem;
+    }
+    
+    .map-section {
+        margin-bottom: 1rem;
+    }
+    
+    .area-legend-items {
+        gap: 0.25rem;
+    }
+    
+    .area-legend-item {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-card i {
+        font-size: 1.75rem;
+    }
+    
+    .stats-card h5 {
+        font-size: 1.25rem;
+    }
+    
+    .filter-section,
+    .map-section {
+        padding: 1rem;
+    }
+    
+    .area-legend-items {
+        justify-content: center;
+    }
+}
+
+/* Loading and Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats-card,
+.filter-section,
+.map-section {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.map-section {
+    animation-delay: 0.1s;
+}
+
+.filter-section {
+    animation-delay: 0.2s;
 }

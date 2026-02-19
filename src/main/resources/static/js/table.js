@@ -7,9 +7,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Create edit modal
-    createEditModal();
-    
     // Initialize DataTable
     const table = new DataTable('#myTable', {
         // Pagination
