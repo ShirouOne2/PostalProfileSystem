@@ -1,0 +1,159 @@
+/* DataTables Custom Styling for Post Office Table */
+#postOfficeTable_wrapper .dataTables_length,
+#postOfficeTable_wrapper .dataTables_filter {
+    padding: 0 0 12px 0;
+}
+
+#postOfficeTable_wrapper .dataTables_length label,
+#postOfficeTable_wrapper .dataTables_filter label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+#postOfficeTable_wrapper .dataTables_length select {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 14px;
+    margin: 0 4px;
+}
+
+#postOfficeTable_wrapper .dataTables_filter input {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 14px;
+    margin-left: 6px;
+    outline: none;
+}
+
+#postOfficeTable_wrapper .dataTables_filter input:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.15rem rgba(78,115,223,0.15);
+}
+
+#postOfficeTable_wrapper .dataTables_info {
+    font-size: 13px;
+    color: #6c757d;
+    padding-top: 10px;
+}
+
+#postOfficeTable_wrapper .dataTables_paginate {
+    padding-top: 8px;
+}
+
+#postOfficeTable_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 13px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: #4e73df !important;
+    background: #fff;
+    cursor: pointer;
+}
+
+#postOfficeTable_wrapper .dataTables_paginate .paginate_button.current {
+    background: #4e73df !important;
+    color: #fff !important;
+    border-color: #4e73df;
+}
+
+#postOfficeTable_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+    background: #eaecf4 !important;
+    color: #4e73df !important;
+    border-color: #dee2e6;
+}
+
+#postOfficeTable_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* DataTables Custom Styling for Main Table */
+#myTable_wrapper .dataTables_length,
+#myTable_wrapper .dataTables_filter {
+    padding: 0 0 12px 0;
+}
+
+#myTable_wrapper .dataTables_length label,
+#myTable_wrapper .dataTables_filter label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+#myTable_wrapper .dataTables_length select {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 14px;
+    margin: 0 4px;
+}
+
+#myTable_wrapper .dataTables_filter input {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 14px;
+    margin-left: 6px;
+    outline: none;
+}
+
+#myTable_wrapper .dataTables_filter input:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.15rem rgba(78,115,223,0.15);
+}
+
+#myTable_wrapper .dataTables_info {
+    font-size: 13px;
+    color: #6c757d;
+    padding-top: 10px;
+}
+
+#myTable_wrapper .dataTables_paginate {
+    padding-top: 8px;
+}
+
+#myTable_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 13px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+    color: #4e73df !important;
+    background: #fff;
+    cursor: pointer;
+}
+
+#myTable_wrapper .dataTables_paginate .paginate_button.current {
+    background: #4e73df !important;
+    color: #fff !important;
+    border-color: #4e73df;
+}
+
+#myTable_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+    background: #eaecf4 !important;
+    color: #4e73df !important;
+    border-color: #dee2e6;
+}
+
+#myTable_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Table section card */
+#dataTableSection {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 20px;
+    border: 1px solid #e3e6f0;
+}
+
+/* Keep action buttons on one line */
+.action-buttons {
+    white-space: nowrap;
+}

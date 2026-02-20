@@ -8,14 +8,21 @@
 
 <body>
 
-<div th:fragment="content"> 
-       
+<div th:fragment="content">
+
+    <!-- CSS Links -->
+    <link rel="stylesheet" th:href="@{/css/table.css}">
+    <link rel="stylesheet" th:href="@{/css/table-custom.css}">
+    <link rel="stylesheet" th:href="@{/css/datatables-custom.css}">
+
     <div class="container-fluid py-4">
-            
+
         <!-- Header -->
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h3 class="mb-1">Post Office Inventory</h3>
+                <h3 class="mb-1 font-weight-bold text-dark">
+                    <i class="fas fa-building text-primary mr-2"></i>Post Office Inventory
+                </h3>
                 <p class="text-muted mb-0">Manage and view all post office records</p>
             </div>
             <a href="/archive" class="btn btn-outline-warning btn-sm">
@@ -25,74 +32,72 @@
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h4 class="mb-0" th:text="${totalCount}">1258</h4>
-                        <small class="text-muted">Total Offices</small>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-left-primary h-100">
+                    <div class="card-body text-center py-3">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Offices</div>
+                        <h4 class="mb-0 font-weight-bold" th:text="${totalCount}">0</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h4 class="mb-0" th:text="${areaCount}">9</h4>
-                        <small class="text-muted">Areas</small>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-left-info h-100">
+                    <div class="card-body text-center py-3">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Areas</div>
+                        <h4 class="mb-0 font-weight-bold" th:text="${areaCount}">0</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h4 class="mb-0 text-success" th:text="${activeCount}">629</h4>
-                        <small class="text-muted">Active</small>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-left-success h-100">
+                    <div class="card-body text-center py-3">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active</div>
+                        <h4 class="mb-0 font-weight-bold text-success" th:text="${activeCount}">0</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h4 class="mb-0 text-danger" th:text="${inactiveCount}">629</h4>
-                        <small class="text-muted">Inactive</small>
+            <div class="col-md-3 mb-3">
+                <div class="card shadow-sm border-left-danger h-100">
+                    <div class="card-body text-center py-3">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Inactive</div>
+                        <h4 class="mb-0 font-weight-bold text-danger" th:text="${inactiveCount}">0</h4>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content Card -->
+        <!-- Main Table Card -->
         <div class="card shadow-sm">
             <div class="card-body">
-                
-                <!-- DataTable Container -->
                 <div class="table-responsive">
-                    <table id="myTable" class="table table-hover table-striped" style="width:100%">
-                        <thead class="thead-light">
+                    <table id="myTable" class="table table-hover table-striped mb-0" style="width:100%">
+                        <thead class="thead-dark">
                             <tr>
-                                <th>#</th>
+                                <th style="width:50px;">#</th>
                                 <th>Post Office Name</th>
-                                <th>Area</th>
-                                <th>City</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th style="width:120px;">Area</th>
+                                <th style="width:180px;">City</th>
+                                <th class="text-center" style="width:110px;">Status</th>
+                                <th class="text-center" style="width:130px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="office, iter : ${offices}">
-                                <td th:text="${iter.count}"></td>
+                            <tr th:each="office : ${offices}" th:data-id="${office.id}">
+                                <td class="row-num text-center"></td>
                                 <td th:text="${office.name}"></td>
                                 <td th:text="${office.area != null ? office.area.areaName : 'N/A'}"></td>
                                 <td th:text="${office.cityMunicipality != null ? office.cityMunicipality.name : 'N/A'}"></td>
                                 <td class="text-center">
                                     <span th:if="${office.connectionStatus}" class="badge badge-success">
-                                        <i class="fas fa-check-circle"></i> Active
+                                        <i class="fas fa-check-circle mr-1"></i>Active
                                     </span>
                                     <span th:unless="${office.connectionStatus}" class="badge badge-danger">
-                                        <i class="fas fa-times-circle"></i> Inactive
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <a th:href="@{/profile/{id}(id=${office.id})}" 
-                                       class="btn btn-sm btn-primary" 
+                                <td class="text-center action-buttons">
+                                    <a th:href="@{/profile/{id}(id=${office.id})}"
+                                       class="btn btn-sm btn-info"
                                        title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -103,25 +108,17 @@
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-archive"
-                                            style="background:#fd7e14;color:white;"
+                                            style="background:#fd7e14; color:white;"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
                                             title="Archive Office">
                                         <i class="fas fa-archive"></i>
                                     </button>
-                                    <!-- Delete button hidden -->
-                                    <!-- <button class="btn btn-sm btn-danger btn-delete"
-                                            th:data-office-id="${office.id}"
-                                            th:data-office-name="${office.name}"
-                                            title="Delete Office">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button> -->
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
 
@@ -131,11 +128,11 @@
     <div class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-archive mr-2"></i>Archive Post Office
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal">
+                    <button type="button" class="close text-white" data-dismiss="modal">
                         <span>&times;</span>
                     </button>
                 </div>
@@ -145,15 +142,19 @@
                         This office will be hidden from all views but can be restored later.
                     </p>
                     <div class="form-group">
-                        <label for="archiveReasonInput">Reason for archiving <small class="text-muted">(optional)</small></label>
+                        <label for="archiveReasonInput">
+                            Reason for archiving <small class="text-muted">(optional)</small>
+                        </label>
                         <textarea id="archiveReasonInput" class="form-control" rows="3"
                                   placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
                     <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
-                        <i class="fas fa-archive mr-1"></i> Archive
+                        <i class="fas fa-archive mr-1"></i>Archive
                     </button>
                 </div>
             </div>

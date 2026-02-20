@@ -7,12 +7,19 @@ import com.pps.profilesystem.Repository.ConnectivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * REST Controller for editing postal offices
@@ -30,6 +37,75 @@ public class PostalOfficeEditController {
 
     @Autowired
     private ConnectivityRepository connectivityRepository;
+
+    /**
+     * Upload profile picture or cover photo for a postal office
+     */
+    @PostMapping("/postal-office/{id}/upload-image")
+    public ResponseEntity<Map<String, Object>> uploadImage(
+            @PathVariable Integer id,
+            @RequestParam("type") String type,
+            @RequestParam("file") MultipartFile file) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Optional<PostalOffice> officeOptional = postalOfficeService.getPostalOfficeById(id);
+            if (officeOptional.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Post office not found.");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            // Validate file type
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                response.put("success", false);
+                response.put("message", "Only image files are allowed.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Save file to /uploads/offices/
+            String uploadDir = "src/main/resources/static/uploads/offices/";
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = (originalFilename != null && originalFilename.contains("."))
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : ".jpg";
+            String filename = type + "_" + id + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+            Path filePath = uploadPath.resolve(filename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            String fileUrl = "/uploads/offices/" + filename;
+
+            PostalOffice office = officeOptional.get();
+            if ("profile".equals(type)) {
+                office.setProfilePicture(fileUrl);
+            } else if ("cover".equals(type)) {
+                office.setCoverPhoto(fileUrl);
+            } else {
+                response.put("success", false);
+                response.put("message", "Invalid image type. Use 'profile' or 'cover'.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            postalOfficeRepository.save(office);
+
+            response.put("success", true);
+            response.put("message", "Image uploaded successfully.");
+            response.put("url", fileUrl);
+            return ResponseEntity.ok(response);
+
+        } catch (IOException e) {
+            response.put("success", false);
+            response.put("message", "Failed to upload image: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     /**
      * Get a single postal office by ID for editing
@@ -103,7 +179,7 @@ public class PostalOfficeEditController {
 
                 if (!Boolean.TRUE.equals(oldStatus) && Boolean.TRUE.equals(newStatus)) {
                     // -------------------------
-                    // INACTIVE â†’ ACTIVE
+                    // INACTIVE Ã¢â€ â€™ ACTIVE
                     // Reuse existing connectivity record instead of creating new one
                     // Find the most recent connectivity record and reactivate it
                     // -------------------------
@@ -143,7 +219,7 @@ public class PostalOfficeEditController {
                     }
                 } else if (Boolean.TRUE.equals(oldStatus) && !Boolean.TRUE.equals(newStatus)) {
                     // -------------------------
-                    // ACTIVE â†’ INACTIVE
+                    // ACTIVE Ã¢â€ â€™ INACTIVE
                     // dateConnected = null, dateDisconnected = now
                     // connectivity_id = NULL
                     // -------------------------
@@ -258,6 +334,8 @@ public class PostalOfficeEditController {
         data.put("postalOfficeContactNumber", office.getPostalOfficeContactNumber());
         data.put("ispContactPerson", office.getIspContactPerson());
         data.put("ispContactNumber", office.getIspContactNumber());
+        data.put("profilePicture", office.getProfilePicture());
+        data.put("coverPhoto", office.getCoverPhoto());
 
         return data;
     }

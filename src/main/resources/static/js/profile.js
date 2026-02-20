@@ -75,10 +75,85 @@ function openEditModal() {
             $('#editLatitude').val(data.latitude || '');
             $('#editLongitude').val(data.longitude || '');
 
+            // Load image previews
+            $('#profilePicPreview').attr('src', data.profilePicture || '/images/no-image.png');
+            $('#coverPhotoPreview').attr('src', data.coverPhoto || '/images/no-image.png');
+            $('#profilePicUploadStatus').html('');
+            $('#coverPhotoUploadStatus').html('');
+
             $('#editOfficeModal').modal('show');
         },
         error: function() {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load office data.' });
+        }
+    });
+}
+
+/**
+ * Preview the selected image and upload it immediately to the server.
+ * @param {HTMLInputElement} input  - the file input element
+ * @param {string}           type  - 'profile' or 'cover'
+ */
+function previewAndUploadImage(input, type) {
+    if (!input.files || !input.files[0]) return;
+
+    var file = input.files[0];
+    var maxSize = 5 * 1024 * 1024; // 5 MB
+
+    if (file.size > maxSize) {
+        Swal.fire({ icon: 'warning', title: 'File Too Large', text: 'Please choose an image smaller than 5 MB.' });
+        input.value = '';
+        return;
+    }
+
+    // Local preview
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        if (type === 'profile') {
+            $('#profilePicPreview').attr('src', e.target.result);
+        } else {
+            $('#coverPhotoPreview').attr('src', e.target.result);
+        }
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    var officeId = $('#editOfficeId').val();
+    var statusEl = type === 'profile' ? $('#profilePicUploadStatus') : $('#coverPhotoUploadStatus');
+    statusEl.html('<small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Uploading...</small>');
+
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    $.ajax({
+        url: '/api/postal-office/' + officeId + '/upload-image',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (res.success) {
+                statusEl.html('<small class="text-success"><i class="fas fa-check-circle"></i> Uploaded!</small>');
+                // Update main profile page images live (no need to reload)
+                if (type === 'profile') {
+                    $('#mainProfilePic').attr('src', res.url);
+                } else {
+                    var coverDiv = $('#coverPhotoDiv');
+                    coverDiv.css({
+                        'background-image': 'url(' + res.url + ')',
+                        'background-size': 'cover',
+                        'background-position': 'center',
+                        'background': ''
+                    });
+                    coverDiv.css('background-image', 'url(' + res.url + ')');
+                }
+            } else {
+                statusEl.html('<small class="text-danger"><i class="fas fa-times-circle"></i> ' + (res.message || 'Upload failed.') + '</small>');
+            }
+        },
+        error: function() {
+            statusEl.html('<small class="text-danger"><i class="fas fa-times-circle"></i> Upload failed. Try again.</small>');
         }
     });
 }
@@ -144,4 +219,4 @@ function saveOfficeChanges() {
             Swal.fire({ icon: 'error', title: 'Error', text: msg });
         }
     });
-}
+}   

@@ -69,8 +69,15 @@ $(document).ready(function () {
                 $btn.prop('disabled', false).html('<i class="fas fa-archive mr-1"></i> Archive');
 
                 if (res.success) {
-                    // Remove the row from the active table
-                    if (pendingArchiveRow) pendingArchiveRow.fadeOut(400, function () { $(this).remove(); });
+                    // Remove row properly - use DataTable API if available, else fade out
+                    if (pendingArchiveRow) {
+                        const $table = pendingArchiveRow.closest('table');
+                        if ($table.length && $.fn.DataTable.isDataTable($table)) {
+                            $table.DataTable().row(pendingArchiveRow).remove().draw(false);
+                        } else {
+                            pendingArchiveRow.fadeOut(400, function () { $(this).remove(); });
+                        }
+                    }
                     showSuccess(res.message);
                 } else {
                     showError(res.message || 'Archive failed.');

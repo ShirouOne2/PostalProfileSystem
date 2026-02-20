@@ -1,5 +1,67 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
+<style>
+.photo-upload-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.photo-preview {
+    object-fit: cover;
+    background: #f0f0f0;
+    transition: opacity 0.2s;
+}
+
+.photo-preview--circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 3px solid #dee2e6;
+}
+
+.photo-preview--cover {
+    width: 100%;
+    max-width: 220px;
+    height: 110px;
+    border-radius: 8px;
+    border: 3px solid #dee2e6;
+    display: block;
+    margin: 0 auto;
+}
+
+.photo-upload-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    background: #ffc107;
+    color: #212529;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: transform 0.2s, background 0.2s;
+    margin: 0;
+    z-index: 2;
+}
+
+.photo-upload-btn--cover {
+    bottom: 4px;
+    right: calc(50% - 110px + 4px);
+}
+
+.photo-upload-btn:hover {
+    background: #e0a800;
+    transform: scale(1.1);
+}
+</style>
+
 <div th:fragment="editModal" class="modal fade" id="editOfficeModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -14,6 +76,52 @@
             <div class="modal-body">
                 <form id="editOfficeForm">
                     <input type="hidden" id="editOfficeId">
+
+                    <!-- Photos Section -->
+                    <h6 class="mt-0 mb-2 text-primary"><i class="fas fa-images mr-1"></i> Photos</h6>
+                    <div class="row mb-3">
+                        <!-- Profile Picture -->
+                        <div class="col-md-6">
+                            <div class="form-group text-center">
+                                <label class="d-block font-weight-bold mb-2">Profile Picture</label>
+                                <div class="photo-upload-wrapper" id="profilePicPreviewWrapper">
+                                    <img id="profilePicPreview" src="/images/no-image.png"
+                                         class="photo-preview photo-preview--circle"
+                                         alt="Profile Picture Preview"
+                                         onerror="this.src='/images/no-image.png'">
+                                    <label for="profilePicInput" class="photo-upload-btn" title="Upload Profile Picture">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" id="profilePicInput" accept="image/*" class="d-none"
+                                           onchange="previewAndUploadImage(this, 'profile')">
+                                </div>
+                                <small class="text-muted d-block mt-1">JPG, PNG, GIF — max 5MB</small>
+                                <div id="profilePicUploadStatus" class="mt-1"></div>
+                            </div>
+                        </div>
+
+                        <!-- Cover Photo -->
+                        <div class="col-md-6">
+                            <div class="form-group text-center">
+                                <label class="d-block font-weight-bold mb-2">Cover Photo</label>
+                                <div class="photo-upload-wrapper" id="coverPhotoPreviewWrapper">
+                                    <img id="coverPhotoPreview" src="/images/no-image.png"
+                                         class="photo-preview photo-preview--cover"
+                                         alt="Cover Photo Preview"
+                                         onerror="this.src='/images/no-image.png'">
+                                    <label for="coverPhotoInput" class="photo-upload-btn photo-upload-btn--cover" title="Upload Cover Photo">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" id="coverPhotoInput" accept="image/*" class="d-none"
+                                           onchange="previewAndUploadImage(this, 'cover')">
+                                </div>
+                                <small class="text-muted d-block mt-1">JPG, PNG, GIF — max 5MB</small>
+                                <div id="coverPhotoUploadStatus" class="mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
                     
                     <div class="row">
                         <!-- Basic Information -->

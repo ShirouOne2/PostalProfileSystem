@@ -108,6 +108,8 @@ public class ProfileController {
         data.put("postalOfficeContactNumber", office.getPostalOfficeContactNumber());
         data.put("ispContactPerson", office.getIspContactPerson());
         data.put("ispContactNumber", office.getIspContactNumber());
+        data.put("profilePicture", office.getProfilePicture());
+        data.put("coverPhoto", office.getCoverPhoto());
         
         return data;
     }

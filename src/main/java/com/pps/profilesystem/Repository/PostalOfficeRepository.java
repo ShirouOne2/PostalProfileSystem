@@ -29,14 +29,16 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
     @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL")
     List<PostalOffice> findAllWithAreaForMap();
     
-    // Count offices that were connected in a specific quarter and year
+    // Count offices that were connected in a specific quarter and year — non-archived only
     @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateConnected) = :year AND " +
            "MONTH(c.dateConnected) BETWEEN :startMonth AND :endMonth")
     long countConnectedInQuarter(@Param("year") int year, @Param("startMonth") int startMonth, @Param("endMonth") int endMonth);
     
-    // Count offices that were disconnected in a specific quarter and year
+    // Count offices that were disconnected in a specific quarter and year — non-archived only
     @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateDisconnected) = :year AND " +
            "MONTH(c.dateDisconnected) BETWEEN :startMonth AND :endMonth")
     long countDisconnectedInQuarter(@Param("year") int year, @Param("startMonth") int startMonth, @Param("endMonth") int endMonth);
@@ -54,19 +56,26 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "(c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
     long countActiveAtQuarterEndNonArchived(@Param("quarterEnd") LocalDateTime quarterEnd);
 
-    // NEW: Date filtering methods for table data
+    // Date filtering methods for table data — non-archived only
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "JOIN Connectivity c ON po.id = c.postalOffice.id " +
-           "WHERE c.dateConnected BETWEEN :startDate AND :endDate")
+           "WHERE po.isArchived = false AND c.dateConnected BETWEEN :startDate AND :endDate")
     List<PostalOffice> findByDateConnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "JOIN Connectivity c ON po.id = c.postalOffice.id " +
-           "WHERE c.dateDisconnected BETWEEN :startDate AND :endDate")
+           "WHERE po.isArchived = false AND c.dateDisconnected BETWEEN :startDate AND :endDate")
     List<PostalOffice> findByDateDisconnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-      // Find all non-archived offices (use these in your existing service calls)
+    // Find all non-archived offices (use these in your existing service calls)
     List<PostalOffice> findByIsArchivedFalse();
+
+    // OPTIMIZED: Fetch area + cityMunicipality in one query — fixes N+1 slow table loading
+    @Query("SELECT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.cityMunicipality " +
+           "WHERE po.isArchived = false")
+    List<PostalOffice> findByIsArchivedFalseWithDetails();
 
     // Find all archived offices
     List<PostalOffice> findByIsArchivedTrue();

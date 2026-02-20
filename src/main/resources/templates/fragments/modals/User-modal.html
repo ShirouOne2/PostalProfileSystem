@@ -8,15 +8,47 @@
 
 <!-- User Modal Fragment -->
 <div th:fragment="userModal">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Bootstrap 4 uses jQuery events
+            $('#userModal').on('hidden.bs.modal', function () {
+                resetUserForm();
+            });
+        });
+        
+        function resetUserForm() {
+            const userForm = document.getElementById('userForm');
+            if (userForm) {
+                userForm.reset();
+                
+                const formElements = userForm.querySelectorAll('.form-control, .form-select');
+                formElements.forEach(element => {
+                    element.classList.remove('is-invalid');
+                });
+                
+                const passwordHint = document.getElementById('passwordHint');
+                if (passwordHint) passwordHint.style.display = 'none';
+                
+                const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+                const passwordStrengthText = document.getElementById('passwordStrengthText');
+                if (passwordStrengthBar) passwordStrengthBar.className = 'password-strength-bar';
+                if (passwordStrengthText) passwordStrengthText.textContent = '';
+            }
+        }
+    </script>
+    
     <!-- Add/Edit User Modal -->
-    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">
-                        <i class="fas fa-user-plus me-2"></i> Add New User
+                        <i class="fas fa-user-plus mr-2"></i> Add New User
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <!-- ✅ FIXED: data-dismiss="modal" (Bootstrap 4), NOT data-bs-dismiss -->
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <form id="userForm">
@@ -24,7 +56,7 @@
                         <input type="hidden" id="isEdit">
 
                         <!-- Username -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="username" class="form-label">
                                 Username <span class="required">*</span>
                             </label>
@@ -34,7 +66,7 @@
                         </div>
 
                         <!-- Email -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="email" class="form-label">
                                 Email <span class="required">*</span>
                             </label>
@@ -44,7 +76,7 @@
                         </div>
 
                         <!-- Password -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="password" class="form-label">
                                 Password <span class="required" id="passwordRequired">*</span>
                             </label>
@@ -61,7 +93,7 @@
                         </div>
 
                         <!-- Confirm Password -->
-                        <div class="mb-3" id="confirmPasswordGroup">
+                        <div class="form-group" id="confirmPasswordGroup">
                             <label for="confirmPassword" class="form-label">
                                 Confirm Password <span class="required" id="confirmRequired">*</span>
                             </label>
@@ -71,11 +103,11 @@
                         </div>
 
                         <!-- Role -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="role" class="form-label">
                                 Role <span class="required">*</span>
                             </label>
-                            <select class="form-select" id="role" required>
+                            <select class="form-control" id="role" required>
                                 <option value="">Select role...</option>
                                 <option value="1">Admin</option>
                                 <option value="2">User</option>
@@ -85,7 +117,7 @@
                         </div>
 
                         <!-- Area ID -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="areaId" class="form-label">
                                 Area ID <small class="text-muted">(Optional)</small>
                             </label>
@@ -94,11 +126,11 @@
                         </div>
 
                         <!-- Status -->
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="status" class="form-label">
                                 Status <span class="required">*</span>
                             </label>
-                            <select class="form-select" id="status" required>
+                            <select class="form-control" id="status" required>
                                 <option value="">Select status...</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -108,11 +140,12 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i> Cancel
+                    <!-- ✅ FIXED: data-dismiss="modal" (Bootstrap 4) -->
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-2"></i> Cancel
                     </button>
-                    <button type="button" class="btn btn-modal-save" onclick="saveUser()">
-                        <i class="fas fa-save me-2"></i> Save User
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">
+                        <i class="fas fa-save mr-2"></i> Save User
                     </button>
                 </div>
             </div>
@@ -123,7 +156,6 @@
 <!-- Modal Styles Fragment -->
 <div th:fragment="userModalStyles">
     <style>
-        /* Modal Styles */
         .modal-content {
             border: none;
             border-radius: 15px;
@@ -142,8 +174,29 @@
             font-size: 20px;
         }
 
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
+        /* ✅ FIXED: Bootstrap 4 close button styling */
+        .modal-header .close {
+            color: white;
+            opacity: 1;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: none;
+            padding: 0;
+            margin: -1rem -1rem -1rem auto;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .modal-header .close:hover {
+            opacity: 0.75;
+            transform: scale(1.1);
+        }
+
+        .modal-header .close:focus {
+            outline: none;
         }
 
         .modal-body {
@@ -155,7 +208,6 @@
             border-top: 1px solid #e0e0e0;
         }
 
-        /* Form Styles */
         .form-label {
             font-weight: 600;
             color: #333;
@@ -169,7 +221,7 @@
             margin-left: 3px;
         }
 
-        .form-control, .form-select {
+        .form-control {
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             padding: 10px 15px;
@@ -177,7 +229,7 @@
             transition: all 0.3s ease;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: #4e73df;
             box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
         }
@@ -191,38 +243,7 @@
             margin-top: 5px;
         }
 
-        /* Modal Buttons */
-        .btn-modal-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .btn-modal-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-
-        .btn-modal-cancel {
-            background: white;
-            border: 2px solid #e0e0e0;
-            color: #666;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .btn-modal-cancel:hover {
-            background: #f8f9fc;
-            border-color: #4e73df;
-            color: #4e73df;
-        }
-
-        /* Password Strength Indicator */
+        /* Password Strength */
         .password-strength {
             height: 5px;
             border-radius: 3px;
@@ -237,39 +258,13 @@
             width: 0%;
         }
 
-        .password-strength-bar.weak {
-            background: #e74a3b;
-            width: 33%;
-        }
-
-        .password-strength-bar.medium {
-            background: #f6c23e;
-            width: 66%;
-        }
-
-        .password-strength-bar.strong {
-            background: #1cc88a;
-            width: 100%;
-        }
+        .password-strength-bar.weak   { background: #e74a3b; width: 33%; }
+        .password-strength-bar.medium { background: #f6c23e; width: 66%; }
+        .password-strength-bar.strong { background: #1cc88a; width: 100%; }
 
         .password-strength-text {
             font-size: 12px;
             margin-top: 5px;
-            color: #666;
-        }
-
-        .form-check {
-            padding-left: 1.8em;
-        }
-
-        .form-check-input {
-            width: 1.2em;
-            height: 1.2em;
-            margin-top: 0.15em;
-        }
-
-        .form-check-label {
-            font-size: 14px;
             color: #666;
         }
     </style>

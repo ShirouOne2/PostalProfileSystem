@@ -39,11 +39,11 @@ public class PostalOfficeService {
     public List<PostalOffice> getAllPostalOffices() {
         Integer userAreaId = getCurrentUserAreaId();
         if (userAreaId == null) {
-            // Admin or no area restriction
-            return postalOfficeRepository.findByIsArchivedFalse();
+            // Admin or no area restriction — use optimized query (fixes N+1 slow loading)
+            return postalOfficeRepository.findByIsArchivedFalseWithDetails();
         } else {
-            // Filter by user's area
-            return postalOfficeRepository.findByIsArchivedFalse().stream()
+            // Filter by user's area — use optimized query then filter
+            return postalOfficeRepository.findByIsArchivedFalseWithDetails().stream()
                 .filter(office -> office.getArea() != null && office.getArea().getId().equals(userAreaId))
                 .collect(Collectors.toList());
         }
@@ -405,21 +405,23 @@ public class PostalOfficeService {
         
         // Handle newly connected/disconnected status filters
         if ("newly_connected".equals(statusFilter)) {
-            // Filter by connection date
+            // Filter by connection date — non-archived only (handled in repo query)
             offices = postalOfficeRepository.findByDateConnectedBetween(startDate, endDate);
         } else if ("newly_disconnected".equals(statusFilter)) {
-            // Filter by disconnection date
+            // Filter by disconnection date — non-archived only (handled in repo query)
             offices = postalOfficeRepository.findByDateDisconnectedBetween(startDate, endDate);
         } else if ("connected".equals(dateType)) {
-            // Filter by connection date
             offices = postalOfficeRepository.findByDateConnectedBetween(startDate, endDate);
         } else if ("disconnected".equals(dateType)) {
-            // Filter by disconnection date
             offices = postalOfficeRepository.findByDateDisconnectedBetween(startDate, endDate);
         } else {
-            // Default to all non-archived offices if no specific date type
             offices = postalOfficeRepository.findByIsArchivedFalse();
         }
+        
+        // Always exclude archived offices as a safety net
+        offices = offices.stream()
+            .filter(office -> !Boolean.TRUE.equals(office.getIsArchived()))
+            .collect(Collectors.toList());
         
         // Apply additional status filter if specified (but not newly_connected/disconnected which are already handled)
         if ("active".equals(statusFilter)) {

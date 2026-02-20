@@ -1,6 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
 
+    // Check if redirected here due to login error (from Spring Security failureUrl)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('error')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Login Failed',
+            text: 'Invalid email or password. Please try again.',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Try Again',
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -25,50 +43,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const formData = new URLSearchParams();
-            formData.append('email', email);       // must match SecurityConfig usernameParameter
+            formData.append('email', email);
             formData.append('password', password);
 
             const response = await fetch('/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData.toString()
+                body: formData.toString(),
+                redirect: 'manual' // ✅ Don't auto-follow redirects
             });
 
-            if (response.redirected) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Login Successful!',
-                    text: 'Redirecting to dashboard...',
-                    showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true
-                }).then(() => {
-                    window.location.href = response.url;
+            // Spring Security redirects to /dashboard on success, /login?error=true on failure
+            if (response.type === 'opaqueredirect' || response.status === 302) {
+                // We can't read the redirect URL with 'manual', so check via a separate call
+                const checkResponse = await fetch('/dashboard', {
+                    method: 'GET',
+                    redirect: 'manual'
                 });
-            } else if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Login Successful!',
-                    text: 'Redirecting to dashboard...',
-                    showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true
-                }).then(() => {
-                    window.location.href = '/dashboard';
-                });
+
+                if (checkResponse.status === 200 || checkResponse.type === 'basic') {
+                    // Authenticated successfully
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Successful!',
+                        text: 'Redirecting to dashboard...',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.href = '/dashboard';
+                    });
+                } else {
+                    // Not authenticated — wrong credentials
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: 'Invalid email or password. Please try again.',
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'Try Again',
+                        showClass: {
+                            popup: 'animate__animated animate__fadeInDown'
+                        },
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOutUp'
+                        }
+                    });
+                    button.disabled = false;
+                    button.textContent = "Login";
+                }
             } else {
+                // Fallback: not redirected at all — treat as error
                 Swal.fire({
                     icon: 'error',
                     title: 'Login Failed',
-                    text: 'Invalid email or password',
+                    text: 'Invalid email or password. Please try again.',
                     confirmButtonColor: '#dc3545',
-                    confirmButtonText: 'Try Again',
-                    showClass: {
-                        popup: 'animate__animated animate__fadeInDown'
-                    },
-                    hideClass: {
-                        popup: 'animate__animated animate__fadeOutUp'
-                    }
+                    confirmButtonText: 'Try Again'
                 });
                 button.disabled = false;
                 button.textContent = "Login";

@@ -16,8 +16,9 @@
 
         <!-- Cover Photo -->
         <div class="cover-photo-container">
-            <div class="cover-photo" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            <div class="cover-photo" id="coverPhotoDiv"
+                 th:style="${postOffice['coverPhoto'] != null} ? 'background-image: url(' + ${postOffice['coverPhoto']} + '); background-size: cover; background-position: center;' : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'">
+            </div>
         </div>
 
         <!-- Profile Section -->
@@ -26,7 +27,8 @@
             <div class="profile-header-wrapper">
                 <div class="profile-picture-container">
                     <div class="profile-picture-wrapper">
-                        <img src="/images/no-image.png" 
+                        <img th:src="${postOffice['profilePicture'] ?: '/images/no-image.png'}"
+                             id="mainProfilePic"
                              class="profile-picture" 
                              alt="Profile Picture"
                              onerror="this.src='/images/no-image.png'">

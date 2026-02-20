@@ -40,83 +40,90 @@ public interface ConnectivityRepository extends JpaRepository<Connectivity, Inte
     List<Connectivity> findByDateDisconnectedBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     /**
-     * Find all currently active connections (connected but not disconnected)
+     * Find all currently active connections (connected but not disconnected) — non-archived only
      */
-    @Query("SELECT c FROM Connectivity c WHERE c.dateConnected IS NOT NULL AND c.dateDisconnected IS NULL")
+    @Query("SELECT c FROM Connectivity c WHERE c.dateConnected IS NOT NULL AND c.dateDisconnected IS NULL AND c.postalOffice.isArchived = false")
     List<Connectivity> findAllActive();
 
     /**
-     * Find all inactive connections (both connected and disconnected)
+     * Find all inactive connections (both connected and disconnected) — non-archived only
      */
-    @Query("SELECT c FROM Connectivity c WHERE c.dateConnected IS NOT NULL AND c.dateDisconnected IS NOT NULL")
+    @Query("SELECT c FROM Connectivity c WHERE c.dateConnected IS NOT NULL AND c.dateDisconnected IS NOT NULL AND c.postalOffice.isArchived = false")
     List<Connectivity> findAllInactive();
 
     /**
-     * Count connections established in a specific quarter
+     * Count connections established in a specific quarter — non-archived only
      */
     @Query("SELECT COUNT(c) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateConnected) = :year AND " +
            "QUARTER(c.dateConnected) = :quarter")
     Long countConnectionsInQuarter(@Param("year") Integer year, @Param("quarter") Integer quarter);
 
     /**
-     * Count disconnections in a specific quarter
+     * Count disconnections in a specific quarter — non-archived only
      */
     @Query("SELECT COUNT(c) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateDisconnected) = :year AND " +
            "QUARTER(c.dateDisconnected) = :quarter")
     Long countDisconnectionsInQuarter(@Param("year") Integer year, @Param("quarter") Integer quarter);
 
     /**
-     * Find all connections established in a specific quarter
+     * Find all connections established in a specific quarter — non-archived only
      */
     @Query("SELECT c FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateConnected) = :year AND " +
            "QUARTER(c.dateConnected) = :quarter " +
            "ORDER BY c.dateConnected DESC")
     List<Connectivity> findConnectionsInQuarter(@Param("year") Integer year, @Param("quarter") Integer quarter);
 
     /**
-     * Find all disconnections in a specific quarter
+     * Find all disconnections in a specific quarter — non-archived only
      */
     @Query("SELECT c FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "YEAR(c.dateDisconnected) = :year AND " +
            "QUARTER(c.dateDisconnected) = :quarter " +
            "ORDER BY c.dateDisconnected DESC")
     List<Connectivity> findDisconnectionsInQuarter(@Param("year") Integer year, @Param("quarter") Integer quarter);
 
     /**
-     * Find all connections active during a specific quarter
-     * (connected before or during quarter, and either not disconnected or disconnected after quarter)
+     * Find all connections active during a specific quarter — non-archived only
      */
     @Query("SELECT c FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "c.dateConnected <= :quarterEnd AND " +
            "(c.dateDisconnected IS NULL OR c.dateDisconnected >= :quarterStart)")
-    List<Connectivity> findActiveInQuarter(@Param("quarterStart") LocalDateTime quarterStart, 
+    List<Connectivity> findActiveInQuarter(@Param("quarterStart") LocalDateTime quarterStart,
                                            @Param("quarterEnd") LocalDateTime quarterEnd);
 
     /**
-     * Count offices that gained connectivity in a specific quarter
+     * Count offices that gained connectivity in a specific quarter — non-archived only
      */
     @Query("SELECT COUNT(DISTINCT c.postalOffice.id) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "c.dateConnected >= :quarterStart AND " +
            "c.dateConnected < :quarterEnd")
-    Long countNewlyConnectedInQuarter(@Param("quarterStart") LocalDateTime quarterStart, 
+    Long countNewlyConnectedInQuarter(@Param("quarterStart") LocalDateTime quarterStart,
                                       @Param("quarterEnd") LocalDateTime quarterEnd);
 
     /**
-     * Count offices that lost connectivity in a specific quarter
+     * Count offices that lost connectivity in a specific quarter — non-archived only
      */
     @Query("SELECT COUNT(DISTINCT c.postalOffice.id) FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "c.dateDisconnected >= :quarterStart AND " +
            "c.dateDisconnected < :quarterEnd")
-    Long countNewlyDisconnectedInQuarter(@Param("quarterStart") LocalDateTime quarterStart, 
+    Long countNewlyDisconnectedInQuarter(@Param("quarterStart") LocalDateTime quarterStart,
                                          @Param("quarterEnd") LocalDateTime quarterEnd);
 
     /**
-     * Find offices with active connections at a specific point in time
+     * Find offices with active connections at a specific point in time — non-archived only
      */
     @Query("SELECT c FROM Connectivity c WHERE " +
+           "c.postalOffice.isArchived = false AND " +
            "c.dateConnected <= :checkDate AND " +
            "(c.dateDisconnected IS NULL OR c.dateDisconnected > :checkDate)")
     List<Connectivity> findActiveAtDate(@Param("checkDate") LocalDateTime checkDate);

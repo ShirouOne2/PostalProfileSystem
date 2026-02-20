@@ -1,408 +1,156 @@
 /**
- * Post Office Inventory DataTable Initialization
- * PHLPost - Post Office Management System
- * Enhanced with SweetAlert2 for better UX
- * WITH EDIT FUNCTIONALITY
+ * Post Office Inventory - table.js
+ * PHLPost Profile System
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Initialize DataTable
-    const table = new DataTable('#myTable', {
-        // Pagination
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Initialize DataTable ──────────────────────────────────────────────────
+    window._inventoryTable = new DataTable('#myTable', {
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
-        
-        // Enable features
-        paging: true,
-        ordering: true,
-        info: true,
+        paging:    true,
+        ordering:  true,
+        info:      true,
         searching: true,
-        
-        // Column configuration
+
         columnDefs: [
-            { 
-                targets: 0, // # column
-                width: '80px',
-                orderable: true,
-                className: 'dt-center'
-            },
-            { 
-                targets: 1, // Post Office Name
-                orderable: true
-            },
-            { 
-                targets: 2, // Area
-                orderable: true
-            },
-            { 
-                targets: 3, // City
-                orderable: true
-            },
-            { 
-                targets: 4, // Status column
-                width: '100px',
-                orderable: true,
-                className: 'dt-center'
-            },
-            { 
-                targets: 5, // Actions column
-                width: '150px',
-                orderable: false,
-                className: 'dt-center',
-                searchable: false
-            }
+            { targets: 0, width: '50px',  orderable: false, className: 'dt-center' },
+            { targets: 1, orderable: true },
+            { targets: 2, orderable: true },
+            { targets: 3, orderable: true },
+            { targets: 4, width: '110px', orderable: true,  className: 'dt-center' },
+            { targets: 5, width: '160px', orderable: false, className: 'dt-center', searchable: false }
         ],
-        
-        // Default sorting by Area column (index 2), then by # column
-        order: [[2, 'asc'], [0, 'asc']],
-        
-        // Language customization
+
+        order: [[2, 'asc'], [1, 'asc']],
+
         language: {
-            search: "Search:",
+            search:     "Search:",
             lengthMenu: "Show _MENU_ entries per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "No entries found",
+            info:       "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty:  "No entries found",
             infoFiltered: "(filtered from _MAX_ total entries)",
-            paginate: {
-                first: "<<",
-                previous: "<",
-                next: ">",
-                last: ">>"
-            },
+            paginate:   { first: "<<", previous: "<", next: ">", last: ">>" },
             zeroRecords: "No matching records found"
         },
-        
-        // DOM layout - search on right, entries on left
-        dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-        
-        // Responsive
+
+        dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row mt-2"<"col-sm-6"i><"col-sm-6"p>>',
+
         responsive: true,
-        
-        // State saving
-        stateSave: true,
-        stateDuration: 60 * 60, // 1 hour
-        
-        // Draw callback
-        drawCallback: function(settings) {
-            console.log('Table drawn with ' + settings.aoData.length + ' records');
-            
-            // Re-attach button event listeners after table redraw
-            attachButtonListeners();
+
+        // Dynamic row numbering — updates correctly after sort/filter/page
+        drawCallback: function () {
+            const api  = this.api();
+            const info = api.page.info();
+            api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                cell.innerHTML = info.start + i + 1;
+            });
         }
     });
-    
-    /**
-     * Attach button event listeners (edit and delete)
-     */
-    function attachButtonListeners() {
-        // Edit buttons
-        const editButtons = document.querySelectorAll('.btn-edit');
-        editButtons.forEach(button => {
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            
-            newButton.addEventListener('click', function() {
-                const officeId = this.getAttribute('data-office-id');
-                handleEdit(officeId);
-            });
-        });
-        
-        // Delete buttons
-        const deleteButtons = document.querySelectorAll('.btn-delete');
-        deleteButtons.forEach(button => {
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            
-            newButton.addEventListener('click', function() {
-                const officeId = this.getAttribute('data-office-id');
-                const officeName = this.getAttribute('data-office-name');
-                handleDelete(officeId, officeName);
-            });
-        });
-    }
-    
-    // Initial attachment of button listeners
-    attachButtonListeners();
-    
-    console.log('DataTable initialized successfully');
-});
 
-/**
- * Handle edit action
- */
+    // ── Delegated event listeners ─────────────────────────────────────────────
+    document.getElementById('myTable').addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.btn-edit');
+        if (editBtn) handleEdit(editBtn.getAttribute('data-office-id'));
+    });
+
+}); // end DOMContentLoaded
+
+
+// ── Edit Office ───────────────────────────────────────────────────────────────
 function handleEdit(officeId) {
-    // Show loading
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Loading Office Data...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    }
-    
-    // Fetch office data
+    Swal.fire({
+        title: 'Loading...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+
     fetch('/api/postal-office/' + officeId)
-        .then(response => response.json())
+        .then(r => r.json())
         .then(office => {
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-            }
-            
-            // Populate form fields
-            document.getElementById('editOfficeId').value = office.id;
-            document.getElementById('editName').value = office.name || '';
-            document.getElementById('editPostmaster').value = office.postmaster || '';
-            document.getElementById('editAddress').value = office.address || '';
-            document.getElementById('editZipCode').value = office.zipCode || '';
-            document.getElementById('editStatus').value = office.connectionStatus ? 'true' : 'false';
-            document.getElementById('editISP').value = office.internetServiceProvider || '';
-            document.getElementById('editSpeed').value = office.speed || '';
-            document.getElementById('editTypeOfConnection').value = office.typeOfConnection || '';
-            document.getElementById('editStaticIP').value = office.staticIpAddress || '';
-            document.getElementById('editNoOfEmployees').value = office.noOfEmployees || '';
-            document.getElementById('editNoOfTellers').value = office.noOfPostalTellers || '';
-            document.getElementById('editNoOfCarriers').value = office.noOfLetterCarriers || '';
-            document.getElementById('editContactPerson').value = office.postalOfficeContactPerson || '';
-            document.getElementById('editContactNumber').value = office.postalOfficeContactNumber || '';
-            document.getElementById('editISPContactPerson').value = office.ispContactPerson || '';
-            document.getElementById('editISPContactNumber').value = office.ispContactNumber || '';
-            document.getElementById('editLatitude').value = office.latitude || '';
-            document.getElementById('editLongitude').value = office.longitude || '';
-            
-            // Show modal (Bootstrap 4)
+            Swal.close();
+
+            document.getElementById('editOfficeId').value             = office.id;
+            document.getElementById('editName').value                 = office.name || '';
+            document.getElementById('editPostmaster').value           = office.postmaster || '';
+            document.getElementById('editAddress').value              = office.address || '';
+            document.getElementById('editZipCode').value              = office.zipCode || '';
+            document.getElementById('editStatus').value               = office.connectionStatus ? 'true' : 'false';
+            document.getElementById('editISP').value                  = office.internetServiceProvider || '';
+            document.getElementById('editSpeed').value                = office.speed || '';
+            document.getElementById('editTypeOfConnection').value     = office.typeOfConnection || '';
+            document.getElementById('editStaticIP').value             = office.staticIpAddress || '';
+            document.getElementById('editNoOfEmployees').value        = office.noOfEmployees || '';
+            document.getElementById('editNoOfTellers').value          = office.noOfPostalTellers || '';
+            document.getElementById('editNoOfCarriers').value         = office.noOfLetterCarriers || '';
+            document.getElementById('editContactPerson').value        = office.postalOfficeContactPerson || '';
+            document.getElementById('editContactNumber').value        = office.postalOfficeContactNumber || '';
+            document.getElementById('editISPContactPerson').value     = office.ispContactPerson || '';
+            document.getElementById('editISPContactNumber').value     = office.ispContactNumber || '';
+            document.getElementById('editLatitude').value             = office.latitude || '';
+            document.getElementById('editLongitude').value            = office.longitude || '';
+
             $('#editOfficeModal').modal('show');
         })
-        .catch(error => {
-            console.error('Error:', error);
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load office data',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert('Failed to load office data');
-            }
+        .catch(() => {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load office data.' });
         });
 }
 
-/**
- * Save office changes
- */
+
+// ── Save Changes ──────────────────────────────────────────────────────────────
 function saveOfficeChanges() {
     const id = document.getElementById('editOfficeId').value;
-    
-    // Validate required fields
-    if (!document.getElementById('editName').value) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Validation Error',
-                text: 'Office name is required',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Office name is required');
-        }
+
+    if (!document.getElementById('editName').value.trim()) {
+        Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Office name is required.' });
         return;
     }
-    
-    // Prepare update data
+
     const updateData = {
-        name: document.getElementById('editName').value,
-        postmaster: document.getElementById('editPostmaster').value || null,
-        address: document.getElementById('editAddress').value || null,
-        zipCode: document.getElementById('editZipCode').value || null,
-        connectionStatus: document.getElementById('editStatus').value === 'true',
-        internetServiceProvider: document.getElementById('editISP').value || null,
-        speed: document.getElementById('editSpeed').value || null,
-        typeOfConnection: document.getElementById('editTypeOfConnection').value || null,
-        staticIpAddress: document.getElementById('editStaticIP').value || null,
-        noOfEmployees: document.getElementById('editNoOfEmployees').value ? parseInt(document.getElementById('editNoOfEmployees').value) : null,
-        noOfPostalTellers: document.getElementById('editNoOfTellers').value ? parseInt(document.getElementById('editNoOfTellers').value) : null,
-        noOfLetterCarriers: document.getElementById('editNoOfCarriers').value ? parseInt(document.getElementById('editNoOfCarriers').value) : null,
-        postalOfficeContactPerson: document.getElementById('editContactPerson').value || null,
-        postalOfficeContactNumber: document.getElementById('editContactNumber').value || null,
-        ispContactPerson: document.getElementById('editISPContactPerson').value || null,
-        ispContactNumber: document.getElementById('editISPContactNumber').value || null,
-        latitude: document.getElementById('editLatitude').value ? parseFloat(document.getElementById('editLatitude').value) : null,
-        longitude: document.getElementById('editLongitude').value ? parseFloat(document.getElementById('editLongitude').value) : null
+        name:                        document.getElementById('editName').value,
+        postmaster:                  document.getElementById('editPostmaster').value || null,
+        address:                     document.getElementById('editAddress').value || null,
+        zipCode:                     document.getElementById('editZipCode').value || null,
+        connectionStatus:            document.getElementById('editStatus').value === 'true',
+        internetServiceProvider:     document.getElementById('editISP').value || null,
+        speed:                       document.getElementById('editSpeed').value || null,
+        typeOfConnection:            document.getElementById('editTypeOfConnection').value || null,
+        staticIpAddress:             document.getElementById('editStaticIP').value || null,
+        noOfEmployees:               document.getElementById('editNoOfEmployees').value ? parseInt(document.getElementById('editNoOfEmployees').value) : null,
+        noOfPostalTellers:           document.getElementById('editNoOfTellers').value   ? parseInt(document.getElementById('editNoOfTellers').value)   : null,
+        noOfLetterCarriers:          document.getElementById('editNoOfCarriers').value  ? parseInt(document.getElementById('editNoOfCarriers').value)  : null,
+        postalOfficeContactPerson:   document.getElementById('editContactPerson').value || null,
+        postalOfficeContactNumber:   document.getElementById('editContactNumber').value || null,
+        ispContactPerson:            document.getElementById('editISPContactPerson').value || null,
+        ispContactNumber:            document.getElementById('editISPContactNumber').value || null,
+        latitude:                    document.getElementById('editLatitude').value  ? parseFloat(document.getElementById('editLatitude').value)  : null,
+        longitude:                   document.getElementById('editLongitude').value ? parseFloat(document.getElementById('editLongitude').value) : null
     };
-    
-    // Show saving progress
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Saving Changes...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    }
-    
-    // Send update request
+
+    Swal.fire({
+        title: 'Saving...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+
     fetch('/api/postal-office/' + id, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
     })
-    .then(response => response.json())
-    .then(data => {
-        // Hide modal
+    .then(r => r.json())
+    .then(() => {
         $('#editOfficeModal').modal('hide');
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Post office updated successfully',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            alert('Post office updated successfully!');
-            window.location.reload();
-        }
+        Swal.fire({ icon: 'success', title: 'Saved!', text: 'Post office updated successfully.', timer: 2000, showConfirmButton: false })
+            .then(() => location.reload());
     })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: 'Failed to update post office',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Failed to update post office');
-        }
-    });
-}
-
-/**
- * Handle delete action with SweetAlert2 or native confirm
- */
-function handleDelete(officeId, officeName) {
-    // Check if SweetAlert2 is available
-    if (typeof Swal !== 'undefined') {
-        // Use SweetAlert2 for better UX
-        Swal.fire({
-            title: 'Delete Post Office?',
-            html: `Are you sure you want to delete <strong>${officeName}</strong>?<br><small class="text-muted">This action cannot be undone.</small>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
-            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                performDelete(officeId, officeName);
-            }
-        });
-    } else {
-        // Fallback to native confirm
-        if (!confirm(`Are you sure you want to delete "${officeName}"?\n\nThis action cannot be undone!`)) {
-            return;
-        }
-        performDelete(officeId, officeName);
-    }
-}
-
-/**
- * Execute the delete operation
- */
-function performDelete(officeId, officeName) {
-    // Show loading state
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Deleting...',
-            html: `Removing <strong>${officeName}</strong>`,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    } else {
-        // Fallback loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'deleteLoadingIndicator';
-        loadingDiv.innerHTML = '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);z-index:9999"><i class="fas fa-spinner fa-spin"></i> Deleting...</div>';
-        document.body.appendChild(loadingDiv);
-    }
-    
-    fetch('/api/postal-office/' + officeId, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Remove loading indicator if using fallback
-        const loadingDiv = document.getElementById('deleteLoadingIndicator');
-        if (loadingDiv) {
-            document.body.removeChild(loadingDiv);
-        }
-        
-        if (data.success) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: `${officeName} has been removed successfully.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload();
-                });
-            } else {
-                alert('Post office deleted successfully!');
-                window.location.reload();
-            }
-        } else {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Delete Failed',
-                    text: data.message || 'Failed to delete post office',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert('Error: ' + (data.message || 'Failed to delete post office'));
-            }
-        }
-    })
-    .catch(error => {
-        // Remove loading indicator if using fallback
-        const loadingDiv = document.getElementById('deleteLoadingIndicator');
-        if (loadingDiv) {
-            document.body.removeChild(loadingDiv);
-        }
-        
-        console.error('Error:', error);
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while deleting the post office',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Failed to delete post office');
-        }
+    .catch(() => {
+        Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not update post office.' });
     });
 }
