@@ -11,7 +11,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // ✅ Use your custom MD5 encoder - no more deprecation warning
         return new Md5PasswordEncoder();
     }
 
@@ -26,7 +25,8 @@ public class SecurityConfig {
                     "/api/**",
                     "/css/**",
                     "/js/**",
-                    "/images/**"
+                    "/images/**",
+                    "/postal-offices/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
