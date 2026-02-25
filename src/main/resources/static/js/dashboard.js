@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize map
     const map = L.map('map', {
-        center: [12.8797, 121.7740],
-        zoom: 5,
-        minZoom: 2,
+        center: [11.0, 122.0],
+        zoom: 6,
+        minZoom: 5,
         maxZoom: 18,
         maxBounds: [
             [4.0, 116.0],
@@ -107,56 +107,63 @@ document.addEventListener('DOMContentLoaded', function() {
                     fillOpacity: 0.8
                 });
 
-                // Bind popup with detailed information
-                console.log('Office data for popup:', office);
-                const statusLabel = office.status ? 'Active' : 'Inactive';
-                const badgeBg = office.status ? '#d4edda' : '#f8d7da';
-                const badgeColor = office.status ? '#155724' : '#721c24';
-                
-                const nameRaw = office.name || 'N/A';
-                const addressRaw = office.address || 'Address not available';
-                const postmasterRaw = office.postmaster || 'Not assigned';
-                const employeesRaw = (office.noOfEmployees === null || office.noOfEmployees === undefined || office.noOfEmployees === 0) ? 'Not available' : office.noOfEmployees;
-                const contactPersonRaw = office.postalOfficeContactPerson || 'Not available';
-                const contactNumberRaw = office.postalOfficeContactNumber || 'Not available';
-                const officeId = office.id || '';
-                
-                // Image placeholder (you can update this path based on your actual image storage)
-                const coverPhotoSrc = office.coverPhoto || '/images/no-image.png';
+                // Helper: build popup HTML from office data object
+                function buildPopupContent(o) {
+                    const sLabel   = o.status ? 'Active' : 'Inactive';
+                    const sBg      = o.status ? '#d4edda' : '#f8d7da';
+                    const sColor   = o.status ? '#155724' : '#721c24';
+                    const name     = o.name || 'N/A';
+                    const address  = o.address || 'Address not available';
+                    const pm       = o.postmaster || 'Not assigned';
+                    const emp      = (!o.noOfEmployees) ? 'Not available' : o.noOfEmployees;
+                    const cp       = o.postalOfficeContactPerson || 'Not available';
+                    const cn       = o.postalOfficeContactNumber || 'Not available';
+                    const oid      = o.id || '';
+                    const cover    = o.coverPhoto    || '/images/no-image.png';
+                    const profile  = o.profilePicture || '/images/no-image.png';
 
-                const popupContent = `
-                    <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.4;max-width:240px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                            <span style="font-size:13px;font-weight:600;color:#002868;">PHLPost Station</span>
-                            <span style="padding:2px 8px;border-radius:999px;background:${badgeBg};color:${badgeColor};font-size:11px;">${statusLabel}</span>
-                        </div>
-                        <div style="color:#1f2a44;font-weight:600;margin-bottom:4px;">${nameRaw}</div>
-                        <div style="color:#4d5a73;margin-bottom:6px;">${addressRaw}</div>
-                        <div style="background:#f7f9ff;border:1px solid rgba(0,40,104,0.08);border-radius:8px;padding:6px 8px;margin-bottom:6px;">
-                            <div style="margin-bottom:4px;">
-                                <span style="color:#7a869a;">Postmaster</span><br>
-                                <strong style="color:#002868;">${postmasterRaw}</strong>
+                    return `
+                        <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.4;max-width:240px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                <span style="font-size:13px;font-weight:600;color:#002868;">PHLPost Station</span>
+                                <span style="padding:2px 8px;border-radius:999px;background:${sBg};color:${sColor};font-size:11px;">${sLabel}</span>
                             </div>
-                            <div style="margin-bottom:4px;">
-                                <span style="color:#7a869a;">Employees</span><br>
-                                <strong style="color:#002868;">${employeesRaw}</strong>
+                            <div style="color:#1f2a44;font-weight:600;margin-bottom:4px;">${name}</div>
+                            <div style="color:#4d5a73;margin-bottom:6px;">${address}</div>
+                            <div style="background:#f7f9ff;border:1px solid rgba(0,40,104,0.08);border-radius:8px;padding:6px 8px;margin-bottom:6px;">
+                                <div style="margin-bottom:4px;"><span style="color:#7a869a;">Postmaster</span><br><strong style="color:#002868;">${pm}</strong></div>
+                                <div style="margin-bottom:4px;"><span style="color:#7a869a;">Employees</span><br><strong style="color:#002868;">${emp}</strong></div>
+                                <div style="margin-bottom:4px;">
+                                    <span style="color:#7a869a;">Contact</span><br>
+                                    <strong style="color:#002868;">${cp}</strong><br>
+                                    <span style="color:#4d5a73;">${cn}</span>
+                                </div>
                             </div>
-                            <div style="margin-bottom:4px;">
-                                <span style="color:#7a869a;">Contact</span><br>
-                                <strong style="color:#002868;">${contactPersonRaw}</strong><br>
-                                <span style="color:#4d5a73;">${contactNumberRaw}</span>
+                            <img src="${cover}" onerror="this.src='/images/no-image.png'"
+                                 style="width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:6px;" />
+                            <div style="display:flex;gap:4px;">
+                                <button onclick="window.location.href='/postal-office/view/${oid}'"
+                                        style="flex:1;padding:6px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;text-align:center;">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
                             </div>
-                        </div>
-                        <img src="${coverPhotoSrc}" onerror="this.src='/images/no-image.png'" style="width:100%;height:110px;border-radius:8px;object-fit:cover;margin-bottom:6px;" />
-                        <div style="display:flex;gap:4px;">
-                            <button onclick="window.location.href='/postal-office/view/${officeId}'" style="flex:1;padding:6px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;text-decoration:none;display:inline-block;text-align:center;">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                        </div>
-                    </div>
-                `;
+                        </div>`;
+                }
 
-                marker.bindPopup(popupContent, {
+                // Bind popup — refresh from API every time it opens so images are always fresh
+                marker.on('click', function() {
+                    const m = this;
+                    m.openPopup();
+                    fetch('/api/postal-office/' + office.id)
+                        .then(r => r.ok ? r.json() : Promise.reject())
+                        .then(fresh => {
+                            m.officeData = Object.assign(m.officeData, fresh);
+                            m.setPopupContent(buildPopupContent(m.officeData));
+                        })
+                        .catch(() => { /* keep existing content */ });
+                });
+
+                marker.bindPopup(buildPopupContent(office), {
                     maxWidth: 260,
                     className: 'custom-popup'
                 });

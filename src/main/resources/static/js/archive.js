@@ -11,6 +11,64 @@
  */
 $(document).ready(function () {
 
+    // Global function to remove all modal backdrops
+    window.removeAllModalBackdrops = function() {
+        $('.modal-backdrop').remove();
+        $('.modal-open').removeClass('modal-open');
+        $('body').removeClass('modal-open');
+        $('body').css('overflow', '');
+        $('body').css('padding-right', '');
+        console.log('Backdrop removed forcefully');
+    };
+    
+    // Aggressive backdrop removal - multiple approaches
+    setInterval(function() {
+        if ($('.modal-backdrop').length > 0 && !$('.modal.show').length) {
+            removeAllModalBackdrops();
+        }
+    }, 200); // Faster check - every 200ms
+    
+    // Mutation observer to catch backdrop creation
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && node.classList && node.classList.contains('modal-backdrop')) {
+                        setTimeout(function() {
+                            if (!$('.modal.show').length) {
+                                $(node).remove();
+                                console.log('Backdrop removed by observer');
+                            }
+                        }, 10);
+                    }
+                });
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Click anywhere to remove backdrop (emergency)
+    $(document).on('click', function(e) {
+        if ($(e.target).hasClass('modal-backdrop')) {
+            $(e.target).remove();
+            removeAllModalBackdrops();
+        }
+    });
+
+    // Clean up modal backdrop when archive modal is hidden
+    $('#archiveReasonModal').on('hidden.bs.modal', function () {
+        removeAllModalBackdrops();
+        
+        // Double-check after a short delay
+        setTimeout(function() {
+            removeAllModalBackdrops();
+        }, 50);
+    });
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     const Toast = Swal.mixin({

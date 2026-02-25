@@ -215,7 +215,7 @@
             src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
     <!-- 9. Dashboard JS -->
-    <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
+    <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js?v=1}"></script>
     
     <!-- 10. Table JS -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>

@@ -4,17 +4,120 @@
  */
 
 $(document).ready(function () {
-    var officeId   = $('#profileArchiveBtn').data('office-id');
-    var officeName = $('#profileArchiveBtn').data('office-name');
-
+    // Global function to remove all modal backdrops
+    window.removeAllModalBackdrops = function() {
+        $('.modal-backdrop').remove();
+        $('.modal-open').removeClass('modal-open');
+        $('body').removeClass('modal-open');
+        $('body').css('overflow', '');
+        $('body').css('padding-right', '');
+        console.log('Backdrop removed forcefully');
+    };
+    
+    // CSS injection to hide backdrops immediately
+    const style = document.createElement('style');
+    style.textContent = `
+        .modal-backdrop:not(.modal-backdrop-active) {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Aggressive backdrop removal - multiple approaches
+    setInterval(function() {
+        if ($('.modal-backdrop').length > 0 && !$('.modal.show').length) {
+            removeAllModalBackdrops();
+        }
+    }, 200); // Faster check - every 200ms
+    
+    // Mutation observer to catch backdrop creation
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && node.classList && node.classList.contains('modal-backdrop')) {
+                        setTimeout(function() {
+                            if (!$('.modal.show').length) {
+                                $(node).remove();
+                                console.log('Backdrop removed by observer');
+                            }
+                        }, 10);
+                    }
+                });
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Click anywhere to remove backdrop (emergency)
+    $(document).on('click', function(e) {
+        if ($(e.target).hasClass('modal-backdrop')) {
+            $(e.target).remove();
+            removeAllModalBackdrops();
+        }
+    });
+    
+    // Specific fix for profile archive modal
+    $('#profileArchiveModal').on('show.bs.modal', function() {
+        // Remove any existing backdrops before showing
+        removeAllModalBackdrops();
+    });
+    
+    $('#profileArchiveModal').on('hide.bs.modal', function() {
+        // Remove backdrop immediately when hiding starts
+        removeAllModalBackdrops();
+    });
+    
+    // Ensure archive button is enabled on page load
+    $('#profileConfirmArchiveBtn').prop('disabled', false);
+    
+    // Clean up modal backdrop when modal is hidden
+    $('#profileArchiveModal').on('hidden.bs.modal', function () {
+        removeAllModalBackdrops();
+        
+        // Double-check after a short delay
+        setTimeout(function() {
+            removeAllModalBackdrops();
+        }, 50);
+    });
+    
+    // Archive button click handler
     $('#profileArchiveBtn').on('click', function () {
+        var officeId   = $('#profileArchiveBtn').data('office-id');
+        var officeName = $('#profileArchiveBtn').data('office-name');
+        
+        console.log('Archive button clicked - Office ID:', officeId, 'Office Name:', officeName);
+        
         $('#profileArchiveReason').val('');
         $('#profileArchiveModal').modal('show');
+        
+        // Ensure confirm button is enabled when modal opens
+        setTimeout(function() {
+            $('#profileConfirmArchiveBtn').prop('disabled', false);
+        }, 100);
     });
 
+    // Confirm archive button handler
     $('#profileConfirmArchiveBtn').on('click', function () {
+        var officeId   = $('#profileArchiveBtn').data('office-id');
+        var officeName = $('#profileArchiveBtn').data('office-name');
         var reason = $('#profileArchiveReason').val().trim();
         var $btn   = $(this);
+        
+        console.log('Confirm archive clicked - Office ID:', officeId, 'Reason:', reason);
+        
+        // Check if button is already disabled
+        if ($btn.prop('disabled')) {
+            console.log('Button is already disabled, ignoring click');
+            return;
+        }
+        
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Archiving...');
 
         $.ajax({
@@ -23,7 +126,15 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: JSON.stringify({ reason: reason }),
             success: function (res) {
+                console.log('Archive success:', res);
                 $('#profileArchiveModal').modal('hide');
+                
+                // Use global cleanup function
+                removeAllModalBackdrops();
+                setTimeout(function() {
+                    removeAllModalBackdrops();
+                }, 100);
+                
                 $btn.prop('disabled', false).html('<i class="fas fa-archive mr-1"></i> Archive');
                 if (res.success) {
                     Swal.fire({
@@ -38,6 +149,7 @@ $(document).ready(function () {
                 }
             },
             error: function (xhr) {
+                console.log('Archive error:', xhr);
                 $btn.prop('disabled', false).html('<i class="fas fa-archive mr-1"></i> Archive');
                 var msg = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
                 Swal.fire({ icon: 'error', title: 'Error', text: msg });
@@ -138,6 +250,8 @@ function previewAndUploadImage(input, type) {
                 // Update main profile page images live (no need to reload)
                 if (type === 'profile') {
                     $('#mainProfilePic').attr('src', res.url);
+                    // Update leaflet popup profile pic if open
+                    $('#popup-profile-' + officeId).attr('src', res.url);
                 } else {
                     var coverDiv = $('#coverPhotoDiv');
                     coverDiv.css({
@@ -147,6 +261,8 @@ function previewAndUploadImage(input, type) {
                         'background': ''
                     });
                     coverDiv.css('background-image', 'url(' + res.url + ')');
+                    // Update leaflet popup cover photo if open
+                    $('#popup-cover-' + officeId).attr('src', res.url);
                 }
             } else {
                 statusEl.html('<small class="text-danger"><i class="fas fa-times-circle"></i> ' + (res.message || 'Upload failed.') + '</small>');
@@ -219,4 +335,4 @@ function saveOfficeChanges() {
             Swal.fire({ icon: 'error', title: 'Error', text: msg });
         }
     });
-}   
+}

@@ -198,22 +198,67 @@
     font-weight: 600;
     color: #6c757d;
     font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
 }
 
-.filter-section .form-control {
+.filter-section .form-control,
+.filter-section .form-select {
     border-radius: 8px;
     border: 2px solid #e9ecef;
     padding: 0.75rem 1rem;
     font-size: 0.95rem;
     transition: all 0.2s ease;
+    background-color: #fff;
 }
 
-.filter-section .form-control:focus {
+.filter-section .form-control:focus,
+.filter-section .form-select:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+    background-color: #fff;
+}
+
+.filter-section .input-group {
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.filter-section .input-group-text {
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    padding: 0.75rem 1rem;
+    color: #6c757d;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.filter-section .input-group .form-control {
+    border-radius: 0 8px 8px 0;
+    border-left: none;
+}
+
+.filter-section .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-section .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section .d-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
 }
 
 /* Map Section */

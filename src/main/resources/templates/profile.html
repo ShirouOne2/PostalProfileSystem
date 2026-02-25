@@ -45,6 +45,26 @@
                 </p>
             </div>
 
+            <!-- Action Buttons -->
+            <div class="text-center mt-3 mb-3">
+                <a th:href="@{/table}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Table
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal()">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+                <button onclick="window.print()" class="btn btn-info btn-sm">
+                    <i class="fas fa-print"></i> Print Profile
+                </button>
+                <button type="button"
+                        class="btn btn-warning btn-sm"
+                        th:data-office-id="${postOffice.id}"
+                        th:data-office-name="${postOffice.postalOffice}"
+                        id="profileArchiveBtn">
+                    <i class="fas fa-archive"></i> Archive
+                </button>
+            </div>
+
             <!-- Profile Tabs -->
             <div class="profile-tabs">
                 <a href="#basic" class="tab-item active">
@@ -349,26 +369,6 @@
                         <div class="info-value" th:text="${postOffice.noOfLetterCarriers ?: '0'}">Letter Carriers</div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="text-center mt-4 mb-4">
-                <a th:href="@{/table}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Table
-                </a>
-                <button type="button" class="btn btn-primary" onclick="openEditModal()">
-                    <i class="fas fa-edit"></i> Edit Profile
-                </button>
-                <button onclick="window.print()" class="btn btn-info">
-                    <i class="fas fa-print"></i> Print Profile
-                </button>
-                <button type="button"
-                        class="btn btn-warning"
-                        th:data-office-id="${postOffice.id}"
-                        th:data-office-name="${postOffice.postalOffice}"
-                        id="profileArchiveBtn">
-                    <i class="fas fa-archive"></i> Archive
-                </button>
             </div>
 
             <!-- Archive Reason Modal -->
