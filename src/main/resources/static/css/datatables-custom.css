@@ -29,8 +29,8 @@
 }
 
 #postOfficeTable_wrapper .dataTables_filter input:focus {
-    border-color: #4e73df;
-    box-shadow: 0 0 0 0.15rem rgba(78,115,223,0.15);
+    border-color: #002868;
+    box-shadow: 0 0 0 0.15rem rgba(0,40,104,0.15);
 }
 
 #postOfficeTable_wrapper .dataTables_info {
@@ -49,20 +49,20 @@
     font-size: 13px;
     margin: 0 2px;
     border: 1px solid #dee2e6;
-    color: #4e73df !important;
+    color: #002868 !important;
     background: #fff;
     cursor: pointer;
 }
 
 #postOfficeTable_wrapper .dataTables_paginate .paginate_button.current {
-    background: #4e73df !important;
+    background: #002868 !important;
     color: #fff !important;
-    border-color: #4e73df;
+    border-color: #002868;
 }
 
 #postOfficeTable_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
     background: #eaecf4 !important;
-    color: #4e73df !important;
+    color: #002868 !important;
     border-color: #dee2e6;
 }
 
@@ -102,8 +102,8 @@
 }
 
 #myTable_wrapper .dataTables_filter input:focus {
-    border-color: #4e73df;
-    box-shadow: 0 0 0 0.15rem rgba(78,115,223,0.15);
+    border-color: #002868;
+    box-shadow: 0 0 0 0.15rem rgba(0,40,104,0.15);
 }
 
 #myTable_wrapper .dataTables_info {
@@ -122,20 +122,20 @@
     font-size: 13px;
     margin: 0 2px;
     border: 1px solid #dee2e6;
-    color: #4e73df !important;
+    color: #002868 !important;
     background: #fff;
     cursor: pointer;
 }
 
 #myTable_wrapper .dataTables_paginate .paginate_button.current {
-    background: #4e73df !important;
+    background: #002868 !important;
     color: #fff !important;
-    border-color: #4e73df;
+    border-color: #002868;
 }
 
 #myTable_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
     background: #eaecf4 !important;
-    color: #4e73df !important;
+    color: #002868 !important;
     border-color: #dee2e6;
 }
 

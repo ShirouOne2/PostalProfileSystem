@@ -119,9 +119,9 @@
 .filter-select:focus, #editStatus:focus {
     color: #495057 !important;
     background-color: #fff !important;
-    border-color: #80bdff !important;
+    border-color: #7a9fd4 !important;
     outline: 0 !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 40, 104, 0.25) !important;
 }
 
 .filter-select option, #editStatus option {
@@ -147,7 +147,7 @@
 .stats-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    border-color: #007bff;
+    border-color: #002868;
 }
 
 .stats-card i {
@@ -212,8 +212,8 @@
 
 .filter-section .form-control:focus,
 .filter-section .form-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+    border-color: #002868;
+    box-shadow: 0 0 0 0.2rem rgba(0, 40, 104, 0.1);
     background-color: #fff;
 }
 

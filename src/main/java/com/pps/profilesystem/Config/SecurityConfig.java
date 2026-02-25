@@ -11,7 +11,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // ✅ Use your custom MD5 encoder - no more deprecation warning
         return new Md5PasswordEncoder();
     }
 
@@ -20,14 +19,30 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Public resources — no login needed
                 .requestMatchers(
                     "/login",
                     "/error",
-                    "/api/**",
                     "/css/**",
                     "/js/**",
-                    "/images/**"
+                    "/images/**",
+                    "/assets/**"
                 ).permitAll()
+
+                // Public API endpoints (location lookups, zip, etc.)
+                .requestMatchers(
+                    "/api/locations/**",
+                    "/api/zip/**",
+                    "/api/quarters/**"
+                ).permitAll()
+
+                // Notification API — must be logged in
+                .requestMatchers(
+                    "/api/notifications",
+                    "/api/notifications/**"
+                ).authenticated()
+
+                // Everything else — must be logged in
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

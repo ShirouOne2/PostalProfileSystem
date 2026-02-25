@@ -17,7 +17,7 @@ body {
     position: relative;
     height: 300px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
 }
 
 .cover-photo {
@@ -110,14 +110,14 @@ body {
 }
 
 .tab-item:hover {
-    color: #007bff;
-    background: rgba(0,123,255,0.05);
+    color: #002868;
+    background: rgba(0,40,104,0.05);
 }
 
 .tab-item.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
-    background: rgba(0,123,255,0.1);
+    color: #002868;
+    border-bottom-color: #002868;
+    background: rgba(0,40,104,0.1);
 }
 
 .info-card {
@@ -141,14 +141,14 @@ body {
     color: #2c3e50;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 3px solid #007bff;
+    border-bottom: 3px solid #002868;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .card-header i {
-    color: #007bff;
+    color: #002868;
 }
 
 .info-row {
@@ -166,7 +166,7 @@ body {
 }
 
 .info-row:hover {
-    background-color: rgba(0,123,255,0.02);
+    background-color: rgba(0,40,104,0.02);
     border-radius: 8px;
     padding-left: 10px;
     padding-right: 10px;
@@ -175,7 +175,7 @@ body {
 .info-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -356,7 +356,7 @@ body {
 }
 
 .badge-info {
-    background: #17a2b8;
+    background: #002868;
     color: white;
 }
 
@@ -370,6 +370,6 @@ body {
 .back-button:focus,
 .print-button:focus,
 .tab-item:focus {
-    outline: 2px solid #007bff;
+    outline: 2px solid #002868;
     outline-offset: 2px;
 }

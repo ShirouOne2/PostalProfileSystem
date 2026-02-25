@@ -1,11 +1,11 @@
 /* Root Variables */
 :root {
-    --primary-color: #4e73df;
+    --primary-color: #002868;
     --secondary-color: #858796;
-    --success-color: #1cc88a;
+    --success-color: #28a745;
     --danger-color: #e74a3b;
     --warning-color: #f6c23e;
-    --info-color: #36b9cc;
+    --info-color: #002868;
     --dark-color: #5a5c69;
 }
 
@@ -64,7 +64,7 @@ body {
 
 /* Buttons */
 .btn-add-user {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     border: none;
     color: white;
     padding: 12px 24px;
@@ -75,7 +75,7 @@ body {
 
 .btn-add-user:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 40, 104, 0.4);
     color: white;
 }
 
@@ -94,7 +94,7 @@ table.dataTable {
 }
 
 table.dataTable thead th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     color: white;
     font-weight: 600;
     text-transform: uppercase;
@@ -132,8 +132,8 @@ table.dataTable tbody tr:hover {
 }
 
 .badge-role {
-    background-color: #e7e8ff;
-    color: #4e73df;
+    background-color: #e8eef7;
+    color: #002868;
 }
 
 /* Action Buttons */
@@ -153,12 +153,12 @@ table.dataTable tbody tr:hover {
 }
 
 .btn-edit {
-    background-color: #36b9cc;
+    background-color: #002868;
     color: white;
 }
 
 .btn-edit:hover {
-    background-color: #2c9faf;
+    background-color: #1a4fa8;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(54, 185, 204, 0.3);
 }
@@ -175,14 +175,14 @@ table.dataTable tbody tr:hover {
 }
 
 .btn-view {
-    background-color: #4e73df;
+    background-color: #002868;
     color: white;
 }
 
 .btn-view:hover {
-    background-color: #2e59d9;
+    background-color: #1a4fa8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 40, 104, 0.3);
 }
 
 /* Modal Styles */
@@ -193,7 +193,7 @@ table.dataTable tbody tr:hover {
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     color: white;
     border-radius: 15px 15px 0 0;
     padding: 20px 30px;
@@ -241,7 +241,7 @@ table.dataTable tbody tr:hover {
 
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(0, 40, 104, 0.15);
 }
 
 .form-control.is-invalid {
@@ -276,7 +276,7 @@ table.dataTable tbody tr:hover {
 
 /* Modal Buttons */
 .btn-modal-save {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     border: none;
     color: white;
     padding: 10px 24px;
@@ -286,7 +286,7 @@ table.dataTable tbody tr:hover {
 
 .btn-modal-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 40, 104, 0.4);
     color: white;
 }
 
@@ -346,7 +346,7 @@ table.dataTable tbody tr:hover {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #C1272D 100%);
     color: white;
     display: flex;
     align-items: center;

@@ -1,0 +1,200 @@
+/* ============================================
+   PHLPOST HEADER STYLES
+   ============================================ */
+
+.header {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-logo img {
+    height: 40px;
+    width: auto;
+}
+
+.header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #002868;
+    margin: 0;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.header-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #002868;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.header-user-name {
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 0.875rem;
+}
+
+.header-user-role {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 6px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.header-btn:hover {
+    background: #f8f9fa;
+    border-color: #cbd5e1;
+    color: #2d3748;
+    text-decoration: none;
+}
+
+.header-btn-primary {
+    background: #002868;
+    color: white;
+    border-color: #002868;
+}
+
+.header-btn-primary:hover {
+    background: #1a4fa8;
+    border-color: #1a4fa8;
+    color: white;
+}
+
+/* Notifications */
+.header-notifications {
+    position: relative;
+}
+
+.notification-bell {
+    position: relative;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-bell:hover {
+    background: #f8f9fa;
+    border-color: #cbd5e1;
+    color: #2d3748;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #C1272D;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .header-container {
+        padding: 0 0.75rem;
+    }
+    
+    .header-title {
+        font-size: 1.125rem;
+    }
+    
+    .header-user-name {
+        display: none;
+    }
+    
+    .header-actions {
+        gap: 0.25rem;
+    }
+    
+    .header-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0.75rem 0;
+    }
+    
+    .header-logo img {
+        height: 32px;
+    }
+    
+    .header-title {
+        font-size: 1rem;
+    }
+    
+    .header-user {
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .header-user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+}

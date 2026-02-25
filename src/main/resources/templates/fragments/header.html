@@ -11,55 +11,127 @@
                      style="height: 45px;">
             </a>
 
-            <!-- RIGHT SIDE - Existing notifications and user -->
+            <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">
-                <li class="nav-item dropdown mr-3">
-                    <a class="nav-link text-muted" href="#" id="alertsDropdown" role="button" data-toggle="dropdown">
-                        <i class="fas fa-bell fa-fw"></i>
-                        <span class="badge badge-danger badge-counter" style="font-size: 10px;">3+</span>
-                    </a>
-                </li>
 
+                <!-- ════════════════════════════════════════════
+                     NOTIFICATION BELL
+                     ════════════════════════════════════════════ -->
+                <li class="nav-item dropdown mr-3" id="notifDropdownItem">
+                    <a class="nav-link text-muted position-relative" href="#"
+                       id="alertsDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                       style="padding: 6px 10px;"
+                       onclick="markNotificationsRead()">
+                        <i class="fas fa-bell fa-fw" style="font-size: 18px;"></i>
+                        <span id="notif-badge"
+                              class="badge badge-danger badge-counter d-none"
+                              style="font-size: 10px; position: absolute; top: 2px; right: 2px; min-width: 18px;">0</span>
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-right shadow-lg p-0"
+                         aria-labelledby="alertsDropdown"
+                         style="width: 360px; max-height: 480px; overflow: hidden; border-radius: 10px;">
+
+                        <!-- Header -->
+                        <div class="d-flex align-items-center justify-content-between px-3 py-2"
+                             style="background: #0d47a1; border-radius: 10px 10px 0 0;">
+                            <span class="text-white font-weight-bold" style="font-size: 14px;">
+                                <i class="fas fa-bell mr-1"></i> Notifications
+                            </span>
+                            <span id="notif-header-count" class="badge badge-light" style="font-size: 11px;">0 new</span>
+                        </div>
+
+                        <!-- Notification List -->
+                        <div id="notif-list"
+                             style="max-height: 380px; overflow-y: auto;">
+
+                            <!-- Empty state -->
+                            <div id="notif-empty" class="text-center py-4 text-muted" style="display:none;">
+                                <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
+                                <span style="font-size: 13px;">No notifications yet</span>
+                            </div>
+
+                            <!-- Loading state -->
+                            <div id="notif-loading" class="text-center py-4 text-muted">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
+                                <span style="font-size: 13px;">Loading...</span>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="text-center py-2 border-top bg-light" style="border-radius: 0 0 10px 10px;">
+                            <a href="#" style="font-size: 12px; color: #0d47a1; text-decoration: none;">
+                                <i class="fas fa-list mr-1"></i> View All Activity
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                <!-- END NOTIFICATION BELL -->
+
+                <!-- User Dropdown -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center pl-3 border-left" 
                        href="#" id="userDropdown" role="button" data-toggle="dropdown" 
                        aria-haspopup="true" aria-expanded="false">
                         <div class="text-right mr-2 d-none d-md-block">
-                            <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;" th:text="${user.username}">Admin User</div>
-                            <div class="user-role" style="font-size: 11px; color: #777;" th:text="${roleName}">System Admin</div>
+                            <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;"
+                                 th:text="${user.username}">Admin User</div>
+                            <div class="user-role" style="font-size: 11px; color: #777;"
+                                 th:text="${roleName}">System Admin</div>
                         </div>
                         <div class="user-avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
                              style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;"
-                             th:text="${#strings.substring(user.username, 0, 1)}">
-                            A
-                        </div>
+                             th:text="${#strings.substring(user.username, 0, 1)}">A</div>
                     </a>
                     
-                    <!-- User Dropdown Menu -->
                     <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown">
                         <a class="dropdown-item" href="#" th:href="@{/profile}">
-                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Profile
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
                         </a>
                         <a class="dropdown-item" href="#" th:href="@{/settings}">
-                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Settings
+                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i> Settings
                         </a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" th:href="@{/users}">
-                            <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Manage Users
+                            <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i> Manage Users
                         </a>
-                    
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" th:href="@{/logout}">
-                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Logout
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
                         </a>
                     </div>
                 </li>
             </ul>
         </div>
     </nav>
+
+    <!-- Notification Item Template (hidden, cloned by JS) -->
+    <template id="notif-item-template">
+        <div class="notif-item px-3 py-2 border-bottom d-flex align-items-start"
+             style="cursor: pointer; transition: background 0.2s;"
+             onmouseover="this.style.background='#f0f4ff'"
+             onmouseout="this.style.background=this.dataset.unread==='true'?'#f8f9ff':'#fff'">
+            <div class="mr-2 mt-1 notif-icon-wrap"
+                 style="width: 32px; height: 32px; border-radius: 50%; background: #e8eaf6;
+                        display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="notif-icon" style="font-size: 13px;"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div class="notif-desc text-dark"
+                     style="font-size: 12.5px; line-height: 1.4; word-break: break-word;"></div>
+                <div class="d-flex align-items-center mt-1" style="gap: 6px;">
+                    <span class="badge notif-badge" style="font-size: 10px;"></span>
+                    <small class="notif-time text-muted" style="font-size: 11px;"></small>
+                </div>
+                <small class="notif-user text-muted" style="font-size: 11px;">
+                    <i class="fas fa-user mr-1"></i><span class="notif-user-name"></span>
+                </small>
+            </div>
+        </div>
+    </template>
+
+    <!-- Notification Script -->
+    <script th:src="@{/js/notifications.js}"></script>
 </div>
 </html>

@@ -34,10 +34,10 @@
 
 /* Active Step */
 .wizard-step-indicator.active {
-    background: #007bff;
+    background: #002868;
     color: white;
     transform: scale(1.1);
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 8px rgba(0, 40, 104, 0.5);
 }
 
 /* Completed Step */
@@ -68,8 +68,8 @@
 }
 
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: #002868;
+    box-shadow: 0 0 0 0.2rem rgba(0, 40, 104, 0.25);
 }
 
 label {
