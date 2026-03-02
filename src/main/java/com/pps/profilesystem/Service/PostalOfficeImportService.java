@@ -30,15 +30,71 @@ public class PostalOfficeImportService {
     @Autowired private ProviderRepository          providerRepository;
     @Autowired private ZipCodeRepository           zipCodeRepository;
 
-    private static final List<DateTimeFormatter> DATE_FORMATTERS = Arrays.asList(
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-            DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-            DateTimeFormatter.ofPattern("M/d/yyyy HH:mm"),
-            DateTimeFormatter.ofPattern("M/d/yyyy"),
-            DateTimeFormatter.ofPattern("MM/dd/yyyy"),
-            DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss")
-    );
+    // ── Region alias map ──────────────────────────────────────────────────────
+    private static final Map<String, String> REGION_ALIASES = new HashMap<>();
+    static {
+        REGION_ALIASES.put("1",    "Region I");
+        REGION_ALIASES.put("2",    "Region II");
+        REGION_ALIASES.put("3",    "Region III");
+        REGION_ALIASES.put("4",    "Region IV");
+        REGION_ALIASES.put("5",    "Region V");
+        REGION_ALIASES.put("6",    "Region VI");
+        REGION_ALIASES.put("7",    "Region VII");
+        REGION_ALIASES.put("8",    "Region VIII");
+        REGION_ALIASES.put("9",    "Region IX");
+        REGION_ALIASES.put("10",   "Region X");
+        REGION_ALIASES.put("11",   "Region XI");
+        REGION_ALIASES.put("12",   "Region XII");
+        REGION_ALIASES.put("13",   "Region XIII");
+        REGION_ALIASES.put("i",    "Region I");
+        REGION_ALIASES.put("ii",   "Region II");
+        REGION_ALIASES.put("iii",  "Region III");
+        REGION_ALIASES.put("iv",   "Region IV");
+        REGION_ALIASES.put("v",    "Region V");
+        REGION_ALIASES.put("vi",   "Region VI");
+        REGION_ALIASES.put("vii",  "Region VII");
+        REGION_ALIASES.put("viii", "Region VIII");
+        REGION_ALIASES.put("ix",   "Region IX");
+        REGION_ALIASES.put("x",    "Region X");
+        REGION_ALIASES.put("xi",   "Region XI");
+        REGION_ALIASES.put("xii",  "Region XII");
+        REGION_ALIASES.put("xiii", "Region XIII");
+        REGION_ALIASES.put("car",      "CAR");
+        REGION_ALIASES.put("cara",     "CAR");
+        REGION_ALIASES.put("nir",      "NIR");
+        REGION_ALIASES.put("barmm",    "BARMM");
+        REGION_ALIASES.put("mimaropa", "MIMAROPA");
+        REGION_ALIASES.put("ncr",      "NCR");
+        REGION_ALIASES.put("iv-a",     "Region IV-A");
+        REGION_ALIASES.put("iv-b",     "Region IV-B");
+        REGION_ALIASES.put("region ix",   "Region IX");
+        REGION_ALIASES.put("region vi",   "Region VI");
+        REGION_ALIASES.put("region x",    "Region X");
+        REGION_ALIASES.put("region xiii", "Region XIII");
+    }
+
+    // ── Province alias map ────────────────────────────────────────────────────
+    private static final Map<String, String> PROVINCE_ALIASES = new HashMap<>();
+    static {
+        PROVINCE_ALIASES.put("cam. norte",          "Camarines Norte");
+        PROVINCE_ALIASES.put("cam. sur",            "Camarines Sur");
+        PROVINCE_ALIASES.put("occ. mindoro",        "Occidental Mindoro");
+        PROVINCE_ALIASES.put("or. mindoro",         "Oriental Mindoro");
+        PROVINCE_ALIASES.put("mt. province",        "Mountain Province");
+        PROVINCE_ALIASES.put("davao de oro",        "Davao de Oro");
+        PROVINCE_ALIASES.put("davao city",          "Davao del Sur");
+        PROVINCE_ALIASES.put("metro manila",        "Metro Manila");
+        PROVINCE_ALIASES.put("metro zamboanga",     "Zamboanga del Sur");
+        PROVINCE_ALIASES.put("guimaraz",            "Guimaras");
+        PROVINCE_ALIASES.put("zambaonga del norte", "Zamboanga del Norte");
+        PROVINCE_ALIASES.put("sarangani province",  "Sarangani");
+        PROVINCE_ALIASES.put("eastern leyte",       "Leyte");
+        PROVINCE_ALIASES.put("western leyte",       "Leyte");
+        PROVINCE_ALIASES.put("eastern samar",       "Eastern Samar");
+        PROVINCE_ALIASES.put("western samar",       "Samar");
+        PROVINCE_ALIASES.put("northern samar",      "Northern Samar");
+        PROVINCE_ALIASES.put("southern leyte",      "Southern Leyte");
+    }
 
     // ── Main entry ────────────────────────────────────────────────────────────
 
@@ -48,13 +104,12 @@ public class PostalOfficeImportService {
         List<PostalOfficeImportDTO> rows = readExcelFile(file);
         System.out.println("Read " + rows.size() + " data rows");
 
-        // Pre-load lookup maps (all normalized to lowercase for matching)
         Map<String, Area>             areaMap     = buildAreaMap();
         Map<String, Regions>          regionMap   = buildRegionMap();
         Map<String, Province>         provinceMap = buildProvinceMap();
         Map<String, CityMunicipality> cityMap     = buildCityMap();
         Map<String, Barangay>         barangayMap = buildBarangayMap();
-        Map<String, String>           zipMap      = buildZipToBarangayMap(); // zip → barangay name
+        Map<String, String>           zipMap      = buildZipToBarangayMap();
 
         Provider defaultProvider = getOrCreateDefaultProvider();
 
@@ -66,27 +121,14 @@ public class PostalOfficeImportService {
         for (PostalOfficeImportDTO dto : rows) {
             rowNum++;
             try {
-                // ── Match existing office by exact name (case-insensitive) ─
-                String officeName = dto.getPostOfficeName();
-                boolean isNew = false;
+                PostalOffice office = resolveExistingOffice(dto, rowNum, warnings);
+                boolean isNew = (office == null);
 
-                PostalOffice office = null;
-                if (!blank(officeName)) {
-                    office = postalOfficeRepository
-                            .findByNameContainingIgnoreCase(officeName)
-                            .stream()
-                            .filter(o -> normalize(o.getName()).equals(normalize(officeName)))
-                            .findFirst()
-                            .orElse(null);
-                }
-
-                if (office == null) {
+                if (isNew) {
                     office = new PostalOffice();
-                    office.setName(officeName);
-                    isNew = true;
+                    office.setName(dto.getPostOfficeName());
                 }
 
-                // ── Apply non-blank fields only (keep existing DB value if blank) ──
                 applyIfNotBlank(dto.getPostmaster(),                office::setPostmaster);
                 applyIfNotNull(dto.getNoOfEmployees(),              office::setNoOfEmployees);
                 applyIfNotNull(dto.getLongitude(),                  office::setLongitude);
@@ -104,30 +146,22 @@ public class PostalOfficeImportService {
                 applyIfNotBlank(dto.getIspContactPerson(),          office::setIspContactPerson);
                 applyIfNotBlank(dto.getIspContactNumber(),          office::setIspContactNumber);
 
-                // ── Area ──────────────────────────────────────────────────
                 if (!blank(dto.getArea())) {
                     Area area = resolveArea(dto.getArea(), areaMap);
-                    if (area == null) {
-                        warnings.add("Row " + rowNum + ": Area not found → '" + dto.getArea() + "'");
-                    } else {
-                        office.setArea(area);
-                    }
+                    if (area == null) warnings.add("Row " + rowNum + ": Area not found → '" + dto.getArea() + "'");
+                    else office.setArea(area);
                 }
 
-                // ── Location hierarchy ────────────────────────────────────
                 resolveLocation(dto, office, regionMap, provinceMap, cityMap, barangayMap, zipMap, rowNum, warnings);
 
-                // ── Connectivity status ───────────────────────────────────
                 if (!blank(dto.getConnectivityStatus())) {
                     office.setConnectionStatus(parseConnectionStatus(dto.getConnectivityStatus()));
                 }
 
-                // ── Save office ───────────────────────────────────────────
                 if (isNew) office.setActiveConnectivity(null);
                 PostalOffice savedOffice = postalOfficeRepository.save(office);
 
-                // ── Connectivity record ───────────────────────────────────
-                handleConnectivity(savedOffice, dto, defaultProvider, isNew);
+                handleConnectivity(savedOffice, dto, defaultProvider, rowNum, warnings);
 
                 if (isNew) inserted++; else updated++;
 
@@ -152,14 +186,102 @@ public class PostalOfficeImportService {
         System.out.println("===== IMPORT COMPLETE: " + inserted + " inserted, " + updated + " updated =====");
     }
 
-    // ── Location resolver ─────────────────────────────────────────────────────
+    // ── Office deduplication — 3 layers ──────────────────────────────────────
 
     /**
-     * For each location level:
-     *   1. Try matching by name from the Excel column
-     *   2. If name is blank OR not found → try deriving from the zip code
-     *   3. If still nothing → leave the existing DB value untouched (warn if name was provided)
+     * LAYER 1: Match by exact postal office name (case-insensitive).
+     * LAYER 2: If no name match (or name is blank), match by longitude + latitude.
+     * LAYER 3: If no coords match, match by zip code.
+     *
+     * Returns the existing PostalOffice if found, or null if this is a new office.
      */
+    private PostalOffice resolveExistingOffice(PostalOfficeImportDTO dto, int rowNum, List<String> warnings) {
+        String officeName = dto.getPostOfficeName();
+
+        // LAYER 1 — name match
+        if (!blank(officeName)) {
+            PostalOffice byName = postalOfficeRepository
+                    .findByNameContainingIgnoreCase(officeName)
+                    .stream()
+                    .filter(o -> normalize(o.getName()).equals(normalize(officeName)))
+                    .findFirst()
+                    .orElse(null);
+            if (byName != null) {
+                System.out.println("Row " + rowNum + ": Matched by NAME → '" + officeName + "'");
+                return byName;
+            }
+        }
+
+        // LAYER 2 — coordinate match
+        if (dto.getLongitude() != null && dto.getLatitude() != null) {
+            List<PostalOffice> byCoords = postalOfficeRepository
+                    .findByLongitudeAndLatitude(dto.getLongitude(), dto.getLatitude());
+            if (!byCoords.isEmpty()) {
+                System.out.println("Row " + rowNum + ": Matched by COORDS → '" + byCoords.get(0).getName() + "'");
+                return byCoords.get(0);
+            }
+        }
+
+        // LAYER 3 — zip code match
+        if (!blank(dto.getZipCode())) {
+            List<PostalOffice> byZip = postalOfficeRepository.findByZipCode(dto.getZipCode().trim());
+            if (!byZip.isEmpty()) {
+                System.out.println("Row " + rowNum + ": Matched by ZIP '" + dto.getZipCode() + "' → '" + byZip.get(0).getName() + "'");
+                return byZip.get(0);
+            }
+        }
+
+        return null; // truly new office
+    }
+
+    // ── Connectivity handler ──────────────────────────────────────────────────
+
+    /**
+     * - Every connected office gets a connectivity record, date or no date.
+     * - Same office + same date_connected already exists → skip (no duplicate).
+     * - Different date → create a new record (one-to-many per office).
+     */
+    private void handleConnectivity(
+            PostalOffice savedOffice,
+            PostalOfficeImportDTO dto,
+            Provider defaultProvider,
+            int rowNum,
+            List<String> warnings) {
+
+        boolean isConnected    = Boolean.TRUE.equals(savedOffice.getConnectionStatus());
+        LocalDateTime dateConn = dto.getDateConnected();
+        LocalDateTime dateDisc = dto.getDateDisconnected();
+
+        if (!isConnected && dateConn == null && dateDisc == null) return;
+
+        List<Connectivity> existing = connectivityRepository.findByPostalOfficeId(savedOffice.getId());
+
+        // Deduplicate by date_connected
+        if (dateConn != null) {
+            boolean alreadyExists = existing.stream()
+                    .anyMatch(c -> dateConn.equals(c.getDateConnected()));
+            if (alreadyExists) return;
+        }
+
+        Connectivity conn = new Connectivity();
+        conn.setPostalOffice(savedOffice);
+        conn.setProvider(defaultProvider);
+        conn.setDateConnected(dateConn);
+        conn.setDateDisconnected(dateDisc);
+
+        Connectivity saved = connectivityRepository.save(conn);
+
+        if (isConnected && dateDisc == null) {
+            savedOffice.setActiveConnectivity(saved);
+            postalOfficeRepository.save(savedOffice);
+        } else if (!isConnected && savedOffice.getActiveConnectivity() != null) {
+            savedOffice.setActiveConnectivity(null);
+            postalOfficeRepository.save(savedOffice);
+        }
+    }
+
+    // ── Location resolver ─────────────────────────────────────────────────────
+
     private void resolveLocation(
             PostalOfficeImportDTO dto,
             PostalOffice office,
@@ -173,23 +295,20 @@ public class PostalOfficeImportService {
 
         ZipDerived zip = deriveFromZip(dto.getZipCode(), zipMap, barangayMap);
 
-        // Region (no zip fallback — zip table doesn't store region)
         if (!blank(dto.getRegionName())) {
-            Regions r = regionMap.get(normalize(dto.getRegionName()));
+            Regions r = lookupRegion(dto.getRegionName(), regionMap);
             if (r != null) office.setRegion(r);
             else warnings.add("Row " + rowNum + ": Region not found → '" + dto.getRegionName() + "'");
         }
 
-        // Province
         if (!blank(dto.getProvinceName())) {
-            Province p = provinceMap.get(normalize(dto.getProvinceName()));
+            Province p = lookupProvince(dto.getProvinceName(), provinceMap);
             if (p != null) office.setProvince(p);
             else warnings.add("Row " + rowNum + ": Province not found → '" + dto.getProvinceName() + "'");
         } else if (zip.province != null && office.getProvince() == null) {
             office.setProvince(zip.province);
         }
 
-        // City/Municipality
         if (!blank(dto.getCityMunicipalityName())) {
             CityMunicipality c = cityMap.get(normalize(dto.getCityMunicipalityName()));
             if (c != null) office.setCityMunicipality(c);
@@ -198,7 +317,6 @@ public class PostalOfficeImportService {
             office.setCityMunicipality(zip.city);
         }
 
-        // Barangay
         if (!blank(dto.getBarangayName())) {
             Barangay b = barangayMap.get(normalize(dto.getBarangayName()));
             if (b != null) office.setBarangay(b);
@@ -208,117 +326,47 @@ public class PostalOfficeImportService {
         }
     }
 
-    // ── Zip-derived location ──────────────────────────────────────────────────
+    private Regions lookupRegion(String raw, Map<String, Regions> regionMap) {
+        if (blank(raw)) return null;
+        String key = normalize(raw);
+        Regions found = regionMap.get(key);
+        if (found != null) return found;
+        String alias = REGION_ALIASES.get(key);
+        if (alias != null) { found = regionMap.get(normalize(alias)); if (found != null) return found; }
+        return regionMap.get("region " + key);
+    }
+
+    private Province lookupProvince(String raw, Map<String, Province> provinceMap) {
+        if (blank(raw)) return null;
+        String key = normalize(raw);
+        Province found = provinceMap.get(key);
+        if (found != null) return found;
+        String alias = PROVINCE_ALIASES.get(key);
+        if (alias != null) { found = provinceMap.get(normalize(alias)); if (found != null) return found; }
+        return null;
+    }
 
     private static class ZipDerived {
-        Barangay         barangay;
-        CityMunicipality city;
-        Province         province;
+        Barangay barangay; CityMunicipality city; Province province;
     }
 
-    private ZipDerived deriveFromZip(
-            String zipCode,
-            Map<String, String>   zipMap,
-            Map<String, Barangay> barangayMap) {
-
+    private ZipDerived deriveFromZip(String zipCode, Map<String, String> zipMap, Map<String, Barangay> barangayMap) {
         ZipDerived result = new ZipDerived();
         if (blank(zipCode)) return result;
-
         String barangayName = zipMap.get(zipCode.trim());
         if (barangayName == null) return result;
-
         Barangay barangay = barangayMap.get(normalize(barangayName));
         if (barangay == null) return result;
-
         result.barangay = barangay;
         CityMunicipality city = barangay.getCityMunicipality();
-        if (city != null) {
-            result.city     = city;
-            result.province = city.getProvince();
-        }
+        if (city != null) { result.city = city; result.province = city.getProvince(); }
         return result;
-    }
-
-    // ── Connectivity handler ──────────────────────────────────────────────────
-
-    /**
-     * INSERT: create a connectivity record if connected or dates are present.
-     * UPDATE: find the most recent connectivity record and update only the date fields.
-     */
-    private void handleConnectivity(
-            PostalOffice savedOffice,
-            PostalOfficeImportDTO dto,
-            Provider defaultProvider,
-            boolean isNew) {
-
-        boolean isConnected = Boolean.TRUE.equals(savedOffice.getConnectionStatus());
-        boolean hasDateInfo = dto.getDateConnected() != null || dto.getDateDisconnected() != null;
-
-        if (isNew) {
-            // ── INSERT: only create connectivity if there's something to record ──
-            if (!isConnected && !hasDateInfo) return;
-
-            Connectivity conn = new Connectivity();
-            conn.setPostalOffice(savedOffice);
-            conn.setProvider(defaultProvider);
-            conn.setDateConnected(
-                    dto.getDateConnected() != null ? dto.getDateConnected()
-                    : isConnected ? LocalDateTime.now() : null);
-            conn.setDateDisconnected(dto.getDateDisconnected());
-
-            Connectivity saved = connectivityRepository.save(conn);
-
-            // Only set as active if currently connected and not yet disconnected
-            if (isConnected && dto.getDateDisconnected() == null) {
-                savedOffice.setActiveConnectivity(saved);
-                postalOfficeRepository.save(savedOffice);
-            }
-
-        } else {
-            // ── UPDATE: only touch connectivity if Excel row has date info ──
-            if (!hasDateInfo) return;
-
-            // Find the connectivity record to update:
-            // prefer the currently linked active one, fallback to most recent in history
-            Connectivity conn = savedOffice.getActiveConnectivity();
-
-            if (conn == null) {
-                conn = connectivityRepository.findByPostalOfficeId(savedOffice.getId())
-                        .stream()
-                        .max(Comparator.comparing(c ->
-                                c.getDateConnected() != null ? c.getDateConnected() : LocalDateTime.MIN))
-                        .orElse(null);
-            }
-
-            if (conn == null) {
-                // No existing record at all — create one
-                conn = new Connectivity();
-                conn.setPostalOffice(savedOffice);
-                conn.setProvider(defaultProvider);
-            }
-
-            // Update date fields only; leave provider, plan, account number, etc. untouched
-            if (dto.getDateConnected() != null)   conn.setDateConnected(dto.getDateConnected());
-            if (dto.getDateDisconnected() != null) conn.setDateDisconnected(dto.getDateDisconnected());
-
-            Connectivity saved = connectivityRepository.save(conn);
-
-            // Re-link or unlink activeConnectivity based on current status
-            if (isConnected && dto.getDateDisconnected() == null) {
-                savedOffice.setActiveConnectivity(saved);
-                postalOfficeRepository.save(savedOffice);
-            } else if (!isConnected && savedOffice.getActiveConnectivity() != null) {
-                savedOffice.setActiveConnectivity(null);
-                postalOfficeRepository.save(savedOffice);
-            }
-        }
     }
 
     // ── Excel reader ──────────────────────────────────────────────────────────
 
     private List<PostalOfficeImportDTO> readExcelFile(MultipartFile file) throws IOException {
         List<PostalOfficeImportDTO> data = new ArrayList<>();
-
         Workbook workbook = new XSSFWorkbook(file.getInputStream());
         Sheet sheet = workbook.getSheetAt(0);
         System.out.println("Reading sheet: " + sheet.getSheetName());
@@ -334,8 +382,6 @@ public class PostalOfficeImportService {
             dto.setNoOfEmployees(getInteger(row, 3));
             dto.setLongitude(getDouble(row, 4));
             dto.setLatitude(getDouble(row, 5));
-            // col 6 Image_Path → ignored
-            // col 7 Local_Path → ignored
             dto.setRegionName(getString(row, 8));
             dto.setProvinceName(getString(row, 9));
             dto.setCityMunicipalityName(getString(row, 10));
@@ -353,14 +399,63 @@ public class PostalOfficeImportService {
             dto.setPostalOfficeContactNumber(getString(row, 22));
             dto.setIspContactPerson(getString(row, 23));
             dto.setIspContactNumber(getString(row, 24));
-            dto.setDateConnected(getDateTime(row, 25));
-            dto.setDateDisconnected(getDateTime(row, 26));
+            dto.setDateConnected(parseFlexibleDate(row, 25));
+            dto.setDateDisconnected(parseFlexibleDate(row, 26));
 
             data.add(dto);
         }
 
         workbook.close();
         return data;
+    }
+
+    // ── Flexible date parser ──────────────────────────────────────────────────
+
+    private LocalDateTime parseFlexibleDate(Row row, int col) {
+        Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) return null;
+
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            try {
+                return cell.getDateCellValue().toInstant()
+                        .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+            } catch (Exception ignored) {}
+        }
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            long num = (long) cell.getNumericCellValue();
+            if (num >= 1900 && num <= 2100) return LocalDateTime.of((int) num, 1, 1, 0, 0);
+            return null;
+        }
+
+        String raw = cell.getCellType() == CellType.STRING
+                ? cell.getStringCellValue().trim()
+                : String.valueOf(cell.getNumericCellValue()).trim();
+        if (raw.isEmpty()) return null;
+
+        if (raw.matches("\\d{4}")) {
+            try { return LocalDateTime.of(Integer.parseInt(raw), 1, 1, 0, 0); } catch (Exception ignored) {}
+        }
+        if (raw.matches("\\d{4}-\\d{2}")) {
+            try {
+                String[] p = raw.split("-");
+                return LocalDateTime.of(Integer.parseInt(p[0]), Integer.parseInt(p[1]), 1, 0, 0);
+            } catch (Exception ignored) {}
+        }
+
+        for (DateTimeFormatter fmt : Arrays.asList(
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+                DateTimeFormatter.ofPattern("M/d/yyyy HH:mm"),
+                DateTimeFormatter.ofPattern("M/d/yyyy"),
+                DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+                DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"))) {
+            try { return LocalDateTime.parse(raw, fmt); } catch (DateTimeParseException ignored) {}
+        }
+
+        System.out.println("WARN: Unrecognized date → '" + raw + "' (stored as null)");
+        return null;
     }
 
     // ── Lookup map builders ───────────────────────────────────────────────────
@@ -370,37 +465,31 @@ public class PostalOfficeImportService {
         areaRepository.findAll().forEach(a -> map.put(normalize(a.getAreaName()), a));
         return map;
     }
-
     private Map<String, Regions> buildRegionMap() {
         Map<String, Regions> map = new HashMap<>();
         regionsRepository.findAll().forEach(r -> map.put(normalize(r.getName()), r));
         return map;
     }
-
     private Map<String, Province> buildProvinceMap() {
         Map<String, Province> map = new HashMap<>();
         provinceRepository.findAll().forEach(p -> map.put(normalize(p.getName()), p));
         return map;
     }
-
     private Map<String, CityMunicipality> buildCityMap() {
         Map<String, CityMunicipality> map = new HashMap<>();
         cityMunicipalityRepository.findAll().forEach(c -> map.put(normalize(c.getName()), c));
         return map;
     }
-
     private Map<String, Barangay> buildBarangayMap() {
         Map<String, Barangay> map = new HashMap<>();
         barangayRepository.findAll().forEach(b -> map.put(normalize(b.getName()), b));
         return map;
     }
-
     private Map<String, String> buildZipToBarangayMap() {
         Map<String, String> map = new HashMap<>();
         zipCodeRepository.findAll().forEach(z -> {
-            if (z.getZipcode() != null && z.getBarangay() != null) {
+            if (z.getZipcode() != null && z.getBarangay() != null)
                 map.put(z.getZipcode().trim(), z.getBarangay());
-            }
         });
         return map;
     }
@@ -411,7 +500,6 @@ public class PostalOfficeImportService {
         if (blank(raw)) return null;
         Area found = areaMap.get(normalize(raw));
         if (found != null) return found;
-        // Handle "AREA-1", "AREA 1", "area1" → "area 1"
         String converted = raw.trim().replaceAll("(?i)area[-\\s]*(\\d+)", "area $1").toLowerCase();
         return areaMap.get(normalize(converted));
     }
@@ -419,13 +507,9 @@ public class PostalOfficeImportService {
     // ── Default provider ──────────────────────────────────────────────────────
 
     private Provider getOrCreateDefaultProvider() {
-        return providerRepository.findAll().stream()
-                .findFirst()
-                .orElseGet(() -> {
-                    Provider p = new Provider();
-                    p.setName("Default Provider");
-                    return providerRepository.save(p);
-                });
+        return providerRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Provider p = new Provider(); p.setName("Default Provider"); return providerRepository.save(p);
+        });
     }
 
     // ── Value applicators ─────────────────────────────────────────────────────
@@ -433,7 +517,6 @@ public class PostalOfficeImportService {
     private void applyIfNotBlank(String value, java.util.function.Consumer<String> setter) {
         if (!blank(value)) setter.accept(value);
     }
-
     private <T> void applyIfNotNull(T value, java.util.function.Consumer<T> setter) {
         if (value != null) setter.accept(value);
     }
@@ -449,14 +532,10 @@ public class PostalOfficeImportService {
                 return v.isEmpty() ? null : v;
             case NUMERIC:
                 double d = cell.getNumericCellValue();
-                // Return as plain long string (no decimals) for things like zip, phone
-                if (d == Math.floor(d) && !Double.isInfinite(d))
-                    return String.valueOf((long) d);
+                if (d == Math.floor(d) && !Double.isInfinite(d)) return String.valueOf((long) d);
                 return String.valueOf(d);
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            default:
-                return null;
+            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
+            default: return null;
         }
     }
 
@@ -465,39 +544,13 @@ public class PostalOfficeImportService {
         if (cell == null) return null;
         if (cell.getCellType() == CellType.NUMERIC) return cell.getNumericCellValue();
         if (cell.getCellType() == CellType.STRING) {
-            try { return Double.parseDouble(cell.getStringCellValue().trim()); }
-            catch (NumberFormatException ignored) {}
+            try { return Double.parseDouble(cell.getStringCellValue().trim()); } catch (NumberFormatException ignored) {}
         }
         return null;
     }
 
     private Integer getInteger(Row row, int col) {
-        Double d = getDouble(row, col);
-        return d == null ? null : d.intValue();
-    }
-
-    private LocalDateTime getDateTime(Row row, int col) {
-        Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-        if (cell == null) return null;
-
-        // POI native date parsing for date-formatted numeric cells
-        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-            try {
-                return cell.getDateCellValue().toInstant()
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDateTime();
-            } catch (Exception ignored) {}
-        }
-
-        // Fallback: parse as string
-        String raw = getString(row, col);
-        if (blank(raw)) return null;
-        for (DateTimeFormatter fmt : DATE_FORMATTERS) {
-            try { return LocalDateTime.parse(raw, fmt); }
-            catch (DateTimeParseException ignored) {}
-        }
-        System.out.println("WARN: Could not parse date → '" + raw + "'");
-        return null;
+        Double d = getDouble(row, col); return d == null ? null : d.intValue();
     }
 
     // ── Misc helpers ──────────────────────────────────────────────────────────
@@ -505,23 +558,16 @@ public class PostalOfficeImportService {
     private boolean parseConnectionStatus(String raw) {
         if (blank(raw)) return false;
         String v = raw.trim().toLowerCase();
-        return v.equals("connected") || v.equals("yes") || v.equals("true")
-                || v.equals("1") || v.equals("active");
+        return v.equals("connected") || v.equals("yes") || v.equals("true") || v.equals("1") || v.equals("active");
     }
 
-    private String normalize(String s) {
-        return s == null ? "" : s.trim().toLowerCase();
-    }
-
-    private boolean blank(String s) {
-        return s == null || s.trim().isEmpty();
-    }
+    private String normalize(String s) { return s == null ? "" : s.trim().toLowerCase(); }
+    private boolean blank(String s) { return s == null || s.trim().isEmpty(); }
 
     private boolean isRowBlank(Row row) {
         for (Cell cell : row) {
-            if (cell != null && cell.getCellType() != CellType.BLANK) {
+            if (cell != null && cell.getCellType() != CellType.BLANK)
                 if (!blank(getString(row, cell.getColumnIndex()))) return false;
-            }
         }
         return true;
     }
