@@ -2,14 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
-<th:block th:fragment="title">
-    Insert New Postal Office
-</th:block>
+<title th:fragment="title">Insert New Postal Office</title>
 
 <div th:fragment="content">
-
 <div class="container-fluid">
-
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
@@ -19,389 +15,460 @@
 
         <div class="card-body">
 
-<form th:action="@{/postal-office/save}" method="post" enctype="multipart/form-data" id="insertPostalOfficeForm">
+            <!-- ✅ No th:action — form is submitted via JS fetch, not native POST -->
+            <form id="insertPostalOfficeForm" novalidate>
 
-    <!-- Wizard Step Indicators -->
-    <div class="wizard-steps mb-4 text-center">
-        <span class="wizard-step-indicator active" data-step="1">1. Basic Info</span>
-        <span class="wizard-step-indicator" data-step="2">2. Location</span>
-        <span class="wizard-step-indicator" data-step="3">3. Connectivity</span>
-        <span class="wizard-step-indicator" data-step="4">4. Contact</span>
-        <span class="wizard-step-indicator" data-step="5">5. Images</span>
-    </div>
+                <!-- Wizard Step Indicators -->
+                <div class="wizard-steps mb-4">
+                    <button type="button" class="wizard-step-indicator active" data-step="1">1. Basic Info</button>
+                    <button type="button" class="wizard-step-indicator" data-step="2">2. Location</button>
+                    <button type="button" class="wizard-step-indicator" data-step="3">3. Connectivity</button>
+                    <button type="button" class="wizard-step-indicator" data-step="4">4. Contact</button>
+                    <button type="button" class="wizard-step-indicator" data-step="5">5. Additional Info</button>
+                </div>
 
-    <!-- Steps -->
-    <div class="wizard-step active" id="step-1">
-        <!-- STEP 1: Basic Info Card -->
-        <div class="card mb-4">
-            <div class="card-header bg-light"><h6><i class="fas fa-info-circle"></i> Basic Information</h6></div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="officeName">Post Office Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="officeName" name="name" required 
-                                   placeholder="e.g., Manila Central Post Office">
-                            <small class="form-text text-muted">Official name of post office</small>
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 1: Basic Info                                         -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step active" id="step-1">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-info-circle text-primary"></i> Basic Information</h6>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="areaId">Area <span class="text-danger">*</span></label>
-                            <select class="form-control" id="areaId" name="areaId" required>
-                                <option value="">-- Select Area --</option>
-                                <option th:each="area : ${areas}" 
-                                        th:value="${area.id}" 
-                                        th:text="${area.areaName}"></option>
-                            </select>
-                            <small class="form-text text-muted">Operational area assignment</small>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="officeName">
+                                            Post Office Name <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="officeName" name="name"
+                                                   placeholder="e.g., Manila Central Post Office"
+                                                   autocomplete="off">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text font-weight-bold text-primary"
+                                                      style="background:#f0f4ff; border-color:#ced4da; letter-spacing:0.03em;">
+                                                    POST OFFICE
+                                                </span>
+                                            </div>
+                                            <div class="invalid-feedback">
+                                                <i class="fas fa-exclamation-circle"></i> Post Office Name is required.
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Official name of the post office</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="areaId">
+                                            Area <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-control" id="areaId" name="areaId">
+                                            <option value="">-- Select Area --</option>
+                                            <option th:each="area : ${areas}"
+                                                    th:value="${area.id}"
+                                                    th:text="${area.areaName}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Please select an Area.
+                                        </div>
+                                        <small class="form-text text-muted">Operational area assignment</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postmaster">Postmaster</label>
+                                        <input type="text" class="form-control" id="postmaster" name="postmaster"
+                                               placeholder="Name of Postmaster" style="text-transform:uppercase;">
+                                        <small class="form-text text-muted">Officer in charge</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="zipCode">ZIP Code</label>
+                                        <input type="text" class="form-control" id="zipCode" name="zipCode"
+                                               placeholder="e.g., 1000" maxlength="10">
+                                        <small class="form-text text-muted">Postal code for this area</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Complete Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="2"
+                                          placeholder="Street address, building name, landmarks"></textarea>
+                                <small class="form-text text-muted">Detailed location information</small>
+                            </div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="button" class="btn btn-primary btn-next">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="postmaster">Postmaster</label>
-                            <input type="text" class="form-control" id="postmaster" name="postmaster" 
-                                   placeholder="Name of Postmaster">
-                            <small class="form-text text-muted">Officer in charge</small>
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 2: Location                                           -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step" id="step-2">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-map text-primary"></i> Location Information</h6>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="zipCode">ZIP Code</label>
-                            <input type="text" class="form-control" id="zipCode" name="zipCode" 
-                                   placeholder="e.g., 1000" maxlength="10">
-                            <small class="form-text text-muted">Postal code for this area</small>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-3 py-2">
+                                <i class="fas fa-info-circle"></i>
+                                Select Region first, then Province, then City/Municipality.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="regionId">Region <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="regionId" name="regionId">
+                                            <option value="">-- Select Region --</option>
+                                            <option th:each="region : ${regions}"
+                                                    th:value="${region.id}"
+                                                    th:text="${region.name}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Please select a Region.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="provinceId">Province <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="provinceId" name="provinceId" disabled>
+                                            <option value="">-- Select Province --</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Please select a Province.
+                                        </div>
+                                        <small class="form-text text-muted">Select a Region first</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="cityMunId">City / Municipality <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="cityMunId" name="cityMunId" disabled>
+                                            <option value="">-- Select City/Municipality --</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Please select a City/Municipality.
+                                        </div>
+                                        <small class="form-text text-muted">Select a Province first</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="barangayId">Barangay <span class="badge badge-secondary ml-1">Optional</span></label>
+                                        <select class="form-control" id="barangayId" name="barangayId" disabled>
+                                            <option value="">-- Select Barangay --</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select a City/Municipality first</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="latitude">
+                                            Latitude <span class="badge badge-info ml-1">Optional</span>
+                                        </label>
+                                        <input type="number" step="any" class="form-control" id="latitude"
+                                               name="latitude" placeholder="e.g., 14.5995" min="-90" max="90">
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Must be between -90 and 90.
+                                        </div>
+                                        <small class="form-text text-muted">North (+) / South (−) &nbsp;|&nbsp; -90 to 90</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="longitude">
+                                            Longitude <span class="badge badge-info ml-1">Optional</span>
+                                        </label>
+                                        <input type="number" step="any" class="form-control" id="longitude"
+                                               name="longitude" placeholder="e.g., 120.9842" min="-180" max="180">
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Must be between -180 and 180.
+                                        </div>
+                                        <small class="form-text text-muted">East (+) / West (−) &nbsp;|&nbsp; -180 to 180</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-prev">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary btn-next">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="address">Complete Address</label>
-                    <textarea class="form-control" id="address" name="address" rows="2" 
-                              placeholder="Street address, building name, landmarks"></textarea>
-                    <small class="form-text text-muted">Detailed location information</small>
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 3: Connectivity                                       -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step" id="step-3">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-wifi text-primary"></i> Connectivity Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="custom-control custom-switch custom-control-lg mb-3">
+                                <input type="checkbox" class="custom-control-input" id="connectionStatus"
+                                       name="connectionStatus" value="true">
+                                <label class="custom-control-label" for="connectionStatus">
+                                    <strong>This post office has active internet connectivity</strong>
+                                </label>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="internetServiceProvider">Internet Service Provider</label>
+                                        <input type="text" class="form-control" id="internetServiceProvider"
+                                               name="internetServiceProvider" placeholder="e.g., PLDT, Globe, Smart"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="typeOfConnection">Type of Connection</label>
+                                        <select class="form-control" id="typeOfConnection" name="typeOfConnection">
+                                            <option value="">-- Select Type --</option>
+                                            <option value="Fiber">Fiber Optic</option>
+                                            <option value="DSL">DSL</option>
+                                            <option value="Cable">Cable</option>
+                                            <option value="Wireless">Wireless</option>
+                                            <option value="Satellite">Satellite</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="speed">Connection Speed</label>
+                                        <input type="text" class="form-control" id="speed" name="speed"
+                                               placeholder="e.g., 50 Mbps">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="staticIpAddress">Static IP Address</label>
+                                        <input type="text" class="form-control" id="staticIpAddress"
+                                               name="staticIpAddress" placeholder="e.g., 192.168.1.100">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dateConnected">Date Connected</label>
+                                        <input type="datetime-local" class="form-control" id="dateConnected"
+                                               name="dateConnected">
+                                        <small class="form-text text-muted">Auto-set when status is Active</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dateDisconnected">Date Disconnected</label>
+                                        <input type="datetime-local" class="form-control" id="dateDisconnected"
+                                               name="dateDisconnected">
+                                        <small class="form-text text-muted">Auto-set when status is Inactive</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-prev">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary btn-next">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="text-right">
-                <button type="button" class="btn btn-primary btn-next">Next <i class="fas fa-arrow-right"></i></button>
-            </div>
+
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 4: Contact                                            -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step" id="step-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-address-book text-primary"></i> Contact Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postalOfficeContactPerson">Postal Office Contact Person</label>
+                                        <input type="text" class="form-control" id="postalOfficeContactPerson"
+                                               name="postalOfficeContactPerson" placeholder="Name of contact person"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postalOfficeContactNumber">Postal Office Contact Number</label>
+                                        <input type="text" class="form-control" id="postalOfficeContactNumber"
+                                               name="postalOfficeContactNumber" placeholder="e.g., +63-2-1234-5678">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ispContactPerson">ISP Contact Person</label>
+                                        <input type="text" class="form-control" id="ispContactPerson"
+                                               name="ispContactPerson" placeholder="Name of ISP contact"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ispContactNumber">ISP Contact Number</label>
+                                        <input type="text" class="form-control" id="ispContactNumber"
+                                               name="ispContactNumber" placeholder="e.g., +63-2-9876-5432">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="noOfEmployees">Number of Employees</label>
+                                        <input type="number" class="form-control" id="noOfEmployees"
+                                               name="noOfEmployees" placeholder="e.g., 10" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="classification">Classification</label>
+                                        <select class="form-control" id="classification" name="classification">
+                                            <option value="">-- Select Classification --</option>
+                                            <option value="Regional">Regional Office</option>
+                                            <option value="Provincial">Provincial Office</option>
+                                            <option value="City">City Office</option>
+                                            <option value="Municipal">Municipal Office</option>
+                                            <option value="Barangay">Barangay Office</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-prev">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary btn-next">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 5: Additional Info                                    -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step" id="step-5">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-clipboard-list text-primary"></i> Additional Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="noOfPostalTellers">Number of Postal Tellers</label>
+                                        <input type="number" class="form-control" id="noOfPostalTellers"
+                                               name="noOfPostalTellers" placeholder="e.g., 3" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="noOfLetterCarriers">Number of Letter Carriers</label>
+                                        <input type="number" class="form-control" id="noOfLetterCarriers"
+                                               name="noOfLetterCarriers" placeholder="e.g., 5" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="serviceProvided">Services Provided</label>
+                                <select class="form-control" id="serviceProvided" name="serviceProvided">
+                                    <option value="">-- Select Service --</option>
+                                    <option value="DELIVERY">DELIVERY</option>
+                                    <option value="ACCEPTANCE">ACCEPTANCE</option>
+                                    <option value="ACCEPTANCE AND DELIVERY">ACCEPTANCE AND DELIVERY</option>
+                                </select>
+                            </div>
+
+                            <!-- Summary box — shows required fields filled so far -->
+                            <div class="alert alert-light border mt-3" id="summaryBox">
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-check-circle"></i> Review Before Saving
+                                </h6>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <small class="text-muted">Post Office Name</small>
+                                        <div id="summaryName" class="font-weight-bold">—</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <small class="text-muted">Area</small>
+                                        <div id="summaryArea" class="font-weight-bold">—</div>
+                                    </div>
+                                    <div class="col-sm-6 mt-2">
+                                        <small class="text-muted">Region</small>
+                                        <div id="summaryRegion" class="font-weight-bold">—</div>
+                                    </div>
+                                    <div class="col-sm-6 mt-2">
+                                        <small class="text-muted">Province</small>
+                                        <div id="summaryProvince" class="font-weight-bold">—</div>
+                                    </div>
+                                    <div class="col-sm-6 mt-2">
+                                        <small class="text-muted">City / Municipality</small>
+                                        <div id="summaryCity" class="font-weight-bold">—</div>
+                                    </div>
+                                    <div class="col-sm-6 mt-2">
+                                        <small class="text-muted">Connectivity</small>
+                                        <div id="summaryStatus" class="font-weight-bold">—</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info py-2 mt-2">
+                                <i class="fas fa-camera"></i>
+                                <strong>Image Upload</strong> will be available after saving the record.
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-prev">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <!-- ✅ type="submit" triggers validateAll() in JS before saving -->
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Save Record
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
         </div>
     </div>
 
-    <div class="wizard-step" id="step-2">
-        <!-- STEP 2: Location Card -->
-        <div class="card mb-4">
-            <div class="card-header bg-light"><h6><i class="fas fa-map"></i> Location Information</h6></div>
-            <div class="card-body">
-                <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle"></i> 
-                    <strong>Note:</strong> Dropdowns will populate automatically as you make selections
-                </div>
+</div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="regionId">Region <span class="text-danger">*</span></label>
-                            <select class="form-control" id="regionId" name="regionId">
-                                <option value="">-- Select Region --</option>
-                                <option th:each="region : ${regions}" 
-                                        th:value="${region.id}" 
-                                        th:text="${region.name}"></option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="provinceId">Province <span class="text-danger">*</span></label>
-                            <select class="form-control" id="provinceId" name="provinceId" required>
-                                <option value="">-- Select Province --</option>
-                            </select>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-arrow-left"></i> Select a region first
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="cityMunId">City/Municipality <span class="text-danger">*</span></label>
-                            <select class="form-control" id="cityMunId" name="cityMunId" required>
-                                <option value="">-- Select City/Municipality --</option>
-                            </select>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-arrow-left"></i> Select a province first
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="barangayId">Barangay (Optional)</label>
-                            <select class="form-control" id="barangayId" name="barangayId">
-                                <option value="">-- Select Barangay --</option>
-                            </select>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-arrow-left"></i> Select a city/municipality first
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="latitude">Latitude <span class="badge badge-info ml-1">Optional</span></label>
-                            <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
-                                   placeholder="e.g., 14.5995" min="-90" max="90">
-                            <small class="form-text text-muted">
-                                <i class="fas fa-compass"></i> North is positive, South is negative (-90 to 90)
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="longitude">Longitude <span class="badge badge-info ml-1">Optional</span></label>
-                            <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
-                                   placeholder="e.g., 120.9842" min="-180" max="180">
-                            <small class="form-text text-muted">
-                                <i class="fas fa-compass"></i> East is positive, West is negative (-180 to 180)
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary btn-prev"><i class="fas fa-arrow-left"></i> Previous</button>
-                <button type="button" class="btn btn-primary btn-next">Next <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP 3: Connectivity -->
-    <div class="wizard-step" id="step-3">
-        <div class="card mb-4">
-            <div class="card-header bg-light"><h6><i class="fas fa-wifi"></i> Connectivity Information</h6></div>
-            <div class="card-body">
-                <div class="custom-control custom-switch custom-control-lg mb-3">
-                    <input type="checkbox" class="custom-control-input" id="connectionStatus" 
-                           name="connectionStatus" value="true">
-                    <label class="custom-control-label" for="connectionStatus">
-                        <strong>This post office has active internet connectivity</strong>
-                    </label>
-                </div>
-                <small class="form-text text-muted">
-                    <i class="fas fa-info-circle"></i> 
-                    Enable this switch if post office currently has an active internet connection
-                </small>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="internetServiceProvider">Internet Service Provider</label>
-                            <input type="text" class="form-control" id="internetServiceProvider" name="internetServiceProvider" 
-                                   placeholder="e.g., PLDT, Globe, Smart">
-                            <small class="form-text text-muted">ISP providing internet service</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="typeOfConnection">Type of Connection</label>
-                            <select class="form-control" id="typeOfConnection" name="typeOfConnection">
-                                <option value="">-- Select Type --</option>
-                                <option value="Fiber">Fiber Optic</option>
-                                <option value="DSL">DSL</option>
-                                <option value="Cable">Cable</option>
-                                <option value="Wireless">Wireless</option>
-                                <option value="Satellite">Satellite</option>
-                            </select>
-                            <small class="form-text text-muted">Type of internet connection</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="speed">Connection Speed</label>
-                            <input type="text" class="form-control" id="speed" name="speed" 
-                                   placeholder="e.g., 50 Mbps">
-                            <small class="form-text text-muted">Internet connection speed</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="staticIpAddress">Static IP Address</label>
-                            <input type="text" class="form-control" id="staticIpAddress" name="staticIpAddress" 
-                                   placeholder="e.g., 192.168.1.100">
-                            <small class="form-text text-muted">Static IP if assigned</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="dateConnected">Date Connected</label>
-                            <input type="datetime-local" class="form-control" id="dateConnected" name="dateConnected">
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle"></i> Auto-set to current date when active. You can override if needed.
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="dateDisconnected">Date Disconnected</label>
-                            <input type="datetime-local" class="form-control" id="dateDisconnected" name="dateDisconnected">
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle"></i> Auto-set to current date when inactive. You can override if needed.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary btn-prev"><i class="fas fa-arrow-left"></i> Previous</button>
-                <button type="button" class="btn btn-primary btn-next">Next <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP 4: Contact -->
-    <div class="wizard-step" id="step-4">
-        <div class="card mb-4">
-            <div class="card-header bg-light"><h6><i class="fas fa-address-book"></i> Contact Information</h6></div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="postalOfficeContactPerson">Postal Office Contact Person</label>
-                            <input type="text" class="form-control" id="postalOfficeContactPerson" name="postalOfficeContactPerson" 
-                                   placeholder="Name of contact person">
-                            <small class="form-text text-muted">Primary contact at post office</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="postalOfficeContactNumber">Postal Office Contact Number</label>
-                            <input type="text" class="form-control" id="postalOfficeContactNumber" name="postalOfficeContactNumber" 
-                                   placeholder="e.g., +63-2-1234-5678">
-                            <small class="form-text text-muted">Contact phone number</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="ispContactPerson">ISP Contact Person</label>
-                            <input type="text" class="form-control" id="ispContactPerson" name="ispContactPerson" 
-                                   placeholder="Name of ISP contact">
-                            <small class="form-text text-muted">ISP representative contact</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="ispContactNumber">ISP Contact Number</label>
-                            <input type="text" class="form-control" id="ispContactNumber" name="ispContactNumber" 
-                                   placeholder="e.g., +63-2-9876-5432">
-                            <small class="form-text text-muted">ISP support contact number</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="noOfEmployees">Number of Employees</label>
-                            <input type="number" class="form-control" id="noOfEmployees" name="noOfEmployees" 
-                                   placeholder="e.g., 10" min="0">
-                            <small class="form-text text-muted">Total staff count</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="classification">Classification</label>
-                            <select class="form-control" id="classification" name="classification">
-                                <option value="">-- Select Classification --</option>
-                                <option value="Regional">Regional Office</option>
-                                <option value="Provincial">Provincial Office</option>
-                                <option value="City">City Office</option>
-                                <option value="Municipal">Municipal Office</option>
-                                <option value="Barangay">Barangay Office</option>
-                            </select>
-                            <small class="form-text text-muted">Office classification level</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary btn-prev"><i class="fas fa-arrow-left"></i> Previous</button>
-                <button type="button" class="btn btn-primary btn-next">Next <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP 5: Images -->
-    <div class="wizard-step" id="step-5">
-        <div class="card mb-4">
-            <div class="card-header bg-light"><h6><i class="fas fa-images"></i> Images</h6></div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="noOfPostalTellers">Number of Postal Tellers</label>
-                            <input type="number" class="form-control" id="noOfPostalTellers" name="noOfPostalTellers" 
-                                   placeholder="e.g., 3" min="0">
-                            <small class="form-text text-muted">Postal teller staff count</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="noOfLetterCarriers">Number of Letter Carriers</label>
-                            <input type="number" class="form-control" id="noOfLetterCarriers" name="noOfLetterCarriers" 
-                                   placeholder="e.g., 5" min="0">
-                            <small class="form-text text-muted">Letter carrier staff count</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="serviceProvided">Services Provided</label>
-                    <textarea class="form-control" id="serviceProvided" name="serviceProvided" rows="3" 
-                              placeholder="List services provided by this post office..."></textarea>
-                    <small class="form-text text-muted">Services available at this location</small>
-                </div>
-
-                <div class="alert alert-info">
-                    <i class="fas fa-camera"></i> 
-                    <strong>Image Upload:</strong> Image upload functionality will be available in the next update.
-                    <br>
-                    <small class="text-muted">You can add photos of the post office after creating the record.</small>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary btn-prev"><i class="fas fa-arrow-left"></i> Previous</button>
-                <button type="submit" class="btn btn-success">Save Record <i class="fas fa-save"></i></button>
-            </div>
-        </div>
-    </div>
-
-</form>
-
-        </div>
-    </div>
-    <!-- Link JS and CSS -->
 <link rel="stylesheet" href="/css/insert-office-wizard.css">
 <script src="/js/insert-office-wizard.js"></script>
-
-</div>
-</div>
-
-
 
 </div>
 </html>

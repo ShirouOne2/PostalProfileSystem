@@ -5,7 +5,7 @@ import com.pps.profilesystem.DTO.CityMunicipalityDTO;
 import com.pps.profilesystem.DTO.ProvinceDTO;
 import com.pps.profilesystem.Entity.*;
 import com.pps.profilesystem.Service.LocationHierarchyService;
-import com.pps.profilesystem.Service.PostalOfficeService;
+import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class PostalOfficeInsertController {
 
     @Autowired
-    private PostalOfficeService postalOfficeService;
+    private PostalOfficeRepository postalOfficeRepository;
 
     @Autowired
     private LocationHierarchyService locationService;
@@ -90,8 +90,8 @@ public class PostalOfficeInsertController {
         try {
             PostalOffice office = buildPostalOfficeFromRequest(requestData);
             
-            // Use the updated service method that creates connectivity record if active
-            PostalOffice savedOffice = postalOfficeService.createPostalOfficeWithConnectivity(office);
+            // Use repository save method
+            PostalOffice savedOffice = postalOfficeRepository.save(office);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

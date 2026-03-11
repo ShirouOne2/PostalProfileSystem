@@ -1,199 +1,194 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
-<head>
-    
-</head>
+<head></head>
 <body>
 
-    <div th:fragment="content">
+    <!-- OFFICE_DATA must be outside the fragment so it renders into <head> via layout -->
+    <th:block th:fragment="content">
 
     <title th:text="${postOffice.postalOffice + ' - Profile'}">Post Office Profile</title>
-    
+
     <!-- Profile CSS -->
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 
+    <!-- Cover Photo -->
+    <div class="cover-photo-container">
+        <div class="cover-photo"
+             th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
+                        ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo); background-size: cover; background-position: center;'
+                        : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+        </div>
+        <div class="cover-upload-overlay" id="coverUploadOverlay">
+            <span><i class="fas fa-camera mr-1"></i> Change Cover Photo</span>
+        </div>
+        <input type="file" id="coverPhotoInput" accept="image/*" style="display:none">
+    </div>
 
-        <!-- Cover Photo -->
-        <div class="cover-photo-container">
-            <div class="cover-photo" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+    <!-- Profile Section -->
+    <div class="profile-section">
+
+        <!-- Profile Picture -->
+        <div class="profile-header-wrapper">
+            <div class="profile-picture-container">
+                <div class="profile-picture-wrapper">
+                    <th:block th:if="${office.profilePicture != null and !#strings.isEmpty(office.profilePicture)}">
+                        <img id="profilePicImg"
+                             th:src="@{/api/postal-office/{id}/profile-photo(id=${office.id})}"
+                             class="profile-picture" alt="Profile Picture">
+                    </th:block>
+                    <th:block th:unless="${office.profilePicture != null and !#strings.isEmpty(office.profilePicture)}">
+                        <img id="profilePicImg"
+                             src="https://ui-avatars.com/api/?name=Post+Office&size=150&background=667eea&color=fff&rounded=true"
+                             class="profile-picture" alt="Profile Picture">
+                    </th:block>
+                    <div class="profile-upload-overlay" id="profileUploadOverlay">
+                        <span><i class="fas fa-camera"></i><br>Change Photo</span>
+                    </div>
+                </div>
+                <input type="file" id="profilePhotoInput" accept="image/*" style="display:none">
+            </div>
         </div>
 
-        <!-- Profile Section -->
-        <div class="profile-section">
-            <!-- Profile Picture -->
-            <div class="profile-header-wrapper">
-                <div class="profile-picture-container">
-                    <div class="profile-picture-wrapper">
-                        <img src="/images/no-image.png" 
-                             class="profile-picture" 
-                             alt="Profile Picture"
-                             onerror="this.src='/images/no-image.png'">
-                    </div>
-                </div>
-            </div>
+        <!-- Profile Info -->
+        <div class="profile-info-section">
+            <h1 class="profile-name" th:text="${postOffice.postalOffice}">Post Office Name</h1>
+            <p class="text-muted">
+                <i class="fas fa-map-marker-alt"></i>
+                <span th:text="${postOffice.city + ', ' + postOffice.province}">Location</span>
+            </p>
+        </div>
 
-            <!-- Profile Name -->
-            <div class="profile-info-section">
-                <h1 class="profile-name" th:text="${postOffice.postalOffice}">Post Office Name</h1>
-                <p class="text-muted">
-                    <i class="fas fa-map-marker-alt"></i> 
-                    <span th:text="${postOffice.city + ', ' + postOffice.province}">Location</span>
-                </p>
-            </div>
+        <!-- Action Buttons -->
+        <div class="text-center mb-3">
+            <a th:href="@{/table}" class="btn btn-outline-secondary btn-sm mr-1">
+                <i class="fas fa-arrow-left"></i> Back to Table
+            </a>
+            <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn">
+                <i class="fas fa-edit"></i> Edit Profile
+            </button>
+            <button onclick="window.print()" class="btn btn-info btn-sm mr-1">
+                <i class="fas fa-print"></i> Print Profile
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn">
+                <i class="fas fa-archive"></i> Archive
+            </button>
+        </div>
 
-            <!-- Profile Tabs -->
-            <div class="profile-tabs">
-                <a href="#basic" class="tab-item active">
-                    <i class="fas fa-info-circle"></i> Basic Info
-                </a>
-                <a href="#location" class="tab-item">
-                    <i class="fas fa-map-marker-alt"></i> Location
-                </a>
-                <a href="#connectivity" class="tab-item">
-                    <i class="fas fa-wifi"></i> Connectivity
-                </a>
-                <a href="#contact" class="tab-item">
-                    <i class="fas fa-address-book"></i> Contact
-                </a>
-                <a href="#staff" class="tab-item">
-                    <i class="fas fa-users"></i> Staff
-                </a>
-            </div>
+        <!-- Profile Tabs -->
+        <div class="profile-tabs">
+            <button class="tab-item active" data-tab="basic">
+                <i class="fas fa-info-circle"></i> Basic Info
+            </button>
+            <button class="tab-item" data-tab="location">
+                <i class="fas fa-map-marker-alt"></i> Location
+            </button>
+            <button class="tab-item" data-tab="connectivity">
+                <i class="fas fa-wifi"></i> Connectivity
+            </button>
+            <button class="tab-item" data-tab="contact">
+                <i class="fas fa-address-book"></i> Contact
+            </button>
+            <button class="tab-item" data-tab="staff">
+                <i class="fas fa-users"></i> Staff
+            </button>
+        </div>
 
-            <!-- Basic Information Card -->
-            <div class="info-card" id="basic">
-                <div class="card-header">
-                    <i class="fas fa-info-circle"></i> Basic Information
-                </div>
-
+        <!-- Tab: Basic Info -->
+        <div id="tab-basic" class="tab-panel active">
+            <div class="info-card">
+                <div class="card-header"><i class="fas fa-info-circle"></i> Basic Information</div>
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-map-marked-alt"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-map-marked-alt"></i></div>
                     <div class="info-content">
                         <div class="info-label">Area</div>
                         <div class="info-value" th:text="${postOffice.area ?: 'N/A'}">Area</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-building"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-building"></i></div>
                     <div class="info-content">
                         <div class="info-label">Postal Office Name</div>
                         <div class="info-value" th:text="${postOffice.postalOffice ?: 'N/A'}">Postal Office Name</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-user-tie"></i></div>
                     <div class="info-content">
                         <div class="info-label">Postmaster</div>
                         <div class="info-value" th:text="${postOffice.postmaster ?: 'N/A'}">Postmaster</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-tag"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-tag"></i></div>
                     <div class="info-content">
                         <div class="info-label">Classification</div>
                         <div class="info-value" th:text="${postOffice.classification ?: 'N/A'}">Classification</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-concierge-bell"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-concierge-bell"></i></div>
                     <div class="info-content">
                         <div class="info-label">Services Provided</div>
                         <div class="info-value" th:text="${postOffice.serviceProvided ?: 'N/A'}">Services</div>
                     </div>
                 </div>
             </div>
+        </div><!-- /#tab-basic -->
 
-            <!-- Location Information Card -->
-            <div class="info-card" id="location">
-                <div class="card-header">
-                    <i class="fas fa-map-marker-alt"></i> Location Information
-                </div>
-
+        <!-- Tab: Location -->
+        <div id="tab-location" class="tab-panel">
+            <div class="info-card">
+                <div class="card-header"><i class="fas fa-map-marker-alt"></i> Location Information</div>
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-map"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-map"></i></div>
                     <div class="info-content">
                         <div class="info-label">Region</div>
                         <div class="info-value" th:text="${postOffice.region ?: 'N/A'}">Region</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-map-pin"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-map-pin"></i></div>
                     <div class="info-content">
                         <div class="info-label">Province</div>
                         <div class="info-value" th:text="${postOffice.province ?: 'N/A'}">Province</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-city"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-city"></i></div>
                     <div class="info-content">
                         <div class="info-label">City/Municipality</div>
                         <div class="info-value" th:text="${postOffice.city ?: 'N/A'}">City</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
                     <div class="info-content">
                         <div class="info-label">Barangay</div>
                         <div class="info-value" th:text="${postOffice.barangay ?: 'N/A'}">Barangay</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-mail-bulk"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-mail-bulk"></i></div>
                     <div class="info-content">
                         <div class="info-label">Zip Code</div>
                         <div class="info-value" th:text="${postOffice.zipCode ?: 'N/A'}">Zip Code</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-road"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-road"></i></div>
                     <div class="info-content">
                         <div class="info-label">Complete Address</div>
                         <div class="info-value" th:text="${postOffice.addressLine ?: 'N/A'}">Address Line</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-globe"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-globe"></i></div>
                     <div class="info-content">
                         <div class="info-label">Coordinates</div>
                         <div class="info-value">
                             <span th:if="${postOffice.latitude != null and postOffice.longitude != null}">
-                                Lat: <span th:text="${postOffice.latitude}">0</span>, 
+                                Lat: <span th:text="${postOffice.latitude}">0</span>,
                                 Lng: <span th:text="${postOffice.longitude}">0</span>
                             </span>
                             <span th:unless="${postOffice.latitude != null and postOffice.longitude != null}">N/A</span>
@@ -201,210 +196,190 @@
                     </div>
                 </div>
             </div>
+        </div><!-- /#tab-location -->
 
-            <!-- Connectivity Information Card -->
-            <div class="info-card" id="connectivity">
-                <div class="card-header">
-                    <i class="fas fa-wifi"></i> Connectivity Information
-                </div>
-
+        <!-- Tab: Connectivity -->
+        <div id="tab-connectivity" class="tab-panel">
+            <div class="info-card">
+                <div class="card-header"><i class="fas fa-wifi"></i> Connectivity Information</div>
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-plug"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-plug"></i></div>
                     <div class="info-content">
                         <div class="info-label">Connection Status</div>
                         <div class="info-value">
-                            <span class="badge" 
+                            <span class="badge"
                                   th:classappend="${postOffice.status == 'Active' ? 'badge-success' : 'badge-danger'}"
-                                  th:text="${postOffice.status ?: 'N/A'}">
-                                Status
-                            </span>
+                                  th:text="${postOffice.status ?: 'N/A'}">Status</span>
                         </div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-network-wired"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-network-wired"></i></div>
                     <div class="info-content">
                         <div class="info-label">Internet Service Provider</div>
                         <div class="info-value" th:text="${postOffice.internetServiceProvider ?: 'N/A'}">ISP</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-ethernet"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-ethernet"></i></div>
                     <div class="info-content">
                         <div class="info-label">Type of Connection</div>
                         <div class="info-value" th:text="${postOffice.typeOfConnection ?: 'N/A'}">Connection Type</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-tachometer-alt"></i></div>
                     <div class="info-content">
                         <div class="info-label">Connection Speed</div>
                         <div class="info-value" th:text="${postOffice.speed ?: 'N/A'}">Speed</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-server"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-server"></i></div>
                     <div class="info-content">
                         <div class="info-label">Static IP Address</div>
                         <div class="info-value" th:text="${postOffice.staticIpAddress ?: 'N/A'}">IP Address</div>
                     </div>
                 </div>
             </div>
+        </div><!-- /#tab-connectivity -->
 
-            <!-- Contact Information Card -->
-            <div class="info-card" id="contact">
-                <div class="card-header">
-                    <i class="fas fa-address-book"></i> Contact Information
-                </div>
-
+        <!-- Tab: Contact -->
+        <div id="tab-contact" class="tab-panel">
+            <div class="info-card">
+                <div class="card-header"><i class="fas fa-address-book"></i> Contact Information</div>
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-user"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-user"></i></div>
                     <div class="info-content">
                         <div class="info-label">Postal Office Contact Person</div>
                         <div class="info-value" th:text="${postOffice.postalOfficeContactPerson ?: 'N/A'}">Contact Person</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-phone"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-phone"></i></div>
                     <div class="info-content">
                         <div class="info-label">Postal Office Contact Number</div>
                         <div class="info-value" th:text="${postOffice.postalOfficeContactNumber ?: 'N/A'}">Contact Number</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-user-tie"></i></div>
                     <div class="info-content">
                         <div class="info-label">ISP Contact Person</div>
                         <div class="info-value" th:text="${postOffice.ispContactPerson ?: 'N/A'}">ISP Contact Person</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-phone-alt"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
                     <div class="info-content">
                         <div class="info-label">ISP Contact Number</div>
                         <div class="info-value" th:text="${postOffice.ispContactNumber ?: 'N/A'}">ISP Contact Number</div>
                     </div>
                 </div>
             </div>
+        </div><!-- /#tab-contact -->
 
-            <!-- Staff Information Card -->
-            <div class="info-card" id="staff">
-                <div class="card-header">
-                    <i class="fas fa-users"></i> Staff Information
-                </div>
-
+        <!-- Tab: Staff -->
+        <div id="tab-staff" class="tab-panel">
+            <div class="info-card">
+                <div class="card-header"><i class="fas fa-users"></i> Staff Information</div>
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-users"></i></div>
                     <div class="info-content">
                         <div class="info-label">Number of Employees</div>
                         <div class="info-value" th:text="${postOffice.noOfEmployees ?: '0'}">Employees</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-cash-register"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-cash-register"></i></div>
                     <div class="info-content">
                         <div class="info-label">Number of Postal Tellers</div>
                         <div class="info-value" th:text="${postOffice.noOfPostalTellers ?: '0'}">Tellers</div>
                     </div>
                 </div>
-
                 <div class="info-row">
-                    <div class="info-icon">
-                        <i class="fas fa-people-carry"></i>
-                    </div>
+                    <div class="info-icon"><i class="fas fa-people-carry"></i></div>
                     <div class="info-content">
                         <div class="info-label">Number of Letter Carriers</div>
                         <div class="info-value" th:text="${postOffice.noOfLetterCarriers ?: '0'}">Letter Carriers</div>
                     </div>
                 </div>
             </div>
+        </div><!-- /#tab-staff -->
 
-            <!-- Action Buttons -->
-            <div class="text-center mt-4 mb-4">
-                <a th:href="@{/table}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Table
-                </a>
-                <a th:href="@{/postal-office/edit/{id}(id=${postOffice.id})}" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Edit Profile
-                </a>
-                <button onclick="window.print()" class="btn btn-info">
-                    <i class="fas fa-print"></i> Print Profile
-                </button>
-                <button type="button"
-                        class="btn btn-warning"
-                        th:data-office-id="${postOffice.id}"
-                        th:data-office-name="${postOffice.postalOffice}"
-                        id="profileArchiveBtn">
-                    <i class="fas fa-archive"></i> Archive
-                </button>
-            </div>
-
-            <!-- Archive Reason Modal -->
-            <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
-                            </h5>
-                            <button type="button" class="close" data-dismiss="modal">
-                                <span>&times;</span>
-                            </button>
+        <!-- Archive Modal -->
+        <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
+                            This office will be hidden from all views but can be restored later.
+                        </p>
+                        <div class="form-group">
+                            <label for="profileArchiveReason">Reason <small class="text-muted">(optional)</small></label>
+                            <textarea id="profileArchiveReason" class="form-control" rows="3"
+                                      placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
                         </div>
-                        <div class="modal-body">
-                            <p class="text-muted mb-3">
-                                You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
-                                This office will be hidden from all views but can be restored later.
-                            </p>
-                            <div class="form-group">
-                                <label for="profileArchiveReason">Reason <small class="text-muted">(optional)</small></label>
-                                <textarea id="profileArchiveReason" class="form-control" rows="3"
-                                          placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-warning" id="profileConfirmArchiveBtn">
-                                <i class="fas fa-archive mr-1"></i> Archive
-                            </button>
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" id="profileConfirmArchiveBtn">
+                            <i class="fas fa-archive mr-1"></i> Archive
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <script th:src="@{/js/profile.js}"></script>
         </div>
-    </div>
+
+        <!-- Tab switching — inline vanilla JS, no dependency on profile.js load order -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.profile-tabs .tab-item').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        document.querySelectorAll('.profile-tabs .tab-item').forEach(function (b) { b.classList.remove('active'); });
+                        document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+                        btn.classList.add('active');
+                        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                    });
+                });
+            });
+        </script>
+
+        <!-- OFFICE_DATA: injected here, inside fragment, runs before profile.js -->
+        <script th:inline="javascript">
+            window.OFFICE_DATA = {
+                id:                         /*[[${office.id}]]*/ null,
+                name:                       /*[[${postOffice.postalOffice}]]*/ '',
+                postmaster:                 /*[[${postOffice.postmaster}]]*/ '',
+                address:                    /*[[${postOffice.addressLine}]]*/ '',
+                zipCode:                    /*[[${postOffice.zipCode}]]*/ '',
+                connectionStatus:           /*[[${postOffice.status == 'Active'}]]*/ false,
+                internetServiceProvider:    /*[[${postOffice.internetServiceProvider}]]*/ '',
+                typeOfConnection:           /*[[${postOffice.typeOfConnection}]]*/ '',
+                speed:                      /*[[${postOffice.speed}]]*/ '',
+                staticIpAddress:            /*[[${postOffice.staticIpAddress}]]*/ '',
+                noOfEmployees:              /*[[${postOffice.noOfEmployees}]]*/ 0,
+                noOfPostalTellers:          /*[[${postOffice.noOfPostalTellers}]]*/ 0,
+                noOfLetterCarriers:         /*[[${postOffice.noOfLetterCarriers}]]*/ 0,
+                postalOfficeContactPerson:  /*[[${postOffice.postalOfficeContactPerson}]]*/ '',
+                postalOfficeContactNumber:  /*[[${postOffice.postalOfficeContactNumber}]]*/ '',
+                ispContactPerson:           /*[[${postOffice.ispContactPerson}]]*/ '',
+                ispContactNumber:           /*[[${postOffice.ispContactNumber}]]*/ '',
+                latitude:                   /*[[${postOffice.latitude}]]*/ null,
+                longitude:                  /*[[${postOffice.longitude}]]*/ null
+            };
+        </script>
+
+    </div><!-- /.profile-section -->
+
+    </th:block>
 
 </body>
 </html>

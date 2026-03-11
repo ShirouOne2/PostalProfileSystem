@@ -149,7 +149,6 @@
     </style>
     
     <!-- Include Modal Styles -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModalStyles}"></div>
     <div th:if="${activePage == 'users'}" th:replace="~{fragments/modals/User-modal :: userModalStyles}"></div>
 </head>
 
@@ -185,9 +184,6 @@
         </div>
 
     </div>
-
-    <!-- Insert Postal Office Modal -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModal}"></div>
 
     <!-- Edit Postal Office Modal -->
     <div th:if="${activePage == 'table'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
@@ -228,9 +224,6 @@
         });
     </script>
     
-    <!-- 6. Insert Modal Script -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModalScript}"></div>
-    
     <!-- 7. Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -257,7 +250,10 @@
    <!-- 13. Archive JS - Loads on archive page AND table page (for the archive button) -->
    <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
 
-   <!-- 14. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
+   <!-- 14. Insert Office Wizard JS - Load on insert page -->
+   <script th:if="${activePage == 'insert'}" th:src="@{/js/insert-office-wizard.js}"></script>
+
+   <!-- 15. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
    <script th:src="@{/js/session-timeout.js}"></script>
 </body>
 </html>

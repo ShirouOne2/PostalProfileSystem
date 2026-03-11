@@ -37,21 +37,24 @@
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
                     <i class='bx bxs-buildings' style="font-size: 2rem; color: #6c757d;"></i>
-                    <h5 class="mb-0 mt-2" id="totalOffices">0</h5>
+                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
+                    <h5 class="mb-0 mt-2" id="totalOffices" th:text="${totalOffices}">0</h5>
                     <small class="text-muted">Total Post Offices</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
                     <i class='bx bxs-check-circle' style="font-size: 2rem; color: #28a745;"></i>
-                    <h5 class="mb-0 mt-2" id="activeOffices">0</h5>
+                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
+                    <h5 class="mb-0 mt-2" id="activeOffices" th:text="${activeOffices}">0</h5>
                     <small class="text-muted">Active Locations</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="border rounded p-3 text-center">
                     <i class='bx bxs-x-circle' style="font-size: 2rem; color: #dc3545;"></i>
-                    <h5 class="mb-0 mt-2" id="inactiveOffices">0</h5>
+                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
+                    <h5 class="mb-0 mt-2" id="inactiveOffices" th:text="${inactiveOffices}">0</h5>
                     <small class="text-muted">Inactive Locations</small>
                 </div>
             </div>

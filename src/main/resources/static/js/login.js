@@ -61,3 +61,18 @@ function togglePassword(icon) {
         icon.name = 'eye-outline';
     }
 }
+
+// Splash screen functionality
+window.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+        const splash = document.getElementById('splashScreen');
+        const login = document.getElementById('loginContainer');
+
+        splash.classList.add('splash-fade-out');
+        setTimeout(function () {
+            splash.style.display = 'none';
+            login.style.display = 'flex';
+            login.classList.add('login-fade-in');
+        }, 600);
+    }, 2800);
+});

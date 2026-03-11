@@ -1,7 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.PostalOffice;
-import com.pps.profilesystem.Service.PostalOfficeService;
+import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class ProfileController {
 
     @Autowired
-    private PostalOfficeService postalOfficeService;
+    private PostalOfficeRepository postalOfficeRepository;
 
     /**
      * View profile by ID - accessible via /profile/{id}
@@ -26,7 +26,7 @@ public class ProfileController {
     @GetMapping("/profile/{id}")
     @Transactional(readOnly = true)
     public String showProfile(@PathVariable Integer id, Model model) {
-        Optional<PostalOffice> officeOptional = postalOfficeService.getPostalOfficeById(id);
+        Optional<PostalOffice> officeOptional = postalOfficeRepository.findById(id);
         if (officeOptional.isEmpty()) {
             return "redirect:/table";
         }

@@ -129,41 +129,43 @@ public class PostalOfficeImportService {
                     office.setName(dto.getPostOfficeName());
                 }
 
-                applyIfNotBlank(dto.getPostmaster(),                office::setPostmaster);
-                applyIfNotNull(dto.getNoOfEmployees(),              office::setNoOfEmployees);
-                applyIfNotNull(dto.getLongitude(),                  office::setLongitude);
-                applyIfNotNull(dto.getLatitude(),                   office::setLatitude);
-                applyIfNotBlank(dto.getZipCode(),                   office::setZipCode);
-                applyIfNotBlank(dto.getAddress(),                   office::setAddress);
-                applyIfNotBlank(dto.getServiceProvided(),           office::setServiceProvided);
-                applyIfNotBlank(dto.getClassification(),            office::setClassification);
-                applyIfNotBlank(dto.getInternetServiceProvider(),   office::setInternetServiceProvider);
-                applyIfNotBlank(dto.getTypeOfConnection(),          office::setTypeOfConnection);
-                applyIfNotBlank(dto.getSpeed(),                     office::setSpeed);
-                applyIfNotBlank(dto.getStaticIpAddress(),           office::setStaticIpAddress);
-                applyIfNotBlank(dto.getPostalOfficeContactPerson(), office::setPostalOfficeContactPerson);
-                applyIfNotBlank(dto.getPostalOfficeContactNumber(), office::setPostalOfficeContactNumber);
-                applyIfNotBlank(dto.getIspContactPerson(),          office::setIspContactPerson);
-                applyIfNotBlank(dto.getIspContactNumber(),          office::setIspContactNumber);
+                if (office != null) {
+                    applyIfNotBlank(dto.getPostmaster(),                office::setPostmaster);
+                    applyIfNotNull(dto.getNoOfEmployees(),              office::setNoOfEmployees);
+                    applyIfNotNull(dto.getLongitude(),                  office::setLongitude);
+                    applyIfNotNull(dto.getLatitude(),                   office::setLatitude);
+                    applyIfNotBlank(dto.getZipCode(),                   office::setZipCode);
+                    applyIfNotBlank(dto.getAddress(),                   office::setAddress);
+                    applyIfNotBlank(dto.getServiceProvided(),           office::setServiceProvided);
+                    applyIfNotBlank(dto.getClassification(),            office::setClassification);
+                    applyIfNotBlank(dto.getInternetServiceProvider(),   office::setInternetServiceProvider);
+                    applyIfNotBlank(dto.getTypeOfConnection(),          office::setTypeOfConnection);
+                    applyIfNotBlank(dto.getSpeed(),                     office::setSpeed);
+                    applyIfNotBlank(dto.getStaticIpAddress(),           office::setStaticIpAddress);
+                    applyIfNotBlank(dto.getPostalOfficeContactPerson(), office::setPostalOfficeContactPerson);
+                    applyIfNotBlank(dto.getPostalOfficeContactNumber(), office::setPostalOfficeContactNumber);
+                    applyIfNotBlank(dto.getIspContactPerson(),          office::setIspContactPerson);
+                    applyIfNotBlank(dto.getIspContactNumber(),          office::setIspContactNumber);
 
-                if (!blank(dto.getArea())) {
-                    Area area = resolveArea(dto.getArea(), areaMap);
-                    if (area == null) warnings.add("Row " + rowNum + ": Area not found → '" + dto.getArea() + "'");
-                    else office.setArea(area);
+                    if (!blank(dto.getArea())) {
+                        Area area = resolveArea(dto.getArea(), areaMap);
+                        if (area == null) warnings.add("Row " + rowNum + ": Area not found → '" + dto.getArea() + "'");
+                        else office.setArea(area);
+                    }
+
+                    resolveLocation(dto, office, regionMap, provinceMap, cityMap, barangayMap, zipMap, rowNum, warnings);
+
+                    if (!blank(dto.getConnectivityStatus())) {
+                        office.setConnectionStatus(parseConnectionStatus(dto.getConnectivityStatus()));
+                    }
+
+                    if (isNew) office.setActiveConnectivity(null);
+                    PostalOffice savedOffice = postalOfficeRepository.save(office);
+
+                    handleConnectivity(savedOffice, dto, defaultProvider, rowNum, warnings);
+
+                    if (isNew) inserted++; else updated++;
                 }
-
-                resolveLocation(dto, office, regionMap, provinceMap, cityMap, barangayMap, zipMap, rowNum, warnings);
-
-                if (!blank(dto.getConnectivityStatus())) {
-                    office.setConnectionStatus(parseConnectionStatus(dto.getConnectivityStatus()));
-                }
-
-                if (isNew) office.setActiveConnectivity(null);
-                PostalOffice savedOffice = postalOfficeRepository.save(office);
-
-                handleConnectivity(savedOffice, dto, defaultProvider, rowNum, warnings);
-
-                if (isNew) inserted++; else updated++;
 
             } catch (Exception e) {
                 errors.add("Row " + rowNum + ": " + e.getMessage());
@@ -542,17 +544,27 @@ public class PostalOfficeImportService {
     private Double getDouble(Row row, int col) {
         Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null) return null;
-        if (cell.getCellType() == CellType.NUMERIC) return cell.getNumericCellValue();
+        if (cell.getCellType() == CellType.NUMERIC) {
+            double value = cell.getNumericCellValue();
+            return isValidCoordinateValue(value) ? value : null;
+        }
         if (cell.getCellType() == CellType.STRING) {
-            try { return Double.parseDouble(cell.getStringCellValue().trim()); } catch (NumberFormatException ignored) {}
+            try { 
+                double value = Double.parseDouble(cell.getStringCellValue().trim());
+                return isValidCoordinateValue(value) ? value : null;
+            } catch (NumberFormatException ignored) {}
         }
         return null;
+    }
+
+    private boolean isValidCoordinateValue(double value) {
+        // Reject obviously invalid values like extremely large numbers
+        return Math.abs(value) <= 1000.0;
     }
 
     private Integer getInteger(Row row, int col) {
         Double d = getDouble(row, col); return d == null ? null : d.intValue();
     }
-
     // ── Misc helpers ──────────────────────────────────────────────────────────
 
     private boolean parseConnectionStatus(String raw) {

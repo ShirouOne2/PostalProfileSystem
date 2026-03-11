@@ -1,7 +1,5 @@
 package com.pps.profilesystem.Controller;
 
-import com.pps.profilesystem.Service.PostalOfficeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,9 +11,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/quarters")
 public class QuartersApiController {
-
-    @Autowired
-    private PostalOfficeService postalOfficeService;
 
     @GetMapping("/export")
     public void exportReport(
@@ -43,10 +38,11 @@ public class QuartersApiController {
             @RequestParam(required = false) String statusFilter) {
         
         if (startDate == null && endDate == null) {
-            // If no date filters provided, return all offices
-            return postalOfficeService.getAllPostalOfficesForTable();
+            // If no date filters provided, return empty list for now
+            return List.of();
         }
         
-        return postalOfficeService.getPostOfficesByDateRange(startDate, endDate, dateType, statusFilter);
+        // Placeholder for date range filtering
+        return List.of();
     }
 }

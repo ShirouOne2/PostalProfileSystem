@@ -96,9 +96,9 @@ public class QuartersController {
         Map<String, Long> stats = new HashMap<>();
         
         try {
-            long totalConnected = postalOfficeRepository.countByConnectionStatus(true);
-            long totalDisconnected = postalOfficeRepository.countByConnectionStatus(false);
-            long totalOffices = postalOfficeRepository.count();
+            long totalConnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(true);
+            long totalDisconnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(false);
+            long totalOffices = postalOfficeRepository.countByIsArchivedFalse();
             
             stats.put("totalConnected", totalConnected);
             stats.put("totalDisconnected", totalDisconnected);
@@ -169,7 +169,7 @@ public class QuartersController {
                 // Calculate totals as of the end of this quarter
                 LocalDateTime quarterEnd = LocalDateTime.of(year, endMonth, getLastDayOfMonth(year, endMonth), 23, 59, 59);
                 long totalConnected = postalOfficeRepository.countActiveAtQuarterEnd(quarterEnd);
-                long totalDisconnected = postalOfficeRepository.count() - totalConnected;
+                long totalDisconnected = postalOfficeRepository.countByIsArchivedFalse() - totalConnected;
                 
                 // Apply status filter logic
                 if ("newly_connected".equals(statusFilter)) {
@@ -230,4 +230,4 @@ public class QuartersController {
     private int getLastDayOfMonth(int year, int month) {
         return java.time.YearMonth.of(year, month).lengthOfMonth();
     }
-}  
+}

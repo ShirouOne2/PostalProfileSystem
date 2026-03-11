@@ -52,9 +52,16 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
 
     List<PostalOffice> findByIsArchivedFalse();
 
+    // FIX N+1: Fetch all non-archived offices WITH all required relationships in a single JOIN query
+    // DISTINCT prevents duplicate rows when offices have multiple connectivity records
+    @Query("SELECT DISTINCT po FROM PostalOffice po LEFT JOIN FETCH po.activeConnectivity LEFT JOIN FETCH po.area LEFT JOIN FETCH po.cityMunicipality LEFT JOIN FETCH po.cityMunicipality.province LEFT JOIN FETCH po.cityMunicipality.province.regions WHERE po.isArchived = false")
+    List<PostalOffice> findAllNonArchivedWithConnectivity();
+
     List<PostalOffice> findByIsArchivedTrue();
 
     long countByIsArchivedTrue();
+
+    long countByIsArchivedFalse();
 
     long countByConnectionStatusAndIsArchivedFalse(Boolean status);
 

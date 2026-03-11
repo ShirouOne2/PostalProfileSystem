@@ -5,12 +5,200 @@
  * WITH EDIT FUNCTIONALITY
  */
 
+
+/**
+ * Create Edit Modal
+ * Dynamically creates the edit office modal and adds it to the page
+ */
+function createEditModal() {
+    const modalHTML = `
+        <div class="modal fade" id="editOfficeModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit"></i> Edit Post Office
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editOfficeForm">
+                            <input type="hidden" id="editOfficeId">
+                            
+                            <div class="row">
+                                <!-- Basic Information -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editName">Office Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="editName" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editPostmaster">Postmaster</label>
+                                        <input type="text" class="form-control" id="editPostmaster">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editAddress">Address</label>
+                                <textarea class="form-control" id="editAddress" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editZipCode">Zip Code</label>
+                                        <input type="text" class="form-control" id="editZipCode">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editStatus">Status <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="editStatus" required>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- ISP Information -->
+                            <h6 class="mt-3 mb-2 text-primary">Internet Service Provider</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISP">ISP</label>
+                                        <input type="text" class="form-control" id="editISP">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editSpeed">Speed</label>
+                                        <input type="text" class="form-control" id="editSpeed" placeholder="e.g., 100 Mbps">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editTypeOfConnection">Connection Type</label>
+                                        <input type="text" class="form-control" id="editTypeOfConnection" placeholder="e.g., Fiber, DSL">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editStaticIP">Static IP Address</label>
+                                        <input type="text" class="form-control" id="editStaticIP">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Staff Information -->
+                            <h6 class="mt-3 mb-2 text-primary">Staff Information</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfEmployees">No. of Employees</label>
+                                        <input type="number" class="form-control" id="editNoOfEmployees" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfTellers">No. of Tellers</label>
+                                        <input type="number" class="form-control" id="editNoOfTellers" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="editNoOfCarriers">No. of Letter Carriers</label>
+                                        <input type="number" class="form-control" id="editNoOfCarriers" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editContactPerson">Post Office Contact Person</label>
+                                        <input type="text" class="form-control" id="editContactPerson">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editContactNumber">Post Office Contact Number</label>
+                                        <input type="text" class="form-control" id="editContactNumber">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISPContactPerson">ISP Contact Person</label>
+                                        <input type="text" class="form-control" id="editISPContactPerson">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editISPContactNumber">ISP Contact Number</label>
+                                        <input type="text" class="form-control" id="editISPContactNumber">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Location Coordinates -->
+                            <h6 class="mt-3 mb-2 text-primary">Location Coordinates</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editLatitude">Latitude</label>
+                                        <input type="number" class="form-control" id="editLatitude" step="0.000001">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editLongitude">Longitude</label>
+                                        <input type="number" class="form-control" id="editLongitude" step="0.000001">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    $('body').append(modalHTML);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Create edit modal
     createEditModal();
     
-    // Initialize DataTable
+    // Initialize DataTable on server-side rendered table
     const table = new DataTable('#myTable', {
         // Pagination
         pageLength: 25,
@@ -21,6 +209,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ordering: true,
         info: true,
         searching: true,
+        processing: false, // No processing needed for server-side rendered data
+        serverSide: false,
         
         // Column configuration
         columnDefs: [
@@ -409,3 +599,52 @@ function performDelete(officeId, officeName) {
         }
     });
 }
+
+// ── Archive Button Handler ────────────────────────────────────────────────────
+(function () {
+    var pendingArchiveId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Event delegation — works with DataTable dynamic rows
+        var tbody = document.querySelector('#myTable tbody');
+        if (tbody) {
+            tbody.addEventListener('click', function (e) {
+                var btn = e.target.closest('.btn-archive');
+                if (!btn) return;
+                pendingArchiveId = btn.getAttribute('data-office-id');
+                var officeName = btn.getAttribute('data-office-name');
+                document.getElementById('archiveOfficeName').textContent = officeName;
+                document.getElementById('archiveReasonInput').value = '';
+                $('#archiveReasonModal').modal('show');
+            });
+        }
+
+        // Confirm archive
+        var confirmBtn = document.getElementById('confirmArchiveBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (!pendingArchiveId) return;
+                var reason = document.getElementById('archiveReasonInput').value.trim();
+                fetch('/api/postal-office/' + pendingArchiveId + '/archive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    $('#archiveReasonModal').modal('hide');
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Archived!', text: 'Office archived successfully.', timer: 2000, showConfirmButton: false })
+                            .then(function () { location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Archive failed.' });
+                    }
+                })
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' });
+                });
+            });
+        }
+    });
+})();
