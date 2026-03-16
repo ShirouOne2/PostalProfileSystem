@@ -17,26 +17,30 @@
     const SESSION_DURATION_MS = 30 * 60 * 1000;   // 30 minutes
     const WARNING_BEFORE_MS  =  5 * 60 * 1000;    //  5 minutes before expiry
     const LOGOUT_URL         = '/login?timeout=true';
-    const KEEP_ALIVE_URL     = '/api/keep-alive';  // optional ping endpoint (see note below)
+    const KEEP_ALIVE_URL     = '/api/keep-alive';
 
     // ── Internal state ───────────────────────────────────────────────────────
-    let warningTimer  = null;
-    let logoutTimer   = null;
-    let warningOpen   = false;
+    let warningTimer      = null;
+    let logoutTimer       = null;
+    let warningOpen       = false;
     let countdownInterval = null;
+    let logoutPending     = false;   // guard against double-logout
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     function clearAllTimers() {
         clearTimeout(warningTimer);
         clearTimeout(logoutTimer);
         clearInterval(countdownInterval);
-        warningTimer  = null;
-        logoutTimer   = null;
+        warningTimer      = null;
+        logoutTimer       = null;
         countdownInterval = null;
     }
 
     function doLogout() {
+        if (logoutPending) return;   // prevent duplicate redirects
+        logoutPending = true;
         clearAllTimers();
+        Swal.close();                // close any open popup before redirect
         window.location.href = LOGOUT_URL;
     }
 
@@ -44,19 +48,15 @@
     function keepAlive() {
         fetch(KEEP_ALIVE_URL, { method: 'GET', credentials: 'same-origin' })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                console.log('[SessionTimeout] Keep-alive successful:', data);
+                console.log('[SessionTimeout] Keep-alive OK:', data);
             })
             .catch(error => {
-                console.warn('[SessionTimeout] Keep-alive failed:', error);
-                // If keep-alive fails, we should logout to be safe
+                console.warn('[SessionTimeout] Keep-alive failed:', error.message);
                 if (error.message.includes('401') || error.message.includes('403')) {
-                    console.log('[SessionTimeout] Session expired, logging out');
                     doLogout();
                 }
             });
@@ -64,35 +64,29 @@
 
     // ── Warning popup ────────────────────────────────────────────────────────
     function showWarning() {
-        if (warningOpen) return;
+        if (warningOpen || logoutPending) return;
         warningOpen = true;
 
-        let secondsLeft = WARNING_BEFORE_MS / 1000;
+        let secondsLeft = Math.floor(WARNING_BEFORE_MS / 1000);
 
         Swal.fire({
-            icon: 'warning',
-            title: 'Session Expiring Soon',
-            html: `Your session will expire in <strong id="swal-countdown">${formatTime(secondsLeft)}</strong>.<br>Do you want to stay logged in?`,
-            showCancelButton: true,
-            confirmButtonText: 'Stay Logged In',
-            cancelButtonText:  'Logout Now',
+            icon:               'warning',
+            title:              'Session Expiring Soon',
+            html:               `Your session will expire in <strong id="swal-countdown">${formatTime(secondsLeft)}</strong>.<br>Do you want to stay logged in?`,
+            showCancelButton:   true,
+            confirmButtonText:  'Stay Logged In',
+            cancelButtonText:   'Logout Now',
             confirmButtonColor: '#002868',
             cancelButtonColor:  '#d33',
-            allowOutsideClick: false,
-            allowEscapeKey:    false,
-            timerProgressBar:  true,
-            timer: WARNING_BEFORE_MS,
+            allowOutsideClick:  false,
+            allowEscapeKey:     false,
+            timerProgressBar:   true,
+            timer:              WARNING_BEFORE_MS,
             didOpen: () => {
-                // Live countdown inside the popup
                 countdownInterval = setInterval(() => {
-                    secondsLeft--;
+                    secondsLeft = Math.max(0, secondsLeft - 1);
                     const el = document.getElementById('swal-countdown');
-                    if (el && secondsLeft >= 0) el.textContent = formatTime(secondsLeft);
-                    if (secondsLeft <= 0) {
-                        clearInterval(countdownInterval);
-                        // Auto-logout when countdown reaches zero
-                        doLogout();
-                    }
+                    if (el) el.textContent = formatTime(secondsLeft);
                 }, 1000);
             },
             willClose: () => {
@@ -101,13 +95,24 @@
             }
         }).then(result => {
             warningOpen = false;
+
             if (result.isConfirmed) {
-                keepAlive();        // ping the server to refresh the server-side session
-                resetTimers();      // restart the frontend timers
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                doLogout();         // user clicked "Logout Now"
+                // User clicked "Stay Logged In"
+                keepAlive();
+                resetTimers();
+            } else if (
+                result.dismiss === Swal.DismissReason.cancel
+            ) {
+                // User clicked "Logout Now"
+                doLogout();
+            } else if (
+                result.dismiss === Swal.DismissReason.timer ||
+                result.dismiss === Swal.DismissReason.backdrop ||
+                result.dismiss === Swal.DismissReason.esc
+            ) {
+                // Timer ran out (or any other auto-dismiss) → logout
+                doLogout();
             }
-            // Don't logout on timer completion - handled by countdown interval
         });
     }
 
@@ -121,13 +126,13 @@
             showWarning();
         }, warningDelay);
 
+        // Safety-net: force logout if the popup was never shown or interacted with
         logoutTimer = setTimeout(() => {
-            if (!warningOpen) doLogout(); // safety net if popup was never shown
+            if (!warningOpen) doLogout();
         }, SESSION_DURATION_MS);
     }
 
     // ── Activity detection ───────────────────────────────────────────────────
-    // Reset timers on any meaningful user activity
     const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
     let activityThrottle = null;
 
@@ -135,7 +140,7 @@
         if (activityThrottle) return;          // throttle to once every 30 s
         activityThrottle = setTimeout(() => {
             activityThrottle = null;
-            if (!warningOpen) resetTimers();   // only reset if popup is NOT showing
+            if (!warningOpen && !logoutPending) resetTimers();
         }, 30_000);
     }
 
@@ -151,9 +156,8 @@
     }
 
     // ── Boot ─────────────────────────────────────────────────────────────────
-    // Ensure SweetAlert2 is loaded before initializing
     if (typeof Swal === 'undefined') {
-        console.error('[SessionTimeout] SweetAlert2 not loaded - session timeout disabled');
+        console.error('[SessionTimeout] SweetAlert2 not loaded — session timeout disabled');
     } else {
         resetTimers();
         console.log('[SessionTimeout] Initialized — expires in', SESSION_DURATION_MS / 60000, 'min');

@@ -2,6 +2,7 @@ package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Repository.AreaRepository;
+import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,17 +14,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-/**
- * Controller for Quarters Management Page
- * Displays connectivity status across quarters using historical connectivity data
- * Shows actual connection/disconnection counts for each quarter based on connectivity records
- */
+import java.util.stream.Collectors;
+
 @Controller
 @RequestMapping("/quarters")
 public class QuartersController {
 
     @Autowired
     private PostalOfficeRepository postalOfficeRepository;
+
+    @Autowired
+    private ConnectivityRepository connectivityRepository;
 
     @Autowired
     private AreaRepository areaRepository;
@@ -38,15 +39,25 @@ public class QuartersController {
 
         int currentYear = (year != null) ? year : LocalDate.now().getYear();
 
+        // Parse areaId from filter string
+        Integer areaId = null;
+        if (areaFilter != null && !areaFilter.trim().isEmpty()) {
+            try { areaId = Integer.parseInt(areaFilter.trim()); } catch (NumberFormatException ignored) {}
+        }
+
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
-        model.addAttribute("connectivityStats", getConnectivityStats());
         model.addAttribute("areas", getAreas());
-        model.addAttribute("quartersData", getQuartersData(currentYear, statusFilter, quarterFilter, areaFilter));
+
+        // Pass filter-aware stats and latest quarter data
+        model.addAttribute("connectivityStats",
+            getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
+        model.addAttribute("latestQuarter",
+            getLatestQuarterData(currentYear, quarterFilter, areaId, statusFilter));
+        
         model.addAttribute("selectedAreaFilter", areaFilter);
         model.addAttribute("selectedQuarterFilter", quarterFilter);
         model.addAttribute("selectedStatusFilter", statusFilter);
-
         model.addAttribute("activePage", "quarters");
 
         Map<String, Boolean> userAccess = new HashMap<>();
@@ -56,178 +67,253 @@ public class QuartersController {
         return "quarters";
     }
 
-    /**
-     * Get current quarter information
-     */
+    // ── Stats Cards (Active / Inactive / Total) ───────────────────────────────
+
+    private Map<String, Long> getConnectivityStats(
+            int year, String quarterFilter, Integer areaId, String statusFilter) {
+
+        Map<String, Long> stats = new HashMap<>();
+        try {
+            // Resolve snapshot date based on quarter filter
+            LocalDateTime snapshotDate = resolveSnapshotDate(year, quarterFilter);
+
+            // Count active offices at snapshot date (filter-aware)
+            long active   = countActiveAt(snapshotDate, areaId);
+            long inactive = countInactiveAt(snapshotDate, areaId);
+            long total    = countTotal(areaId);
+
+            // Apply status filter to what we show
+            if ("active".equals(statusFilter)) {
+                stats.put("totalConnected",    active);
+                stats.put("totalDisconnected", 0L);
+                stats.put("totalOffices",      active);
+            } else if ("inactive".equals(statusFilter)) {
+                stats.put("totalConnected",    0L);
+                stats.put("totalDisconnected", inactive);
+                stats.put("totalOffices",      inactive);
+            } else if ("newly_connected".equals(statusFilter)) {
+                LocalDateTime[] qRange = resolveQuarterRange(year, quarterFilter);
+                long newlyConnected = countNewlyConnected(qRange[0], qRange[1], areaId);
+                stats.put("totalConnected",    newlyConnected);
+                stats.put("totalDisconnected", 0L);
+                stats.put("totalOffices",      newlyConnected);
+            } else if ("newly_disconnected".equals(statusFilter)) {
+                LocalDateTime[] qRange = resolveQuarterRange(year, quarterFilter);
+                long newlyDisconnected = countNewlyDisconnected(qRange[0], qRange[1], areaId);
+                stats.put("totalConnected",    0L);
+                stats.put("totalDisconnected", newlyDisconnected);
+                stats.put("totalOffices",      newlyDisconnected);
+            } else {
+                // All Status: show active + inactive, total = all non-archived offices
+                stats.put("totalConnected",    active);
+                stats.put("totalDisconnected", inactive);
+                stats.put("totalOffices",      total);
+            }
+        } catch (Exception e) {
+            stats.put("totalConnected",    0L);
+            stats.put("totalDisconnected", 0L);
+            stats.put("totalOffices",      0L);
+        }
+        return stats;
+    }
+
+    // ── Latest Quarter Data (for simplified card layout) ──────────────────────
+
+    private Map<String, Object> getLatestQuarterData(
+            int year, String quarterFilter, Integer areaId, String statusFilter) {
+
+        try {
+            // Determine which quarter to show (default to current quarter if no filter)
+            String targetQuarter = quarterFilter;
+            if (targetQuarter == null || targetQuarter.isEmpty()) {
+                LocalDate now = LocalDate.now();
+                int month = now.getMonthValue();
+                if (month <= 3) targetQuarter = "Q1";
+                else if (month <= 6) targetQuarter = "Q2";
+                else if (month <= 9) targetQuarter = "Q3";
+                else targetQuarter = "Q4";
+            }
+
+            // Get quarter date range
+            int quarterIndex = Integer.parseInt(targetQuarter.substring(1)) - 1;
+            int[][] qMonths = {{1,3},{4,6},{7,9},{10,12}};
+            int startMonth = qMonths[quarterIndex][0];
+            int endMonth = qMonths[quarterIndex][1];
+
+            LocalDateTime qStart = LocalDateTime.of(year, startMonth, 1, 0, 0, 0);
+            LocalDateTime qEnd = LocalDateTime.of(year, endMonth,
+                java.time.YearMonth.of(year, endMonth).lengthOfMonth(), 23, 59, 59);
+
+            // Use the same snapshot date as getConnectivityStats for consistency
+            LocalDateTime snapshotDate = resolveSnapshotDate(year, targetQuarter);
+
+            // Calculate stats for this quarter
+            long newlyConnected    = countNewlyConnected(qStart, qEnd, areaId);
+            long newlyDisconnected = countNewlyDisconnected(qStart, qEnd, areaId);
+            long totalConnected    = countActiveAt(snapshotDate, areaId);
+            long totalDisconnected = countInactiveAt(snapshotDate, areaId);
+
+            Map<String, Object> latestData = new HashMap<>();
+            latestData.put("quarter", targetQuarter);
+            latestData.put("year", year);
+
+            if ("newly_connected".equals(statusFilter)) {
+                latestData.put("connected", newlyConnected);
+                latestData.put("disconnected", 0L);
+                latestData.put("newlyConnected", newlyConnected);
+                latestData.put("newlyDisconnected", 0L);
+            } else if ("newly_disconnected".equals(statusFilter)) {
+                latestData.put("connected", 0L);
+                latestData.put("disconnected", newlyDisconnected);
+                latestData.put("newlyConnected", 0L);
+                latestData.put("newlyDisconnected", newlyDisconnected);
+            } else {
+                latestData.put("connected", totalConnected);
+                latestData.put("disconnected", totalDisconnected);
+                latestData.put("newlyConnected", newlyConnected);
+                latestData.put("newlyDisconnected", newlyDisconnected);
+            }
+
+            return latestData;
+        } catch (Exception e) {
+            // Return empty data on error
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("quarter", "Q1");
+            empty.put("year", year);
+            empty.put("connected", 0L);
+            empty.put("disconnected", 0L);
+            empty.put("newlyConnected", 0L);
+            empty.put("newlyDisconnected", 0L);
+            return empty;
+        }
+    }
+
+    // ── Helper: resolve quarter start and end dates ───────────────────────────
+
+    private LocalDateTime[] resolveQuarterRange(int year, String quarterFilter) {
+        String q = (quarterFilter == null || quarterFilter.isEmpty()) ? "Q1" : quarterFilter.toUpperCase();
+        switch (q) {
+            case "Q1": return new LocalDateTime[]{
+                LocalDateTime.of(year, 1,  1,  0, 0, 0),
+                LocalDateTime.of(year, 3, 31, 23, 59, 59)};
+            case "Q2": return new LocalDateTime[]{
+                LocalDateTime.of(year, 4,  1,  0, 0, 0),
+                LocalDateTime.of(year, 6, 30, 23, 59, 59)};
+            case "Q3": return new LocalDateTime[]{
+                LocalDateTime.of(year, 7,  1,  0, 0, 0),
+                LocalDateTime.of(year, 9, 30, 23, 59, 59)};
+            default:   return new LocalDateTime[]{
+                LocalDateTime.of(year, 10,  1,  0, 0, 0),
+                LocalDateTime.of(year, 12, 31, 23, 59, 59)};
+        }
+    }
+
+    // ── Helper: snapshot date based on quarter filter ─────────────────────────
+
+    private LocalDateTime resolveSnapshotDate(int year, String quarterFilter) {
+        if (quarterFilter == null || quarterFilter.isEmpty()) {
+            return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+        }
+        switch (quarterFilter.toUpperCase()) {
+            case "Q1": return LocalDateTime.of(year, 3, 31, 23, 59, 59);
+            case "Q2": return LocalDateTime.of(year, 6, 30, 23, 59, 59);
+            case "Q3": return LocalDateTime.of(year, 9, 30, 23, 59, 59);
+            case "Q4": return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+            default:   return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+        }
+    }
+
+    // ── Helper: count active offices = offices with connectionStatus=true ────────
+
+    private long countActiveAt(LocalDateTime snap, Integer areaId) {
+        return postalOfficeRepository.findByIsArchivedFalse().stream()
+            .filter(po -> areaId == null
+                || (po.getArea() != null && areaId.equals(po.getArea().getId())))
+            .filter(po -> Boolean.TRUE.equals(po.getConnectionStatus()))
+            .count();
+    }
+
+    // ── Helper: count inactive offices = offices with connectionStatus=false ────
+    // Uses PostalOffice.connectionStatus as the source of truth.
+    // "Inactive" means the office has no active internet connection,
+    // not just that it lacks a Connectivity record.
+
+    private long countInactiveAt(LocalDateTime snap, Integer areaId) {
+        return postalOfficeRepository.findByIsArchivedFalse().stream()
+            .filter(po -> areaId == null
+                || (po.getArea() != null && areaId.equals(po.getArea().getId())))
+            .filter(po -> !Boolean.TRUE.equals(po.getConnectionStatus()))
+            .count();
+    }
+
+    // ── Helper: count total non-archived offices, optionally by area ──────────
+
+    private long countTotal(Integer areaId) {
+        if (areaId == null) {
+            return postalOfficeRepository.countByIsArchivedFalse();
+        }
+        return postalOfficeRepository.findByIsArchivedFalse().stream()
+            .filter(po -> po.getArea() != null && areaId.equals(po.getArea().getId()))
+            .count();
+    }
+
+    // ── Helper: count newly connected in date range, optionally by area ───────
+
+    private long countNewlyConnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        return connectivityRepository.findByDateConnectedBetween(start, end).stream()
+            .filter(c -> c.getPostalOffice() != null
+                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+            .filter(c -> areaId == null
+                || (c.getPostalOffice().getArea() != null
+                    && areaId.equals(c.getPostalOffice().getArea().getId())))
+            .map(c -> c.getPostalOffice().getId())
+            .distinct()
+            .count();
+    }
+
+    // ── Helper: count newly disconnected in date range, optionally by area ────
+
+    private long countNewlyDisconnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
+            .filter(c -> c.getPostalOffice() != null
+                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+            .filter(c -> areaId == null
+                || (c.getPostalOffice().getArea() != null
+                    && areaId.equals(c.getPostalOffice().getArea().getId())))
+            .map(c -> c.getPostalOffice().getId())
+            .distinct()
+            .count();
+    }
+
+    // ── Other helpers ─────────────────────────────────────────────────────────
+
     private Map<String, Object> getCurrentQuarterInfo() {
         Map<String, Object> info = new HashMap<>();
         LocalDate now = LocalDate.now();
         int month = now.getMonthValue();
-        
         String quarter;
-        String monthName = now.getMonth().toString();
         long daysUntilNext;
-        
-        if (month >= 1 && month <= 3) {
+        if (month <= 3) {
             quarter = "Q1";
             daysUntilNext = LocalDate.of(now.getYear(), 4, 1).toEpochDay() - now.toEpochDay();
-        } else if (month >= 4 && month <= 6) {
+        } else if (month <= 6) {
             quarter = "Q2";
             daysUntilNext = LocalDate.of(now.getYear(), 7, 1).toEpochDay() - now.toEpochDay();
-        } else if (month >= 7 && month <= 9) {
+        } else if (month <= 9) {
             quarter = "Q3";
             daysUntilNext = LocalDate.of(now.getYear(), 10, 1).toEpochDay() - now.toEpochDay();
         } else {
             quarter = "Q4";
             daysUntilNext = LocalDate.of(now.getYear() + 1, 1, 1).toEpochDay() - now.toEpochDay();
         }
-        
         info.put("quarter", quarter);
-        info.put("monthName", monthName);
+        info.put("monthName", now.getMonth().toString());
         info.put("daysUntilNext", daysUntilNext);
-        
         return info;
     }
 
-    /**
-     * Get connectivity statistics
-     */
-    private Map<String, Long> getConnectivityStats() {
-        Map<String, Long> stats = new HashMap<>();
-        
-        try {
-            long totalConnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(true);
-            long totalDisconnected = postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(false);
-            long totalOffices = postalOfficeRepository.countByIsArchivedFalse();
-            
-            stats.put("totalConnected", totalConnected);
-            stats.put("totalDisconnected", totalDisconnected);
-            stats.put("totalOffices", totalOffices);
-        } catch (Exception e) {
-            // Handle database connection issues gracefully
-            stats.put("totalConnected", 0L);
-            stats.put("totalDisconnected", 0L);
-            stats.put("totalOffices", 0L);
-        }
-        
-        return stats;
-    }
-
-    /**
-     * Get list of Area objects
-     */
     private List<Area> getAreas() {
-        try {
-            return areaRepository.findAll();
-        } catch (Exception e) {
-            // Handle database connection issues gracefully
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Get quarters data for a specific year with optional filters
-     * Now uses historical connectivity data to show actual counts per quarter
-     */
-    private List<Map<String, Object>> getQuartersData(int year, String statusFilter, String quarterFilter, String areaFilter) {
-        List<Map<String, Object>> quartersData = new ArrayList<>();
-        
-        try {
-            String[] quarters = {"Q1", "Q2", "Q3", "Q4"};
-            LocalDate now = LocalDate.now();
-            int currentQuarter = (now.getMonthValue() - 1) / 3;
-            
-            // Quarter month ranges
-            int[][] quarterMonths = {
-                {1, 3},   // Q1: Jan-Mar
-                {4, 6},   // Q2: Apr-Jun
-                {7, 9},   // Q3: Jul-Sep
-                {10, 12}  // Q4: Oct-Dec
-            };
-            
-            for (int i = 0; i < quarters.length; i++) {
-                // Skip if quarter filter is set and doesn't match current quarter
-                if (quarterFilter != null && !quarterFilter.isEmpty() && !quarters[i].equals(quarterFilter)) {
-                    continue;
-                }
-                
-                Map<String, Object> quarterData = new HashMap<>();
-                
-                quarterData.put("quarter", quarters[i]);
-                quarterData.put("year", year);
-                
-                // Get historical connection counts for this quarter
-                int startMonth = quarterMonths[i][0];
-                int endMonth = quarterMonths[i][1];
-                
-                // Count new connections in this quarter
-                long newlyConnected = postalOfficeRepository.countConnectedInQuarter(year, startMonth, endMonth);
-                
-                // Count new disconnections in this quarter
-                long newlyDisconnected = postalOfficeRepository.countDisconnectedInQuarter(year, startMonth, endMonth);
-                
-                // Calculate totals as of the end of this quarter
-                LocalDateTime quarterEnd = LocalDateTime.of(year, endMonth, getLastDayOfMonth(year, endMonth), 23, 59, 59);
-                long totalConnected = postalOfficeRepository.countActiveAtQuarterEnd(quarterEnd);
-                long totalDisconnected = postalOfficeRepository.countByIsArchivedFalse() - totalConnected;
-                
-                // Apply status filter logic
-                if ("newly_connected".equals(statusFilter)) {
-                    // For newly connected filter, only show the newly connected count
-                    quarterData.put("connected", newlyConnected);
-                    quarterData.put("disconnected", 0L);
-                    quarterData.put("newlyConnected", newlyConnected);
-                    quarterData.put("newlyDisconnected", 0L);
-                } else if ("newly_disconnected".equals(statusFilter)) {
-                    // For newly disconnected filter, only show the newly disconnected count
-                    quarterData.put("connected", 0L);
-                    quarterData.put("disconnected", newlyDisconnected);
-                    quarterData.put("newlyConnected", 0L);
-                    quarterData.put("newlyDisconnected", newlyDisconnected);
-                } else {
-                    // Normal display (active, inactive, or no filter)
-                    quarterData.put("connected", totalConnected);
-                    quarterData.put("disconnected", totalDisconnected);
-                    quarterData.put("newlyConnected", newlyConnected);
-                    quarterData.put("newlyDisconnected", newlyDisconnected);
-                }
-                
-                // Mark current quarter
-                quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
-                
-                quartersData.add(quarterData);
-            }
-        } catch (Exception e) {
-            // Handle database connection issues gracefully - return empty quarters data
-            String[] quarters = {"Q1", "Q2", "Q3", "Q4"};
-            LocalDate now = LocalDate.now();
-            int currentQuarter = (now.getMonthValue() - 1) / 3;
-            
-            for (int i = 0; i < quarters.length; i++) {
-                // Skip if quarter filter is set and doesn't match current quarter
-                if (quarterFilter != null && !quarterFilter.isEmpty() && !quarters[i].equals(quarterFilter)) {
-                    continue;
-                }
-                
-                Map<String, Object> quarterData = new HashMap<>();
-                quarterData.put("quarter", quarters[i]);
-                quarterData.put("year", year);
-                quarterData.put("connected", 0L);
-                quarterData.put("disconnected", 0L);
-                quarterData.put("newlyConnected", 0L);
-                quarterData.put("newlyDisconnected", 0L);
-                quarterData.put("isCurrent", year == now.getYear() && i == currentQuarter);
-                quartersData.add(quarterData);
-            }
-        }
-        
-        return quartersData;
-    }
-    
-    /**
-     * Helper method to get the last day of a month
-     */
-    private int getLastDayOfMonth(int year, int month) {
-        return java.time.YearMonth.of(year, month).lengthOfMonth();
+        try { return areaRepository.findAll(); }
+        catch (Exception e) { return new ArrayList<>(); }
     }
 }

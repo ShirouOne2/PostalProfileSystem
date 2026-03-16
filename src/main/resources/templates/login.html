@@ -48,7 +48,11 @@
         </div>
 
         <div class="remember-forgot">
-          <label><input type="checkbox" name="remember-me"> Remember me</label>
+          <label class="remember-label">
+            <input type="checkbox" name="remember-me" id="rememberMe">
+            <span class="custom-checkbox"></span>
+            <span>Remember me</span>
+          </label>
           <a th:href="@{/request-otp}" class="forgot-password">Forgot Password?</a>
         </div>
 

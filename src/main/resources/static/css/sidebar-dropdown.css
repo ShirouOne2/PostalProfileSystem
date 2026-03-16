@@ -1,0 +1,98 @@
+/* ── Dropdown wrapper ──────────────────────────────────────── */
+.sidebar-dropdown {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+/* Arrow icon inside the toggle */
+.sidebar-dropdown-toggle .dropdown-arrow {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--sidebar-muted);
+    transition: transform 0.25s ease, color 0.2s ease;
+    width: auto !important;        /* override sidebar-link i rule */
+    margin-right: 0 !important;
+}
+
+/* Rotate arrow when open */
+.sidebar-dropdown.open .dropdown-arrow {
+    transform: rotate(90deg);
+    color: var(--phlpost-blue);
+}
+
+/* ── Submenu ───────────────────────────────────────────────── */
+.sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8fafd;
+    border-left: 3px solid var(--phlpost-blue);
+    margin-left: 1.5rem;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.sidebar-dropdown.open .sidebar-submenu {
+    max-height: 300px;
+}
+
+/* ── Sublink ───────────────────────────────────────────────── */
+.sidebar-sublink {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 0.86rem;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    position: relative;
+}
+
+.sidebar-sublink i {
+    width: 1.3rem;
+    margin-right: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--sidebar-muted);
+    transition: color 0.2s ease;
+}
+
+.sidebar-sublink:hover {
+    background: var(--sidebar-hover);
+    color: var(--phlpost-blue);
+    border-left-color: var(--phlpost-blue);
+    transform: translateX(2px);
+}
+
+.sidebar-sublink:hover i {
+    color: var(--phlpost-blue);
+}
+
+.sidebar-sublink.active {
+    background: #fff5f5;
+    color: var(--phlpost-red);
+    font-weight: 600;
+    border-left-color: var(--phlpost-red);
+    transform: translateX(2px);
+}
+
+.sidebar-sublink.active i {
+    color: var(--phlpost-red);
+}
+
+/* ── Mobile responsiveness ───────────────────────────────────── */
+@media (max-width: 768px) {
+    .sidebar-submenu {
+        margin-left: 1rem;
+        border-radius: 0 0 4px 4px;
+    }
+    
+    .sidebar-sublink {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .sidebar-dropdown.open .sidebar-submenu {
+        max-height: 250px;
+    }
+}

@@ -52,10 +52,25 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
 
     List<PostalOffice> findByIsArchivedFalse();
 
-    // FIX N+1: Fetch all non-archived offices WITH all required relationships in a single JOIN query
-    // DISTINCT prevents duplicate rows when offices have multiple connectivity records
-    @Query("SELECT DISTINCT po FROM PostalOffice po LEFT JOIN FETCH po.activeConnectivity LEFT JOIN FETCH po.area LEFT JOIN FETCH po.cityMunicipality LEFT JOIN FETCH po.cityMunicipality.province LEFT JOIN FETCH po.cityMunicipality.province.regions WHERE po.isArchived = false")
+    // Fetch all non-archived offices with all required relationships
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.activeConnectivity " +
+           "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.cityMunicipality " +
+           "LEFT JOIN FETCH po.cityMunicipality.province " +
+           "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
+           "WHERE po.isArchived = false")
     List<PostalOffice> findAllNonArchivedWithConnectivity();
+
+    // ✅ NEW: Fetch non-archived offices filtered by area_id (for Area Admin / User)
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.activeConnectivity " +
+           "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.cityMunicipality " +
+           "LEFT JOIN FETCH po.cityMunicipality.province " +
+           "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
+           "WHERE po.isArchived = false AND po.area.id = :areaId")
+    List<PostalOffice> findAllNonArchivedByArea(@Param("areaId") Integer areaId);
 
     List<PostalOffice> findByIsArchivedTrue();
 
@@ -68,13 +83,25 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
     @Query("SELECT COUNT(DISTINCT po.area.id) FROM PostalOffice po WHERE po.area IS NOT NULL AND po.isArchived = false")
     long countDistinctAreasNonArchived();
 
-    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL AND po.isArchived = false")
+    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area " +
+           "WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL AND po.isArchived = false")
     List<PostalOffice> findAllWithAreaForMapNonArchived();
 
-    // Dedup Layer 2: match by exact longitude + latitude
     @Query("SELECT po FROM PostalOffice po WHERE po.longitude = :longitude AND po.latitude = :latitude")
     List<PostalOffice> findByLongitudeAndLatitude(@Param("longitude") Double longitude, @Param("latitude") Double latitude);
 
-    // Dedup Layer 3: match by zip code (fallback when name is blank and coords differ)
     List<PostalOffice> findByZipCode(String zipCode);
+
+    @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c " +
+           "WHERE c.dateConnected <= :refDate " +
+           "AND (c.dateDisconnected IS NULL OR c.dateDisconnected > :refDate) " +
+           "AND c.postalOffice.isArchived = false " +
+           "AND (:areaId IS NULL OR c.postalOffice.area.id = :areaId)")
+    long countActiveAtYearEndByArea(@Param("refDate") LocalDateTime refDate,
+                                    @Param("areaId") Integer areaId);
+
+    @Query("SELECT COUNT(po) FROM PostalOffice po " +
+           "WHERE po.isArchived = false " +
+           "AND (:areaId IS NULL OR po.area.id = :areaId)")
+    long countByIsArchivedFalseAndArea(@Param("areaId") Integer areaId);
 }

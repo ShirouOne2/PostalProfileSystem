@@ -162,79 +162,45 @@
         </div>
         <!-- ===== END FILTER PANEL ===== -->
 
-        <!-- Connectivity Cards - Two Columns -->
+        <!-- Connectivity Cards - Latest Quarter Only -->
         <div class="row mb-4">
             
             <!-- WITH CONNECTIVITY (Left Column - Green) -->
             <div class="col-lg-6">
-                <div class="connectivity-card">
-                    <div class="connectivity-header header-with-connectivity">
+                <div class="card bg-success text-white">
+                    <div class="card-header">
                         <i class="fas fa-wifi mr-2"></i> With Connectivity
                     </div>
-                    <div class="p-3">
-                        <div class="quarter-item" th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-active' : ''}">
-                            <div class="quarter-header">
-                                <span class="quarter-title" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="new-badge" 
-                                      th:classappend="${quarter.newlyConnected > 0 ? 'new-badge-positive' : 'new-badge-neutral'}"
-                                      th:text="${'+' + quarter.newlyConnected}">
-                                    +0
-                                </span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">Total Connected:</span>
-                                <span class="stat-value" th:text="${quarter.connected}">593</span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">New This Quarter:</span>
-                                <span class="new-this-quarter" th:text="${quarter.newlyConnected}">0</span>
-                            </div>
-                            
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Current Quarter</span>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+                        <p>
+                            Total Connected:
+                            <strong th:text="${latestQuarter.connected}">15</strong>
+                        </p>
+                        <p>
+                            New This Quarter:
+                            <strong th:text="${latestQuarter.newlyConnected}">0</strong>
+                        </p>
                     </div>
                 </div>
             </div>
             
             <!-- WITHOUT CONNECTIVITY (Right Column - Red) -->
             <div class="col-lg-6">
-                <div class="connectivity-card">
-                    <div class="connectivity-header header-without-connectivity">
+                <div class="card bg-danger text-white">
+                    <div class="card-header">
                         <i class="fas fa-wifi-slash mr-2"></i> Without Connectivity
                     </div>
-                    <div class="p-3">
-                        <div class="quarter-item" th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-inactive' : ''}">
-                            <div class="quarter-header">
-                                <span class="quarter-title" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="new-badge" 
-                                      th:classappend="${quarter.newlyDisconnected > 0 ? 'new-badge-negative' : 'new-badge-neutral'}"
-                                      th:text="${'+' + quarter.newlyDisconnected}">
-                                    +0
-                                </span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">Total Disconnected:</span>
-                                <span class="stat-value" th:text="${quarter.disconnected}">539</span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">New This Quarter:</span>
-                                <span class="new-this-quarter-red" th:text="${quarter.newlyDisconnected}">0</span>
-                            </div>
-                            
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Current Quarter</span>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+                        <p>
+                            Total Disconnected:
+                            <strong th:text="${latestQuarter.disconnected}">15</strong>
+                        </p>
+                        <p>
+                            New This Quarter:
+                            <strong th:text="${latestQuarter.newlyDisconnected}">1</strong>
+                        </p>
                     </div>
                 </div>
             </div>

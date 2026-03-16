@@ -1,16 +1,106 @@
 package com.pps.profilesystem.Controller;
 
-import org.springframework.format.annotation.DateTimeFormat;
+import com.pps.profilesystem.Entity.Connectivity;
+import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Repository.ConnectivityRepository;
+import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.time.Month;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/quarters")
 public class QuartersApiController {
+
+    @Autowired
+    private PostalOfficeRepository postalOfficeRepository;
+
+    @Autowired
+    private ConnectivityRepository connectivityRepository;
+
+    /**
+     * Main endpoint for the Quarters page table.
+     * Filters offices by year, quarter, area, and status.
+     */
+    @GetMapping("/post-offices")
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getQuartersPostOffices(
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) String quarter,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) String status) {
+
+        // Parse params
+        Integer yearInt    = parseInteger(year);
+        Integer quarterInt = parseQuarter(quarter);
+        Integer areaInt    = parseInteger(area);
+
+        // Resolve year/quarter — default to current if not provided
+        int resolvedYear    = (yearInt != null) ? yearInt : LocalDateTime.now().getYear();
+        int resolvedQuarter = (quarterInt != null) ? quarterInt
+                            : (LocalDateTime.now().getMonthValue() - 1) / 3 + 1;
+
+        LocalDateTime[] range  = getQuarterDateRange(resolvedYear, resolvedQuarter);
+        LocalDateTime qStart   = range[0];
+        LocalDateTime qEnd     = range[1];
+
+        List<Map<String, Object>> offices;
+
+        if ("newly_connected".equals(status)) {
+            // Only show offices that ACTUALLY connected within this quarter
+            List<Connectivity> records = connectivityRepository.findByDateConnectedBetween(qStart, qEnd);
+            offices = toUniqueDTOsWithFlag(records, true, true);
+        } else if ("newly_disconnected".equals(status)) {
+            // Offices that DISCONNECTED within the quarter
+            List<Connectivity> records = connectivityRepository.findByDateDisconnectedBetween(qStart, qEnd);
+            offices = toUniqueDTOsWithFlag(records, false, false);
+        } else {
+            // Show ALL non-archived offices (active + inactive)
+            // Use connectionStatus from PostalOffice as source of truth
+
+            Set<Integer> newlyConnectedIds = connectivityRepository.findByDateConnectedBetween(qStart, qEnd)
+                .stream()
+                .filter(c -> c.getPostalOffice() != null && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                .map(c -> c.getPostalOffice().getId())
+                .collect(Collectors.toSet());
+
+            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
+                .stream()
+                .map(po -> {
+                    Map<String, Object> dto = convertToDTO(po);
+                    dto.put("newThisQuarter", newlyConnectedIds.contains(po.getId()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        }
+
+        // Apply area filter
+        if (areaInt != null) {
+            final Integer ai = areaInt;
+            offices = offices.stream()
+                .filter(o -> ai.equals(o.get("areaId")))
+                .collect(Collectors.toList());
+        }
+
+        // Apply active / inactive status filter
+        if ("active".equals(status)) {
+            offices = offices.stream()
+                .filter(o -> Boolean.TRUE.equals(o.get("status")))
+                .collect(Collectors.toList());
+        } else if ("inactive".equals(status)) {
+            offices = offices.stream()
+                .filter(o -> !Boolean.TRUE.equals(o.get("status")))
+                .collect(Collectors.toList());
+        }
+
+        return offices;
+    }
 
     @GetMapping("/export")
     public void exportReport(
@@ -20,29 +110,99 @@ public class QuartersApiController {
             @RequestParam(required = false) String quarterFilter,
             @RequestParam(required = false) String statusFilter,
             HttpServletResponse response) throws IOException {
-        
-        // Placeholder for export functionality
         response.setContentType("text/plain");
         response.getWriter().write("Export feature coming soon for type: " + type);
     }
 
-    /**
-     * Get post offices filtered by date range and status
-     * Supports filtering by connection/disconnection dates
-     */
-    @GetMapping("/post-offices/filtered")
-    public List<Map<String, Object>> getFilteredPostOffices(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @RequestParam(required = false) String dateType,
-            @RequestParam(required = false) String statusFilter) {
-        
-        if (startDate == null && endDate == null) {
-            // If no date filters provided, return empty list for now
-            return List.of();
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private List<Map<String, Object>> toUniqueDTOs(List<Connectivity> records) {
+        Map<Integer, PostalOffice> seen = new LinkedHashMap<>();
+        for (Connectivity c : records) {
+            PostalOffice po = c.getPostalOffice();
+            if (po == null || Boolean.TRUE.equals(po.getIsArchived())) continue;
+            seen.putIfAbsent(po.getId(), po);
         }
-        
-        // Placeholder for date range filtering
-        return List.of();
+        return seen.values().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * Like toUniqueDTOs but overrides the status field and marks newThisQuarter.
+     * @param statusOverride  the boolean status to set in the DTO (true=active, false=inactive)
+     * @param newThisQuarter  whether to mark offices with the "New This Quarter" badge
+     */
+    private List<Map<String, Object>> toUniqueDTOsWithFlag(
+            List<Connectivity> records, boolean statusOverride, boolean newThisQuarter) {
+        Map<Integer, PostalOffice> seen = new LinkedHashMap<>();
+        for (Connectivity c : records) {
+            PostalOffice po = c.getPostalOffice();
+            if (po == null || Boolean.TRUE.equals(po.getIsArchived())) continue;
+            seen.putIfAbsent(po.getId(), po);
+        }
+        return seen.values().stream().map(po -> {
+            Map<String, Object> dto = convertToDTO(po);
+            dto.put("status", statusOverride);         // override with correct status
+            dto.put("newThisQuarter", newThisQuarter); // flag for badge
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> convertToDTO(PostalOffice po) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id",       po.getId());
+        dto.put("name",     po.getName());
+        dto.put("address",  po.getAddress());
+        dto.put("zipCode",  po.getZipCode());
+        dto.put("postmaster", po.getPostmaster());
+        dto.put("speed",    po.getSpeed());
+        dto.put("status",   po.getConnectionStatus());
+        dto.put("areaId",   po.getArea() != null ? po.getArea().getId() : null);
+        dto.put("area",     po.getArea() != null ? po.getArea().getAreaName() : null);
+        dto.put("noOfEmployees",    po.getNoOfEmployees());
+        dto.put("noOfPostalTellers",  po.getNoOfPostalTellers());
+        dto.put("noOfLetterCarriers", po.getNoOfLetterCarriers());
+        dto.put("postalOfficeContactPerson", po.getPostalOfficeContactPerson());
+        dto.put("postalOfficeContactNumber", po.getPostalOfficeContactNumber());
+        dto.put("internetServiceProvider",   po.getInternetServiceProvider());
+        dto.put("typeOfConnection",  po.getTypeOfConnection());
+        dto.put("staticIpAddress",   po.getStaticIpAddress());
+        dto.put("ispContactPerson",  po.getIspContactPerson());
+        dto.put("ispContactNumber",  po.getIspContactNumber());
+        dto.put("latitude",  po.getLatitude());
+        dto.put("longitude", po.getLongitude());
+        return dto;
+    }
+
+    private Integer parseInteger(String val) {
+        if (val == null || val.trim().isEmpty()) return null;
+        try { return Integer.parseInt(val.trim()); } catch (NumberFormatException e) { return null; }
+    }
+
+    private Integer parseQuarter(String val) {
+        if (val == null || val.trim().isEmpty()) return null;
+        String q = val.trim().toUpperCase();
+        if (q.startsWith("Q")) {
+            try {
+                int n = Integer.parseInt(q.substring(1));
+                return (n >= 1 && n <= 4) ? n : null;
+            } catch (NumberFormatException e) { return null; }
+        }
+        return null;
+    }
+
+    private LocalDateTime[] getQuarterDateRange(int year, int quarter) {
+        Month startMonth, endMonth;
+        switch (quarter) {
+            case 1: startMonth = Month.JANUARY;  endMonth = Month.MARCH;     break;
+            case 2: startMonth = Month.APRIL;    endMonth = Month.JUNE;      break;
+            case 3: startMonth = Month.JULY;     endMonth = Month.SEPTEMBER; break;
+            case 4: startMonth = Month.OCTOBER;  endMonth = Month.DECEMBER;  break;
+            default: throw new IllegalArgumentException("Quarter must be 1-4");
+        }
+        boolean leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        return new LocalDateTime[]{
+            LocalDateTime.of(year, startMonth, 1, 0, 0, 0),
+            LocalDateTime.of(year, endMonth, endMonth.length(leap), 23, 59, 59)
+        };
     }
 }

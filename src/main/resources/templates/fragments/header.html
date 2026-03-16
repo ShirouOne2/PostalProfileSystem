@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <div th:fragment="header">
     <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm sticky-top">
         <div class="container-fluid">
@@ -11,7 +12,7 @@
                      style="height: 45px;">
             </a>
 
-            <!-- RIGHT SIDE - Existing notifications and user -->
+            <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">
                 <li class="nav-item dropdown mr-3">
                     <a class="nav-link text-muted" href="#" id="alertsDropdown" role="button" data-toggle="dropdown">
@@ -24,13 +25,26 @@
                     <a class="nav-link dropdown-toggle d-flex align-items-center pl-3 border-left" 
                        href="#" id="userDropdown" role="button" data-toggle="dropdown" 
                        aria-haspopup="true" aria-expanded="false">
+
+                        <!-- ✅ DYNAMIC: Logged-in user name & role -->
                         <div class="text-right mr-2 d-none d-md-block">
-                            <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;">Admin User</div>
-                            <div class="user-role" style="font-size: 11px; color: #777;">System Admin</div>
+                            <div class="user-name" 
+                                 style="font-size: 13px; font-weight: 700; color: #333;"
+                                 th:text="${loggedInUsername ?: 'User'}">
+                                User
+                            </div>
+                            <div class="user-role" 
+                                 style="font-size: 11px; color: #777;"
+                                 th:text="${loggedInRole ?: 'User'}">
+                                User
+                            </div>
                         </div>
+
+                        <!-- ✅ DYNAMIC: First letter of username as avatar -->
                         <div class="user-avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                             style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;">
-                            A
+                             style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;"
+                             th:text="${loggedInInitial ?: 'U'}">
+                            U
                         </div>
                     </a>
                     
@@ -44,12 +58,16 @@
                             <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i>
                             Settings
                         </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#" th:href="@{/users}">
-                            <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Manage Users
-                        </a>
-                    
+
+                        <!-- ✅ ADMIN ONLY: Manage Users -->
+                        <div sec:authorize="hasRole('ADMIN')">
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" th:href="@{/users}">
+                                <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Manage Users
+                            </a>
+                        </div><!-- end ADMIN only -->
+
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" th:href="@{/logout}">
                             <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>

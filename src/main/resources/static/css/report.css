@@ -1,0 +1,171 @@
+/* =================================
+   REPORT PAGE STYLES
+   ================================= */
+
+/* ── Quarterly breakdown table ── */
+#quarterlyBreakdownTable thead th {
+    font-size: 0.78rem;
+    letter-spacing: 0.4px;
+    vertical-align: middle;
+}
+
+#quarterlyBreakdownTable tbody td {
+    vertical-align: middle;
+    font-size: 0.88rem;
+}
+
+#quarterlyBreakdownTable tbody tr.table-active {
+    background: #eef2ff !important;
+}
+
+/* ── Print button loading state ── */
+#applyFiltersBtn.loading {
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+/* ── Gap utility ── */
+.gap-2 { gap: 0.5rem !important; }
+
+/* ── Quarter total row ── */
+.quarter-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #dee2e6;
+}
+
+.total-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+}
+
+.total-value-green {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1cc88a;
+    background: #e9f7f1;
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+.total-value-red {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e74a3b;
+    background: #fdf0ee;
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+/* =====================================================
+   PRINT STYLES
+   ===================================================== */
+@media print {
+    /* Hide chrome */
+    #sidebar,
+    .main-header,
+    .main-footer,
+    #printReportBtn,
+    #exportCsvBtn,
+    #applyFiltersBtn,
+    #clearFiltersBtn,
+    #toggleFiltersBtn,
+    .filter-panel,
+    .filter-tag,
+    nav {
+        display: none !important;
+    }
+
+    /* Full width */
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    body, .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Print header */
+    .container-fluid::before {
+        content: "PHLPost — Connectivity Report";
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+        color: #002868;
+        border-bottom: 3px solid #002868;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+
+    /* Cards */
+    .card, .connectivity-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+
+    /* Table */
+    #quarterlyBreakdownTable {
+        font-size: 11px;
+    }
+
+    thead tr {
+        background: #002868 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .header-with-connectivity,
+    .header-without-connectivity {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .total-value-green,
+    .total-value-red {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Avoid breaking cards across pages */
+    .row.mb-4 {
+        page-break-inside: avoid;
+    }
+}
+
+/* ── Future quarter rows — muted/greyed out ── */
+.quarter-future {
+    opacity: 0.55;
+    background: #f9f9f9 !important;
+    border-left: 4px solid #ced4da !important;
+}
+
+.quarter-future .quarter-title {
+    color: #adb5bd;
+}
+
+/* ── PO Name list in Quarterly Breakdown table ── */
+.po-name-list {
+    border-top: 1px dashed #dee2e6;
+    padding-top: 4px;
+}
+
+.po-name-item {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.po-name-item i {
+    font-size: 0.45rem;
+    vertical-align: middle;
+    opacity: 0.7;
+}

@@ -20,6 +20,14 @@
 }
 
 /* ===== CARD STYLES ===== */
+.card {
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
+    border: 2px solid #e0e0e0;
+}
+
 .connectivity-card {
     border-radius: 8px;
     margin-bottom: 20px;
@@ -28,18 +36,20 @@
 
 .connectivity-header {
     padding: 15px 20px;
-    border-radius: 8px 8px 0 0;
-    color: white;
+    border-radius: 8px 0 0;
+    color: #333;
     font-weight: bold;
     font-size: 1.1rem;
 }
 
 .header-with-connectivity {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    background: #28a745;
+    color: white;
 }
 
 .header-without-connectivity {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    background: #dc3545;
+    color: white;
 }
 
 /* Border accent utilities */
@@ -160,6 +170,37 @@
 .new-this-quarter-red {
     color: #dc3545;
     font-weight: bold;
+}
+
+/* ===== TOTAL SECTION ALIGNMENT ===== */
+.quarter-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px solid #e9ecef;
+    font-weight: bold;
+}
+
+.total-label {
+    font-size: 0.95rem;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.total-value-green {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.total-value-red {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #dc3545;
 }
 
 /* ===== ALERTS & WARNINGS ===== */

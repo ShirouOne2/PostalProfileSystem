@@ -22,12 +22,18 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",
                     "/error",
+                    "/request-otp",
+                    "/verify-otp",
+                    "/reset-password",
                     "/api/**",
                     "/css/**",
                     "/js/**",
                     "/images/**",
                     "/postal-offices/**"
                 ).permitAll()
+                // Only ADMIN can access user management and archive
+                .requestMatchers("/users", "/register").hasRole("ADMIN")
+                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

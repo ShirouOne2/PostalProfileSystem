@@ -187,16 +187,45 @@ body {
     font-size: 14px;
 }
 
-.remember-forgot label {
+.remember-label {
     display: flex;
     align-items: center;
+    gap: 8px;
     color: #6b7280;
     cursor: pointer;
+    user-select: none;
 }
 
-.remember-forgot input[type="checkbox"] {
-    margin-right: 6px;
-    cursor: pointer;
+.remember-label input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.remember-label input[type="checkbox"]:checked + .custom-checkbox {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.remember-label input[type="checkbox"]:checked + .custom-checkbox::after {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    display: block;
 }
 
 .forgot-password { 

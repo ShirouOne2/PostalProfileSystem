@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 <head></head>
 <body>
 
-    <!-- OFFICE_DATA must be outside the fragment so it renders into <head> via layout -->
     <th:block th:fragment="content">
 
     <title th:text="${postOffice.postalOffice + ' - Profile'}">Post Office Profile</title>
@@ -70,7 +70,9 @@
             <button onclick="window.print()" class="btn btn-info btn-sm mr-1">
                 <i class="fas fa-print"></i> Print Profile
             </button>
-            <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn">
+            <!-- ✅ ADMIN ONLY: Archive Button -->
+            <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn"
+                    sec:authorize="hasRole('ADMIN')">
                 <i class="fas fa-archive"></i> Archive
             </button>
         </div>
@@ -307,36 +309,38 @@
             </div>
         </div><!-- /#tab-staff -->
 
-        <!-- Archive Modal -->
-        <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted mb-3">
-                            You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
-                            This office will be hidden from all views but can be restored later.
-                        </p>
-                        <div class="form-group">
-                            <label for="profileArchiveReason">Reason <small class="text-muted">(optional)</small></label>
-                            <textarea id="profileArchiveReason" class="form-control" rows="3"
-                                      placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+        <!-- ✅ ADMIN ONLY: Archive Modal -->
+        <div sec:authorize="hasRole('ADMIN')">
+            <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-archive mr-2 text-warning"></i>Archive Post Office
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-warning" id="profileConfirmArchiveBtn">
-                            <i class="fas fa-archive mr-1"></i> Archive
-                        </button>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3">
+                                You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
+                                This office will be hidden from all views but can be restored later.
+                            </p>
+                            <div class="form-group">
+                                <label for="profileArchiveReason">Reason <small class="text-muted">(optional)</small></label>
+                                <textarea id="profileArchiveReason" class="form-control" rows="3"
+                                          placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="profileConfirmArchiveBtn">
+                                <i class="fas fa-archive mr-1"></i> Archive
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div><!-- end ADMIN Archive Modal -->
 
         <!-- Tab switching — inline vanilla JS, no dependency on profile.js load order -->
         <script>

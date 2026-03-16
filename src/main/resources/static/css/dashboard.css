@@ -117,3 +117,22 @@
     outline: 0 !important;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
 }
+
+/* ============================================
+   CUSTOM LEAFLET POPUP STYLES
+   =========================================== */
+
+/* Custom Leaflet popup styles for dashboard map */
+.custom-popup .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-popup .leaflet-popup-content {
+    margin: 0;
+}
+
+.custom-popup .leaflet-popup-tip {
+    display: none;
+}
