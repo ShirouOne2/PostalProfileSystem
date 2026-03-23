@@ -22,12 +22,24 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",
                     "/error",
-                    "/api/**",
+                    "/request-otp",
+                    "/verify-otp",
+                    "/reset-password",
                     "/css/**",
                     "/js/**",
                     "/images/**",
-                    "/postal-offices/**"
+                    "/assets/**",
+                    "/postal-offices/**",
+                    "/api/keep-alive"          // public ping for session check
                 ).permitAll()
+                // ✅ FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
+                // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
+                // 403 Forbidden on /api/notifications/stream, causing silent SSE failure.
+                .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN")
+                // Only ADMIN can access user management and archive
+                // AREA_ADMIN can access but sees only their own area's data
+                .requestMatchers("/users", "/register").hasAnyRole("ADMIN", "AREA_ADMIN")
+                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasAnyRole("ADMIN", "AREA_ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

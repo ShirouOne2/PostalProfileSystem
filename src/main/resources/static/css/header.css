@@ -1,0 +1,243 @@
+/* ============================================
+   PHLPost HEADER STYLES
+   Clean • Modern • Professional
+   ============================================ */
+
+/* Main Navigation Bar */
+.navbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e6e9ef !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0;
+    min-height: 60px;
+}
+
+/* Navbar Brand */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    color: #2B5BA6 !important;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+}
+
+.navbar-brand:hover {
+    opacity: 0.8;
+}
+
+.navbar-brand img {
+    height: 45px;
+    margin-right: 0.5rem;
+}
+
+/* Right Side Navigation */
+.navbar-nav {
+    align-items: center;
+}
+
+/* Notification Bell */
+.nav-item.dropdown {
+    position: relative;
+}
+
+.nav-link.text-muted {
+    color: #8a97a8 !important;
+    padding: 0.5rem !important;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    position: relative;
+    display: inline-block;
+}
+
+.nav-link.text-muted:hover {
+    background: #f4f7fb !important;
+    color: #2B5BA6 !important;
+}
+
+/* Notification Badge */
+#notifBadge {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+    background: #dc3545;
+    color: #fff;
+    font-weight: 700;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    will-change: transform, opacity;
+}
+
+/* User Dropdown */
+.nav-link.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem !important;
+    border-left: 1px solid #e6e9ef;
+    color: #2c3e50 !important;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.nav-link.dropdown-toggle:hover {
+    background: #f4f7fb !important;
+    color: #2B5BA6 !important;
+}
+
+/* User Info */
+.text-right.mr-2.d-none.d-md-block {
+    text-align: right;
+    margin-right: 0.5rem;
+}
+
+.text-right.mr-2.d-none.d-md-block div:first-child {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.2;
+}
+
+.text-right.mr-2.d-none.d-md-block div:last-child {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.2;
+}
+
+/* User Avatar */
+.bg-primary.text-white.rounded-circle {
+    background: #2B5BA6 !important;
+    color: white;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    min-width: 200px;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    color: #2c3e50;
+    text-decoration: none;
+    transition: background 0.15s ease;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background: #f4f7fb;
+    color: #2B5BA6;
+}
+
+.dropdown-item i {
+    margin-right: 0.5rem;
+    color: #8a97a8;
+    width: 16px;
+    text-align: center;
+}
+
+.dropdown-item:hover i {
+    color: #2B5BA6;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: #e6e9ef;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.25rem 0;
+        min-height: 50px;
+    }
+    
+    .navbar-brand img {
+        height: 35px;
+    }
+    
+    .text-right.mr-2.d-none.d-md-block {
+        display: none !important;
+    }
+    
+    .bg-primary.text-white.rounded-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .nav-link.dropdown-toggle {
+        padding: 0.25rem 0.5rem !important;
+    }
+}
+
+/* Sticky Top Fix */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+/* Container Fluid Fix */
+.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Remove Bootstrap default shadows */
+.navbar.shadow-sm {
+    box-shadow: none !important;
+}
+
+/* Bell Icon Fix */
+.fas.fa-bell.fa-fw {
+    font-size: 17px;
+    width: 17px;
+    text-align: center;
+}
+
+/* Dropdown Arrow Fix */
+.dropdown-toggle::after {
+    margin-left: 0.25rem;
+}
+
+/* Notification Dropdown Specific */
+.notification-dropdown {
+    min-width: 360px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.notification-dropdown #notifContent {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.notification-dropdown #notifContent::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notification-dropdown #notifContent::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}

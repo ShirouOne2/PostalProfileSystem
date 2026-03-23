@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POST OFFICE - Forgot Password</title>
+  <link rel="stylesheet" th:href="@{/css/login.css}">
+  <link rel="stylesheet" th:href="@{/css/forgot-password.css}">
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
+
+<div class="split-container">
+  <div class="left-section">
+    <img th:src="@{/images/background.jpg}" class="background-img" alt="Background">
+  </div>
+  <div class="right-section">
+    <div class="login-card">
+      <img th:src="@{/images/logo.jpg}" class="logo" alt="Logo">
+
+      <!-- Step Indicator -->
+      <div class="fp-steps">
+        <div class="fp-step active">
+          <div class="fp-step-circle">1</div>
+          <span>Email</span>
+        </div>
+        <div class="fp-step-line"></div>
+        <div class="fp-step">
+          <div class="fp-step-circle">2</div>
+          <span>OTP</span>
+        </div>
+        <div class="fp-step-line"></div>
+        <div class="fp-step">
+          <div class="fp-step-circle">3</div>
+          <span>Reset</span>
+        </div>
+      </div>
+
+      <div class="welcome-text">
+        <h1>Forgot Password?</h1>
+        <p>Enter your email and we'll send you a one-time password.</p>
+      </div>
+
+      <form id="requestOtpForm">
+        <div class="input-wrapper">
+          <ion-icon name="mail-outline"></ion-icon>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="off">
+        </div>
+
+        <button type="submit" class="login-button" id="sendBtn">
+          <span id="sendBtnText">Send OTP</span>
+          <span id="sendBtnSpinner" style="display:none; align-items:center; gap:6px;">
+            <ion-icon name="refresh-outline" class="spin-icon"></ion-icon> Sending...
+          </span>
+        </button>
+      </form>
+
+      <div class="fp-back-link">
+        <a th:href="@{/login}">
+          <ion-icon name="arrow-back-outline"></ion-icon> Back to Login
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/request-otp.js}"></script>
+</body>
+</html>

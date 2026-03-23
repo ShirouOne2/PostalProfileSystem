@@ -1,64 +1,238 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <div th:fragment="header">
+
     <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm sticky-top">
         <div class="container-fluid">
 
-            <!-- Logo - LEFT SIDE -->
-            <a class="navbar-brand d-flex align-items-center" href="#" th:href="@{/dashboard}">
-                <img th:src="@{/assets/images/phlpostlogo.png}" 
-                     alt="PHLPost Logo" 
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/dashboard}">
+                <img th:src="@{/assets/images/phlpostlogo.png}"
+                     alt="PHLPost Logo"
                      style="height: 45px;">
             </a>
 
-            <!-- RIGHT SIDE - Existing notifications and user -->
+            <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">
-                <li class="nav-item dropdown mr-3">
-                    <a class="nav-link text-muted" href="#" id="alertsDropdown" role="button" data-toggle="dropdown">
-                        <i class="fas fa-bell fa-fw"></i>
-                        <span class="badge badge-danger badge-counter" style="font-size: 10px;">3+</span>
-                    </a>
-                </li>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center pl-3 border-left" 
-                       href="#" id="userDropdown" role="button" data-toggle="dropdown" 
-                       aria-haspopup="true" aria-expanded="false">
-                        <div class="text-right mr-2 d-none d-md-block">
-                            <div class="user-name" style="font-size: 13px; font-weight: 700; color: #333;">Admin User</div>
-                            <div class="user-role" style="font-size: 11px; color: #777;">System Admin</div>
-                        </div>
-                        <div class="user-avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                             style="width: 35px; height: 35px; font-weight: bold; border: 2px solid #eef2f7;">
-                            A
-                        </div>
+                <!-- Notification Bell — Admin only -->
+                <li class="nav-item dropdown mr-3 position-relative"
+                    id="notifBellLi"
+                    sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN')">
+
+                    <!-- Bell button -->
+                    <a class="nav-link text-muted p-2"
+                       href="#"
+                       id="alertsDropdown"
+                       role="button"
+                       data-toggle="dropdown"
+                       aria-haspopup="true"
+                       aria-expanded="false"
+                       style="position:relative;display:inline-block;">
+
+                        <i class="fas fa-bell fa-fw" style="font-size:17px;"></i>
+
+                        <span id="notifBadge"
+                              style="display:none;
+                                     position:absolute;top:2px;right:0;
+                                     font-size:9px;padding:2px 5px;
+                                     border-radius:10px;min-width:18px;
+                                     text-align:center;line-height:1.4;
+                                     background:#dc3545;color:#fff;
+                                     font-weight:700;">
+                        </span>
                     </a>
-                    
-                    <!-- User Dropdown Menu -->
+
+                    <!--
+                        Bootstrap dropdown WRAPPER — Bootstrap owns this div.
+                        We NEVER touch this element's attributes or replace it.
+
+                        #notifContent is the SSE target — only its innerHTML is
+                        swapped by JS, leaving Bootstrap's .dropdown-menu alone.
+                    -->
+                    <div class="dropdown-menu dropdown-menu-right shadow notification-dropdown"
+                         aria-labelledby="alertsDropdown"
+                         style="min-width:360px;padding:0;border:none;
+                                border-radius:10px;overflow:hidden;">
+
+                        <!-- ↓ SSE updates ONLY this inner div — never the parent -->
+                        <div id="notifContent">
+                            <div class="px-3 py-3 text-center text-muted" style="font-size:13px;">
+                                <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                                Loading notifications…
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+                <!-- end notification bell -->
+
+                <!-- User Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center pl-3 border-left"
+                       href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+
+                        <div class="text-right mr-2 d-none d-md-block">
+                            <div style="font-size:13px;font-weight:700;color:#333;"
+                                 th:text="${loggedInUsername ?: 'User'}">User</div>
+                            <div style="font-size:11px;color:#777;"
+                                 th:text="${loggedInRole ?: 'User'}">User</div>
+                        </div>
+
+                        <div class="bg-primary text-white rounded-circle
+                                    d-flex align-items-center justify-content-center"
+                             style="width:35px;height:35px;font-weight:bold;border:2px solid #eef2f7;"
+                             th:text="${loggedInInitial ?: 'U'}">U</div>
+                    </a>
+
                     <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown">
-                        <a class="dropdown-item" href="#" th:href="@{/profile}">
-                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Profile
+                        <a class="dropdown-item" th:href="@{/profile}">
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
                         </a>
-                        <a class="dropdown-item" href="#" th:href="@{/settings}">
-                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Settings
+                        <a class="dropdown-item" th:href="@{/settings}">
+                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i> Settings
                         </a>
+                        <div sec:authorize="hasRole('ADMIN')">
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" th:href="@{/users}">
+                                <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i> Manage Users
+                            </a>
+                        </div>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#" th:href="@{/users}">
-                            <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Manage Users
-                        </a>
-                    
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#" th:href="@{/logout}">
-                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                            Logout
+                        <a class="dropdown-item" th:href="@{/logout}" onclick="if(window._sseClose)window._sseClose();">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
                         </a>
                     </div>
                 </li>
+
             </ul>
         </div>
     </nav>
+
+    <style>
+        #notifBadge { transition: transform .15s ease, opacity .15s ease; }
+
+        .notification-dropdown { max-height: 420px; }
+
+        .notification-dropdown #notifContent {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown #notifContent::-webkit-scrollbar { width: 4px; }
+        .notification-dropdown #notifContent::-webkit-scrollbar-thumb {
+            background: #ccc; border-radius: 4px;
+        }
+
+        .notif-item:hover { background: #eef4ff !important; }
+
+        @keyframes bellShake {
+            0%,100% { transform: rotate(0); }
+            20%      { transform: rotate(-15deg); }
+            40%      { transform: rotate(15deg); }
+            60%      { transform: rotate(-10deg); }
+            80%      { transform: rotate(10deg); }
+        }
+        .bell-shake .fa-bell { animation: bellShake .5s ease; }
+    </style>
+
+    <script>
+    (function () {
+
+        var bellLi      = document.getElementById('notifBellLi');
+        var badge       = document.getElementById('notifBadge');
+        var notifContent = document.getElementById('notifContent');
+
+        // Only admins have #notifBellLi — bail out for everyone else
+        if (!bellLi || !notifContent) return;
+
+        var es;
+        var retryDelay = 3000;
+
+        function connect() {
+            es = new EventSource('/api/notifications/stream');
+
+            // ── Badge event ──────────────────────────────────────────────────
+            es.addEventListener('badge', function (e) {
+                var count = (e.data || '').trim();
+                if (count !== '' && count !== '0') {
+                    badge.textContent  = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.textContent  = '';
+                    badge.style.display = 'none';
+                }
+            });
+
+            // ── Notification HTML event ──────────────────────────────────────
+            es.addEventListener('notification', function (e) {
+                var html = (e.data || '').trim();
+                if (!html) return;
+
+                /*
+                 * KEY FIX: Update ONLY #notifContent innerHTML.
+                 * The parent .dropdown-menu is NEVER touched — Bootstrap keeps
+                 * full control of its show/hide state.
+                 */
+                notifContent.innerHTML = html;
+
+                // Re-bind click handlers in the new content
+                bindMarkRead();
+
+                // Shake the bell
+                bellLi.classList.remove('bell-shake');
+                void bellLi.offsetWidth;
+                bellLi.classList.add('bell-shake');
+            });
+
+            es.onerror = function () {
+                es.close();
+                setTimeout(connect, retryDelay);
+                retryDelay = Math.min(retryDelay * 2, 30000);
+            };
+
+            es.onopen = function () {
+                retryDelay = 3000;
+            };
+        }
+
+        // ── Mark-read click delegation ───────────────────────────────────────
+        function bindMarkRead() {
+
+            // Individual notification click → mark-read
+            notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
+                // Remove old listener first to avoid duplicates
+                el.replaceWith(el.cloneNode(true));
+            });
+            notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    fetch('/api/notifications/mark-read/' + this.getAttribute('data-notif-id'),
+                          { method: 'POST' });
+                });
+            });
+
+            // Mark-all-read button
+            var markAllBtn = notifContent.querySelector('[data-mark-all-read]');
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    fetch('/api/notifications/mark-all-read', { method: 'POST' });
+                });
+            }
+        }
+
+        connect();
+
+        // Expose close function for logout link
+        window._sseClose = function () {
+            if (es) { es.close(); es = null; }
+        };
+
+    })();
+    </script>
+
 </div>
 </html>

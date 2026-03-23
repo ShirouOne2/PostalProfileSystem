@@ -2,6 +2,7 @@ package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.UserRepository;
+import com.pps.profilesystem.Service.UserCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,9 @@ public class UserCrudController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserCacheService userCacheService;
 
     /**
      * CREATE - Add new user
@@ -102,10 +106,13 @@ public class UserCrudController {
      * GET /api/users
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
         try {
             List<User> users = userRepository.findAll();
-            return ResponseEntity.ok(users);
+            List<Map<String, Object>> result = users.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -116,12 +123,12 @@ public class UserCrudController {
      * GET /api/users/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
         try {
             Optional<User> user = userRepository.findById(id);
             
             if (user.isPresent()) {
-                return ResponseEntity.ok(user.get());
+                return ResponseEntity.ok(convertToDTO(user.get()));
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -141,7 +148,7 @@ public class UserCrudController {
         try {
             Optional<User> existingUserOpt = userRepository.findById(id);
             
-            if (!existingUserOpt.isPresent()) {
+            if (existingUserOpt.isEmpty()) {
                 response.put("success", false);
                 response.put("message", "User not found");
                 return ResponseEntity.notFound().build();
@@ -203,6 +210,13 @@ public class UserCrudController {
             
             // Save updated user
             User updatedUser = userRepository.save(existingUser);
+
+            // Evict cached user so GlobalModelAdvice picks up the new data
+            userCacheService.evictUser(updatedUser.getEmail());
+            // Also evict old email in case the email itself was changed
+            if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+                userCacheService.evictUser(existingUser.getEmail());
+            }
             
             // Prepare success response
             response.put("success", true);
@@ -227,14 +241,15 @@ public class UserCrudController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            Optional<User> user = userRepository.findById(id);
-            
-            if (!user.isPresent()) {
+            if (!userRepository.existsById(id)) {
                 response.put("success", false);
                 response.put("message", "User not found");
                 return ResponseEntity.notFound().build();
             }
             
+            // Evict from cache before deleting
+            userRepository.findById(id).ifPresent(u -> userCacheService.evictUser(u.getEmail()));
+
             // Delete user
             userRepository.deleteById(id);
             

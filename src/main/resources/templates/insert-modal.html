@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Insert Postal Office Modal -->
+<div th:fragment="insertModal" class="modal fade" id="insertPostalOfficeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i> Add New Postal Office
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="insertPostalOfficeForm" th:action="@{/api/postal-office/insert}" method="post">
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="officeName">Post Office Name <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="officeName" name="name" required 
+                                               placeholder="e.g., Manila Central Post Office">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text font-weight-bold text-primary"
+                                                  style="background:#f0f4ff; border-color:#ced4da; letter-spacing:0.03em;">
+                                                    POST OFFICE
+                                                </span>
+                                        </div>
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle"></i> Post Office Name is required.
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Official name of post office</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="postmaster">Postmaster</label>
+                                    <input type="text" class="form-control" id="postmaster" name="postmaster" 
+                                           placeholder="Name of Postmaster" style="text-transform:uppercase;">
+                                    <small class="form-text text-muted">Officer in charge</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="2" 
+                                      placeholder="Complete address of the postal office"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="zipCode">ZIP Code</label>
+                                    <input type="text" class="form-control" id="zipCode" name="zipCode" 
+                                           placeholder="e.g., 1000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="areaId">Area <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="areaId" name="areaId" required>
+                                        <option value="">-- Select Area --</option>
+                                        <option th:each="area : ${areas}" 
+                                                th:value="${area.id}" 
+                                                th:text="${area.areaName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Hierarchy Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-map-marked-alt"></i> Location Hierarchy
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="regionId">Region</label>
+                                    <select class="form-control" id="regionId" name="regionId">
+                                        <option value="">-- Select Region --</option>
+                                        <option th:each="region : ${regions}" 
+                                                th:value="${region.id}" 
+                                                th:text="${region.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="provinceId">Province</label>
+                                    <select class="form-control" id="provinceId" name="provinceId" disabled>
+                                        <option value="">-- Select Province --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cityMunId">City/Municipality</label>
+                                    <select class="form-control" id="cityMunId" name="cityMunId" disabled>
+                                        <option value="">-- Select City/Municipality --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="barangayId">Barangay</label>
+                                    <select class="form-control" id="barangayId" name="barangayId" disabled>
+                                        <option value="">-- Select Barangay --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coordinates Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-map-pin"></i> Geographic Coordinates
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="latitude">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="latitude" name="latitude" 
+                                           placeholder="e.g., 14.5995">
+                                    <small class="form-text text-muted">Decimal degrees format</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="longitude">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="longitude" name="longitude" 
+                                           placeholder="e.g., 120.9842">
+                                    <small class="form-text text-muted">Decimal degrees format</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connectivity Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-wifi"></i> Connectivity Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="connectionStatus">Connection Status</label>
+                                    <select class="form-control" id="connectionStatus" name="connectionStatus">
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dateConnected">Date Connected</label>
+                                    <input type="date" class="form-control" id="dateConnected" name="dateConnected">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dateDisconnected">Date Disconnected</label>
+                                    <input type="date" class="form-control" id="dateDisconnected" name="dateDisconnected" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="internetServiceProvider">Internet Service Provider</label>
+                                    <input type="text" class="form-control" id="internetServiceProvider" 
+                                           name="internetServiceProvider" placeholder="e.g., PLDT, Globe, Smart"
+                                           style="text-transform:uppercase;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="typeOfConnection">Type of Connection</label>
+                                    <select class="form-control" id="typeOfConnection" name="typeOfConnection">
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Fiber">Fiber</option>
+                                        <option value="DSL">DSL</option>
+                                        <option value="Wireless">Wireless</option>
+                                        <option value="Satellite">Satellite</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="speed">Speed</label>
+                                    <input type="text" class="form-control" id="speed" name="speed" 
+                                           placeholder="e.g., 100 Mbps">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="staticIpAddress">Static IP Address</label>
+                                    <input type="text" class="form-control" id="staticIpAddress" name="staticIpAddress" 
+                                           placeholder="e.g., 192.168.1.1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-address-book"></i> Contact Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="postalOfficeContactPerson">Postal Office Contact Person</label>
+                                    <input type="text" class="form-control" id="postalOfficeContactPerson" 
+                                           name="postalOfficeContactPerson" placeholder="Name of contact person"
+                                           style="text-transform:uppercase;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="postalOfficeContactNumber">Contact Number</label>
+                                    <input type="text" class="form-control" id="postalOfficeContactNumber" 
+                                           name="postalOfficeContactNumber" placeholder="Contact number">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ispContactPerson">ISP Contact Person</label>
+                                    <input type="text" class="form-control" id="ispContactPerson" 
+                                           name="ispContactPerson" placeholder="Name of ISP contact"
+                                           style="text-transform:uppercase;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ispContactNumber">ISP Contact Number</label>
+                                    <input type="text" class="form-control" id="ispContactNumber" 
+                                           name="ispContactNumber" placeholder="ISP contact number">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Staff Information Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-users"></i> Staff Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="noOfEmployees">Number of Employees</label>
+                                    <input type="number" class="form-control" id="noOfEmployees" name="noOfEmployees" 
+                                           placeholder="0" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="noOfPostalTellers">Number of Postal Tellers</label>
+                                    <input type="number" class="form-control" id="noOfPostalTellers" name="noOfPostalTellers" 
+                                           placeholder="0" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="noOfLetterCarriers">Number of Letter Carriers</label>
+                                    <input type="number" class="form-control" id="noOfLetterCarriers" name="noOfLetterCarriers" 
+                                           placeholder="0" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information Section -->
+                    <div class="form-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle"></i> Additional Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="classification">Classification</label>
+                                    <select class="form-control" id="classification" name="classification">
+                                        <option value="">-- Select Classification --</option>
+                                        <option value="Regional">Regional</option>
+                                        <option value="Provincial">Provincial</option>
+                                        <option value="City">City</option>
+                                        <option value="Municipal">Municipal</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="serviceProvided">Services Provided</label>
+                                    <select class="form-control" id="serviceProvided" name="serviceProvided">
+                                        <option value="">-- Select Service --</option>
+                                        <option value="DELIVERY">DELIVERY</option>
+                                        <option value="ACCEPTANCE">ACCEPTANCE</option>
+                                        <option value="ACCEPTANCE AND DELIVERY">ACCEPTANCE AND DELIVERY</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" form="insertPostalOfficeForm" class="btn btn-success">
+                    <i class="fas fa-save"></i> Save Record
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

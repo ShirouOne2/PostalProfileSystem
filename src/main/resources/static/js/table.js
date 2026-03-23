@@ -1,411 +1,387 @@
 /**
- * Post Office Inventory DataTable Initialization
- * PHLPost - Post Office Management System
- * Enhanced with SweetAlert2 for better UX
- * WITH EDIT FUNCTIONALITY
+ * Post Office Inventory — DataTable + Filter Panel
+ * Columns: # | Name | Area | City | Connection Status | Office Status | Actions
+ * Edit modal handled by edit-modal.js — do NOT bind .btn-edit here.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Create edit modal
-    createEditModal();
-    
-    // Initialize DataTable
-    const table = new DataTable('#myTable', {
-        // Pagination
+let table;
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    if ($.fn.DataTable.isDataTable('#myTable')) {
+        $('#myTable').DataTable().destroy();
+    }
+
+    // ── Initialize DataTable ─────────────────────────────────────────────────
+    table = new DataTable('#myTable', {
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
-        
-        // Enable features
-        paging: true,
-        ordering: true,
-        info: true,
+        paging:    true,
+        ordering:  true,
+        info:      true,
         searching: true,
-        
-        // Column configuration
+        serverSide: false,
+
         columnDefs: [
-            { 
-                targets: 0, // # column
-                width: '80px',
-                orderable: true,
-                className: 'dt-center'
-            },
-            { 
-                targets: 1, // Post Office Name
-                orderable: true
-            },
-            { 
-                targets: 2, // Area
-                orderable: true
-            },
-            { 
-                targets: 3, // City
-                orderable: true
-            },
-            { 
-                targets: 4, // Status column
-                width: '100px',
-                orderable: true,
-                className: 'dt-center'
-            },
-            { 
-                targets: 5, // Actions column
-                width: '150px',
-                orderable: false,
-                className: 'dt-center',
-                searchable: false
-            }
+            { targets: 0, width: '45px',  orderable: true,  className: 'dt-center' },
+            { targets: 1, orderable: true },
+            { targets: 2, orderable: true },
+            { targets: 3, orderable: true },
+            { targets: 4, orderable: true },
+            { targets: 5, width: '120px', orderable: true, className: 'dt-center' },
+            { targets: 6, width: '105px', orderable: true, className: 'dt-center' },
+            { targets: 7, orderable: false },
+            { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false }
         ],
-        
-        // Default sorting by Area column (index 2), then by # column
-        order: [[2, 'asc'], [0, 'asc']],
-        
-        // Language customization
+
+        order: [[2, 'asc'], [1, 'asc']],
+
         language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "No entries found",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            paginate: {
-                first: "<<",
-                previous: "<",
-                next: ">",
-                last: ">>"
-            },
-            zeroRecords: "No matching records found"
+            search:            '',
+            searchPlaceholder: 'Quick search...',
+            lengthMenu:        'Show _MENU_ entries',
+            info:              'Showing _START_–_END_ of _TOTAL_ offices',
+            infoEmpty:         'No offices found',
+            infoFiltered:      '(filtered from _MAX_ total)',
+            paginate:          { first: '«', previous: '‹', next: '›', last: '»' },
+            zeroRecords:       'No matching offices found'
         },
-        
-        // DOM layout - search on right, entries on left
-        dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-        
-        // Responsive
+
+        dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
+
         responsive: true,
-        
-        // State saving
-        stateSave: true,
-        stateDuration: 60 * 60, // 1 hour
-        
-        // Draw callback
-        drawCallback: function(settings) {
-            console.log('Table drawn with ' + settings.aoData.length + ' records');
-            
-            // Re-attach button event listeners after table redraw
+        stateSave:  true,   // saves page number + sort order via localStorage
+
+        drawCallback: function () {
             attachButtonListeners();
+            updateSummary(this.api());
         }
     });
-    
-    /**
-     * Attach button event listeners (edit and delete)
-     */
-    function attachButtonListeners() {
-        // Edit buttons
-        const editButtons = document.querySelectorAll('.btn-edit');
-        editButtons.forEach(button => {
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            
-            newButton.addEventListener('click', function() {
-                const officeId = this.getAttribute('data-office-id');
-                handleEdit(officeId);
-            });
-        });
-        
-        // Delete buttons
-        const deleteButtons = document.querySelectorAll('.btn-delete');
-        deleteButtons.forEach(button => {
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            
-            newButton.addEventListener('click', function() {
-                const officeId = this.getAttribute('data-office-id');
-                const officeName = this.getAttribute('data-office-name');
-                handleDelete(officeId, officeName);
-            });
-        });
+
+    // Hide DataTables default search
+    document.querySelector('.dataTables_filter')?.style.setProperty('display', 'none', 'important');
+
+    // Populate Area dropdown from table data
+    populateAreaDropdown();
+
+    // Wire filters
+    initFilters();
+
+    // ── Restore saved filter state if returning from profile ─────────────────
+    const savedRaw = sessionStorage.getItem('tableFilterState');
+    if (savedRaw && sessionStorage.getItem('tableFilterSource') === 'table') {
+        sessionStorage.removeItem('tableFilterState');
+        sessionStorage.removeItem('tableFilterSource');
+
+        try {
+            const state = JSON.parse(savedRaw);
+
+            // Restore filter inputs
+            if (state.search)     setVal('tableSearchInput',    state.search);
+            if (state.area)       setVal('filterArea',          state.area);
+            if (state.connStatus) setVal('filterConnStatus',    state.connStatus);
+            if (state.offStatus)  setVal('filterOfficeStatus',  state.offStatus);
+
+            // Re-apply filters
+            setTimeout(function () {
+                applyFilters();
+                highlightSelects();
+
+                // Restore scroll after filters applied + table redrawn
+                if (state.scrollY) {
+                    setTimeout(function () {
+                        window.scrollTo({ top: state.scrollY, behavior: 'instant' });
+                    }, 300);
+                }
+            }, 100);
+        } catch (e) {
+            console.warn('[Table] Could not restore state:', e);
+        }
     }
-    
-    // Initial attachment of button listeners
+
     attachButtonListeners();
-    
-    console.log('DataTable initialized successfully');
+    updateSummary(table);
+    console.log('[Table] Initialized.');
 });
 
-/**
- * Handle edit action
- */
-function handleEdit(officeId) {
-    // Show loading
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Loading Office Data...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    }
-    
-    // Fetch office data
-    fetch('/api/postal-office/' + officeId)
-        .then(response => response.json())
-        .then(office => {
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-            }
-            
-            // Populate form fields
-            document.getElementById('editOfficeId').value = office.id;
-            document.getElementById('editName').value = office.name || '';
-            document.getElementById('editPostmaster').value = office.postmaster || '';
-            document.getElementById('editAddress').value = office.address || '';
-            document.getElementById('editZipCode').value = office.zipCode || '';
-            document.getElementById('editStatus').value = office.connectionStatus ? 'true' : 'false';
-            document.getElementById('editISP').value = office.internetServiceProvider || '';
-            document.getElementById('editSpeed').value = office.speed || '';
-            document.getElementById('editTypeOfConnection').value = office.typeOfConnection || '';
-            document.getElementById('editStaticIP').value = office.staticIpAddress || '';
-            document.getElementById('editNoOfEmployees').value = office.noOfEmployees || '';
-            document.getElementById('editNoOfTellers').value = office.noOfPostalTellers || '';
-            document.getElementById('editNoOfCarriers').value = office.noOfLetterCarriers || '';
-            document.getElementById('editContactPerson').value = office.postalOfficeContactPerson || '';
-            document.getElementById('editContactNumber').value = office.postalOfficeContactNumber || '';
-            document.getElementById('editISPContactPerson').value = office.ispContactPerson || '';
-            document.getElementById('editISPContactNumber').value = office.ispContactNumber || '';
-            document.getElementById('editLatitude').value = office.latitude || '';
-            document.getElementById('editLongitude').value = office.longitude || '';
-            
-            // Show modal (Bootstrap 4)
-            $('#editOfficeModal').modal('show');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load office data',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert('Failed to load office data');
-            }
-        });
-}
+// ═══════════════════════════════════════════════════════════════
+//  AREA DROPDOWN
+// ═══════════════════════════════════════════════════════════════
+function populateAreaDropdown() {
+    const select = document.getElementById('filterArea');
+    if (!select) return;
 
-/**
- * Save office changes
- */
-function saveOfficeChanges() {
-    const id = document.getElementById('editOfficeId').value;
-    
-    // Validate required fields
-    if (!document.getElementById('editName').value) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Validation Error',
-                text: 'Office name is required',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Office name is required');
-        }
-        return;
-    }
-    
-    // Prepare update data
-    const updateData = {
-        name: document.getElementById('editName').value,
-        postmaster: document.getElementById('editPostmaster').value || null,
-        address: document.getElementById('editAddress').value || null,
-        zipCode: document.getElementById('editZipCode').value || null,
-        connectionStatus: document.getElementById('editStatus').value === 'true',
-        internetServiceProvider: document.getElementById('editISP').value || null,
-        speed: document.getElementById('editSpeed').value || null,
-        typeOfConnection: document.getElementById('editTypeOfConnection').value || null,
-        staticIpAddress: document.getElementById('editStaticIP').value || null,
-        noOfEmployees: document.getElementById('editNoOfEmployees').value ? parseInt(document.getElementById('editNoOfEmployees').value) : null,
-        noOfPostalTellers: document.getElementById('editNoOfTellers').value ? parseInt(document.getElementById('editNoOfTellers').value) : null,
-        noOfLetterCarriers: document.getElementById('editNoOfCarriers').value ? parseInt(document.getElementById('editNoOfCarriers').value) : null,
-        postalOfficeContactPerson: document.getElementById('editContactPerson').value || null,
-        postalOfficeContactNumber: document.getElementById('editContactNumber').value || null,
-        ispContactPerson: document.getElementById('editISPContactPerson').value || null,
-        ispContactNumber: document.getElementById('editISPContactNumber').value || null,
-        latitude: document.getElementById('editLatitude').value ? parseFloat(document.getElementById('editLatitude').value) : null,
-        longitude: document.getElementById('editLongitude').value ? parseFloat(document.getElementById('editLongitude').value) : null
-    };
-    
-    // Show saving progress
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Saving Changes...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    }
-    
-    // Send update request
-    fetch('/api/postal-office/' + id, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Hide modal
-        $('#editOfficeModal').modal('hide');
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Post office updated successfully',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.reload();
-            });
-        } else {
-            alert('Post office updated successfully!');
-            window.location.reload();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: 'Failed to update post office',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Failed to update post office');
-        }
+    const areaSet = new Set();
+    document.querySelectorAll('#myTable tbody tr td:nth-child(3)').forEach(cell => {
+        const val = cell.textContent.trim();
+        if (val && val !== 'N/A') areaSet.add(val);
+    });
+
+    [...areaSet].sort().forEach(area => {
+        const opt       = document.createElement('option');
+        opt.value       = area;
+        opt.textContent = area;
+        select.appendChild(opt);
     });
 }
 
-/**
- * Handle delete action with SweetAlert2 or native confirm
- */
+// ═══════════════════════════════════════════════════════════════
+//  FILTER INIT
+// ═══════════════════════════════════════════════════════════════
+function initFilters() {
+
+    // Toggle panel
+    document.getElementById('toggleFilterBody')?.addEventListener('click', function () {
+        const body    = document.getElementById('filterBody');
+        const chevron = document.getElementById('filterChevron');
+        const hidden  = body.classList.toggle('d-none');
+        chevron.classList.toggle('fa-chevron-up',  !hidden);
+        chevron.classList.toggle('fa-chevron-down',  hidden);
+    });
+
+    document.getElementById('applyTableFilters')?.addEventListener('click', applyFilters);
+    document.getElementById('clearTableFilters')?.addEventListener('click', clearFilters);
+
+    // Clear search ×
+    document.getElementById('clearSearchBtn')?.addEventListener('click', function () {
+        document.getElementById('tableSearchInput').value = '';
+        applyFilters();
+    });
+
+    // Live search debounced
+    let timer;
+    document.getElementById('tableSearchInput')?.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(applyFilters, 300);
+    });
+    document.getElementById('tableSearchInput')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
+    });
+
+    // Instant on dropdown change
+    ['filterArea', 'filterConnStatus', 'filterOfficeStatus'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', applyFilters);
+    });
+}
+
+// ── Apply filters ─────────────────────────────────────────────────────────────
+function applyFilters() {
+    if (!table) return;
+
+    const search      = (document.getElementById('tableSearchInput')?.value    || '').trim();
+    const area        = (document.getElementById('filterArea')?.value           || '').trim();
+    const connStatus  = (document.getElementById('filterConnStatus')?.value     || '').trim();
+    const offStatus   = (document.getElementById('filterOfficeStatus')?.value   || '').trim();
+
+    table.column(2).search(area       ? '^' + escRx(area)       + '$' : '', true, false);
+    table.column(5).search(connStatus ? escRx(connStatus)              : '', true, false);
+    table.column(6).search(offStatus  ? escRx(offStatus)               : '', true, false);
+    table.search(search).draw();
+
+    renderTags(search, area, connStatus, offStatus);
+    highlightSelects();
+}
+
+// ── Clear filters ─────────────────────────────────────────────────────────────
+function clearFilters() {
+    if (!table) return;
+
+    ['tableSearchInput', 'filterArea', 'filterConnStatus', 'filterOfficeStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    table.column(2).search('');
+    table.column(5).search('');
+    table.column(6).search('');
+    table.search('').draw();
+
+    renderTags('', '', '', '');
+    highlightSelects();
+}
+
+// ── Render active filter pill tags ────────────────────────────────────────────
+function renderTags(search, area, connStatus, offStatus) {
+    const container = document.getElementById('activeFilterTags');
+    const countEl   = document.getElementById('activeFilterCount');
+    if (!container) return;
+
+    container.innerHTML = '';
+    let n = 0;
+
+    function tag(css, icon, text, clearFn) {
+        n++;
+        const el = document.createElement('span');
+        el.className = 'filter-tag-pill ' + css;
+        el.innerHTML = `<i class="${icon}"></i>${escHtml(text)}<button class="tag-remove-btn" title="Remove">&times;</button>`;
+        el.querySelector('.tag-remove-btn').addEventListener('click', clearFn);
+        container.appendChild(el);
+    }
+
+    if (search) tag(
+        'tag-search', 'fas fa-search mr-1', `"${search}"`,
+        () => { document.getElementById('tableSearchInput').value = ''; applyFilters(); }
+    );
+    if (area) tag(
+        'tag-area', 'fas fa-map-marker-alt mr-1', area,
+        () => { document.getElementById('filterArea').value = ''; applyFilters(); }
+    );
+    if (connStatus) tag(
+        connStatus === 'Active' ? 'tag-active' : 'tag-inactive',
+        'fas fa-wifi mr-1',
+        'Connection: ' + connStatus,
+        () => { document.getElementById('filterConnStatus').value = ''; applyFilters(); }
+    );
+    if (offStatus) tag(
+        offStatus === 'Open' ? 'tag-open' : 'tag-closed',
+        offStatus === 'Open' ? 'fas fa-door-open mr-1' : 'fas fa-door-closed mr-1',
+        'Office: ' + offStatus,
+        () => { document.getElementById('filterOfficeStatus').value = ''; applyFilters(); }
+    );
+
+    if (countEl) {
+        countEl.textContent   = n || '';
+        countEl.style.display = n > 0 ? 'inline-block' : 'none';
+    }
+}
+
+// ── Highlight active selects ──────────────────────────────────────────────────
+function highlightSelects() {
+    ['filterArea', 'filterConnStatus', 'filterOfficeStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('has-value', !!el.value);
+    });
+    const s = document.getElementById('tableSearchInput');
+    if (s) s.classList.toggle('has-value', !!s.value);
+}
+
+// ── Summary text ──────────────────────────────────────────────────────────────
+function updateSummary(api) {
+    const el = document.getElementById('tableSummaryText');
+    if (!el || !api) return;
+    const info    = api.page.info();
+    const visible = info.recordsDisplay;
+    const total   = info.recordsTotal;
+    el.textContent = visible < total
+        ? `${visible} of ${total} offices`
+        : `${total} offices`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escRx(s)   { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+// ═══════════════════════════════════════════════════════════════
+//  BUTTON LISTENERS (Delete only — Edit handled by edit-modal.js)
+// ═══════════════════════════════════════════════════════════════
+function attachButtonListeners() {
+    document.querySelectorAll('.btn-delete').forEach(button => {
+        const clone = button.cloneNode(true);
+        button.parentNode.replaceChild(clone, button);
+        clone.addEventListener('click', function () {
+            handleDelete(this.dataset.officeId, this.dataset.officeName);
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════════════════════════════
 function handleDelete(officeId, officeName) {
-    // Check if SweetAlert2 is available
-    if (typeof Swal !== 'undefined') {
-        // Use SweetAlert2 for better UX
-        Swal.fire({
-            title: 'Delete Post Office?',
-            html: `Are you sure you want to delete <strong>${officeName}</strong>?<br><small class="text-muted">This action cannot be undone.</small>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash"></i> Yes, Delete',
-            cancelButtonText: '<i class="fas fa-times"></i> Cancel',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                performDelete(officeId, officeName);
-            }
-        });
-    } else {
-        // Fallback to native confirm
-        if (!confirm(`Are you sure you want to delete "${officeName}"?\n\nThis action cannot be undone!`)) {
-            return;
-        }
-        performDelete(officeId, officeName);
-    }
-}
-
-/**
- * Execute the delete operation
- */
-function performDelete(officeId, officeName) {
-    // Show loading state
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: 'Deleting...',
-            html: `Removing <strong>${officeName}</strong>`,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-    } else {
-        // Fallback loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'deleteLoadingIndicator';
-        loadingDiv.innerHTML = '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);z-index:9999"><i class="fas fa-spinner fa-spin"></i> Deleting...</div>';
-        document.body.appendChild(loadingDiv);
-    }
-    
-    fetch('/api/postal-office/' + officeId, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Remove loading indicator if using fallback
-        const loadingDiv = document.getElementById('deleteLoadingIndicator');
-        if (loadingDiv) {
-            document.body.removeChild(loadingDiv);
-        }
-        
-        if (data.success) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: `${officeName} has been removed successfully.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.reload();
-                });
-            } else {
-                alert('Post office deleted successfully!');
-                window.location.reload();
-            }
-        } else {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Delete Failed',
-                    text: data.message || 'Failed to delete post office',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert('Error: ' + (data.message || 'Failed to delete post office'));
-            }
-        }
-    })
-    .catch(error => {
-        // Remove loading indicator if using fallback
-        const loadingDiv = document.getElementById('deleteLoadingIndicator');
-        if (loadingDiv) {
-            document.body.removeChild(loadingDiv);
-        }
-        
-        console.error('Error:', error);
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while deleting the post office',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('Failed to delete post office');
-        }
+    Swal.fire({
+        title: 'Delete Post Office?',
+        html:  `Are you sure you want to delete <strong>${escHtml(officeName)}</strong>?<br>
+                <small class="text-muted">This action cannot be undone.</small>`,
+        icon:  'warning',
+        showCancelButton:   true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor:  '#6c757d',
+        confirmButtonText:  '<i class="fas fa-trash mr-1"></i>Yes, Delete',
+        cancelButtonText:   '<i class="fas fa-times mr-1"></i>Cancel',
+        reverseButtons:     true
+    }).then(result => {
+        if (result.isConfirmed) performDelete(officeId, officeName);
     });
 }
+
+function performDelete(officeId, officeName) {
+    Swal.fire({
+        title: 'Deleting…',
+        html:  `Removing <strong>${escHtml(officeName)}</strong>`,
+        allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch('/api/postal-office/' + officeId, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Deleted!', text: `${officeName} removed.`, timer: 2000, showConfirmButton: false })
+                    .then(() => location.reload());
+            } else {
+                Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Delete failed.' });
+            }
+        })
+        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ARCHIVE
+// ═══════════════════════════════════════════════════════════════
+(function () {
+    let pendingId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelector('#myTable tbody')?.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-archive');
+            if (!btn) return;
+            pendingId = btn.dataset.officeId;
+            document.getElementById('archiveOfficeName').textContent = btn.dataset.officeName || '';
+            document.getElementById('archiveReasonInput').value = '';
+            $('#archiveReasonModal').modal('show');
+        });
+
+        document.getElementById('confirmArchiveBtn')?.addEventListener('click', function () {
+            if (!pendingId) return;
+            const reason = document.getElementById('archiveReasonInput').value.trim();
+            fetch('/api/archive/' + pendingId, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ reason })
+            })
+            .then(r => r.json())
+            .then(res => {
+                $('#archiveReasonModal').modal('hide');
+                if (res.success) {
+                    Swal.fire({ icon: 'success', title: 'Archived!', timer: 2000, showConfirmButton: false })
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Archive failed.' });
+                }
+            })
+            .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' }));
+        });
+    });
+})();
+
+// ── Save state before navigating to profile ───────────────────────────────────
+// Called by the View button click (see table.html onclick)
+function saveTableStateAndView(officeId) {
+    const state = {
+        search:     document.getElementById('tableSearchInput')?.value     || '',
+        area:       document.getElementById('filterArea')?.value           || '',
+        connStatus: document.getElementById('filterConnStatus')?.value     || '',
+        offStatus:  document.getElementById('filterOfficeStatus')?.value   || '',
+        scrollY:    window.scrollY
+    };
+    sessionStorage.setItem('tableFilterState',  JSON.stringify(state));
+    sessionStorage.setItem('tableFilterSource', 'table');
+    window.location.href = '/profile/' + officeId + '?source=table';
+}
+
+// ── Cleanup ───────────────────────────────────────────────────────────────────
+window.addEventListener('beforeunload', function () {
+    if (table && $.fn.DataTable.isDataTable('#myTable')) table.destroy();
+    document.getElementById('editOfficeModal')?.remove();
+});

@@ -38,8 +38,10 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
     z-index: 1000;
+    contain: layout style paint;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 /* ============================================
@@ -81,6 +83,7 @@ body {
 .sidebar-menu {
     padding: 1rem 0;
     flex: 1;
+    contain: layout style;
 }
 
 .sidebar-heading {
@@ -99,7 +102,9 @@ body {
     text-decoration: none;
     font-size: 0.92rem;
     border-left: 4px solid transparent;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease, border-left-color 0.15s ease;
+    contain: layout style;
+    will-change: background-color, color, border-left-color;
 }
 
 .sidebar-link i {

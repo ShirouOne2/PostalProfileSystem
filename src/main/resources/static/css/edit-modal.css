@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════════
+   Edit Office Modal Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Modal Header ────────────────────────────────────────────── */
+#editOfficeModal .modal-header {
+    background: linear-gradient(135deg, #f6c23e 0%, #f4a006 100%);
+    border-bottom: none;
+    padding: 16px 20px;
+}
+
+#editOfficeModal .modal-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
+#editOfficeModal .modal-title i {
+    margin-right: 8px;
+}
+
+#editOfficeModal .close {
+    color: #fff;
+    opacity: 0.85;
+    font-size: 1.4rem;
+    text-shadow: none;
+}
+
+#editOfficeModal .close:hover {
+    opacity: 1;
+    color: #fff;
+}
+
+/* ── Modal Body ──────────────────────────────────────────────── */
+#editOfficeModal .modal-body {
+    padding: 24px;
+    background: #f8f9fa;
+}
+
+#editOfficeModal .modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+/* ── Section Headings ────────────────────────────────────────── */
+#editOfficeModal h6.text-primary {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #4e73df !important;
+    border-bottom: 2px solid #e3e6f0;
+    padding-bottom: 6px;
+    margin-bottom: 12px !important;
+}
+
+/* ── Form Controls ───────────────────────────────────────────── */
+#editOfficeModal .form-control {
+    border-radius: 6px;
+    border: 1px solid #d1d3e2;
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: #fff;
+}
+
+
+#editOfficeModal .form-control:focus {
+    border-color: #f6c23e;
+    box-shadow: 0 0 0 3px rgba(246, 194, 62, 0.2);
+    outline: none;
+}
+
+#editOfficeModal select.form-control {
+    padding: 0;
+}
+
+#editOfficeModal label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 4px;
+}
+
+/* ── Modal Footer ────────────────────────────────────────────── */
+#editOfficeModal .modal-footer {
+    background: #fff;
+    border-top: 1px solid #e3e6f0;
+    padding: 12px 20px;
+    gap: 8px;
+}
+
+#editOfficeModal .btn-secondary {
+    background: #858796;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    transition: background 0.2s ease;
+}
+
+#editOfficeModal .btn-secondary:hover {
+    background: #717384;
+}
+
+#editOfficeModal .btn-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #f4a006 100%);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+#editOfficeModal .btn-warning:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 576px) {
+    #editOfficeModal .modal-body {
+        padding: 16px;
+    }
+
+    #editOfficeModal .modal-dialog {
+        margin: 10px;
+    }
+}
+
+/* ── Archive Button ───────────────────────────────────────────── */
+#editOfficeModal .btn-danger {
+    background: #e74a3b;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+#editOfficeModal .btn-danger:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    color: #fff;
+}

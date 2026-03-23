@@ -66,9 +66,9 @@
                                     <i class="fas fa-calendar text-primary mr-1"></i> Year
                                 </label>
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
-                                    <option value="">All Years</option>
+                                    <option value="">Select Years</option>
                                     <!-- Thymeleaf: generate year options dynamically -->
-                                    <option th:each="y : ${#numbers.sequence(2023, 2027)}"
+                                    <option th:each="y : ${#numbers.sequence(1993, 2027)}"
                                             th:value="${y}"
                                             th:text="${y}"
                                             th:selected="${y == currentYear}">2026</option>
@@ -81,7 +81,7 @@
                                     <i class="fas fa-layer-group text-warning mr-1"></i> Quarter
                                 </label>
                                 <select id="quarterFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Quarters</option>
+                                    <option value="">Choose Quarters</option>
                                     <option value="Q1"
                                             th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan Mar)</option>
                                     <option value="Q2"
@@ -99,7 +99,7 @@
                                     <i class="fas fa-map-marker-alt text-danger mr-1"></i> Area
                                 </label>
                                 <select id="areaFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Areas</option>
+                                    <option value="">Select Areas</option>
                                     <option th:each="area : ${areas}"
                                             th:value="${area.id}"
                                             th:text="${area.areaName}"
@@ -115,7 +115,7 @@
                                     <i class="fas fa-wifi text-success mr-1"></i> Status
                                 </label>
                                 <select id="statusFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Status</option>
+                                    <option value="">Select Status</option>
                                     <option value="active"
                                             th:selected="${selectedStatusFilter == 'active'}">
                                         <i class="fas fa-check-circle"></i> Active
@@ -162,79 +162,45 @@
         </div>
         <!-- ===== END FILTER PANEL ===== -->
 
-        <!-- Connectivity Cards - Two Columns -->
+        <!-- Connectivity Cards - Latest Quarter Only -->
         <div class="row mb-4">
             
             <!-- WITH CONNECTIVITY (Left Column - Green) -->
             <div class="col-lg-6">
-                <div class="connectivity-card">
-                    <div class="connectivity-header header-with-connectivity">
+                <div class="card bg-success text-white">
+                    <div class="card-header">
                         <i class="fas fa-wifi mr-2"></i> With Connectivity
                     </div>
-                    <div class="p-3">
-                        <div class="quarter-item" th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-active' : ''}">
-                            <div class="quarter-header">
-                                <span class="quarter-title" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="new-badge" 
-                                      th:classappend="${quarter.newlyConnected > 0 ? 'new-badge-positive' : 'new-badge-neutral'}"
-                                      th:text="${'+' + quarter.newlyConnected}">
-                                    +0
-                                </span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">Total Connected:</span>
-                                <span class="stat-value" th:text="${quarter.connected}">593</span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">New This Quarter:</span>
-                                <span class="new-this-quarter" th:text="${quarter.newlyConnected}">0</span>
-                            </div>
-                            
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Current Quarter</span>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+                        <p>
+                            Total Connected:
+                            <strong th:text="${latestQuarter.connected}">15</strong>
+                        </p>
+                        <p>
+                            New This Quarter:
+                            <strong th:text="${latestQuarter.newlyConnected}">0</strong>
+                        </p>
                     </div>
                 </div>
             </div>
             
             <!-- WITHOUT CONNECTIVITY (Right Column - Red) -->
             <div class="col-lg-6">
-                <div class="connectivity-card">
-                    <div class="connectivity-header header-without-connectivity">
+                <div class="card bg-danger text-white">
+                    <div class="card-header">
                         <i class="fas fa-wifi-slash mr-2"></i> Without Connectivity
                     </div>
-                    <div class="p-3">
-                        <div class="quarter-item" th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-inactive' : ''}">
-                            <div class="quarter-header">
-                                <span class="quarter-title" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span class="new-badge" 
-                                      th:classappend="${quarter.newlyDisconnected > 0 ? 'new-badge-negative' : 'new-badge-neutral'}"
-                                      th:text="${'+' + quarter.newlyDisconnected}">
-                                    +0
-                                </span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">Total Disconnected:</span>
-                                <span class="stat-value" th:text="${quarter.disconnected}">539</span>
-                            </div>
-                            
-                            <div class="quarter-stats">
-                                <span class="stat-label">New This Quarter:</span>
-                                <span class="new-this-quarter-red" th:text="${quarter.newlyDisconnected}">0</span>
-                            </div>
-                            
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Current Quarter</span>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+                        <p>
+                            Total Disconnected:
+                            <strong th:text="${latestQuarter.disconnected}">15</strong>
+                        </p>
+                        <p>
+                            New This Quarter:
+                            <strong th:text="${latestQuarter.newlyDisconnected}">1</strong>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -291,8 +257,9 @@
                             <th>ADDRESS</th>
                             <th>ZIP CODE</th>
                             <th>SPEED</th>
-                            <th>STATUS</th>
+                            <th>CONNECTION STATUS</th>
                             <th>POSTMASTER</th>
+                            <th>REMARKS</th>
                             <th>ACTION</th>
                         </tr>
                     </thead>
@@ -301,6 +268,43 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Archive Modal for Quarters Page -->
+    <div class="modal fade" id="quartersArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-archive mr-2"></i>Archive Post Office
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        You are about to archive <strong id="quartersArchiveOfficeName"></strong>.
+                        This office will be hidden from all views but can be restored later.
+                    </p>
+                    <div class="form-group">
+                        <label for="quartersArchiveReasonInput">
+                            Reason for archiving <small class="text-muted">(optional)</small>
+                        </label>
+                        <textarea id="quartersArchiveReasonInput" class="form-control" rows="3"
+                                  placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" id="quartersConfirmArchiveBtn">
+                        <i class="fas fa-archive mr-1"></i>Archive
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Map modal will be created dynamically by quarters.js -->

@@ -1,489 +1,495 @@
-document.addEventListener('DOMContentLoaded', function() {
+// ── Global: called by onchange on the Connection Status select ────────────
+function syncConnectionStatus(select) {
+    const isActive    = select.value === 'active';
+    const connCheck   = document.getElementById('connectionStatus');
+    const dateConn    = document.getElementById('dateConnected');
+    const dateDisconn = document.getElementById('dateDisconnected');
+    const pad = n => String(n).padStart(2, '0');
+    const nowLocal = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+    if (connCheck) connCheck.checked = isActive;
+    if (dateConn && dateDisconn) {
+        if (isActive) {
+            if (!dateConn.value) dateConn.value = nowLocal();
+            dateDisconn.value    = '';
+            dateConn.disabled    = false;
+            dateDisconn.disabled = true;
+        } else {
+            if (!dateDisconn.value) dateDisconn.value = nowLocal();
+            dateConn.value       = '';
+            dateConn.disabled    = true;
+            dateDisconn.disabled = false;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
 
     console.log('Insert Office Wizard initializing...');
 
     const steps = document.querySelectorAll('.wizard-step');
-    const indicators = document.querySelectorAll('.wizard-step-indicator');
-    const form = document.getElementById('insertPostalOfficeForm');
+    const form  = document.getElementById('insertPostalOfficeForm');
     let currentStep = 0;
 
-    function showStep(index) {
-        // Hide all steps
-        document.querySelectorAll('.wizard-step').forEach(step => {
-            step.classList.remove('active');
-        });
-        
-        // Show target step by ID
-        const targetStep = document.getElementById('step-' + (index + 1));
-        if (targetStep) {
-            targetStep.classList.add('active');
-        } else {
-            console.error('Step not found: step-' + (index + 1));
-            return;
-        }
-        
-        // Update indicators
-        document.querySelectorAll('.wizard-step-indicator').forEach(indicator => {
-            indicator.classList.remove('active', 'completed');
-        });
-        
-        // Mark current and completed steps
-        document.querySelectorAll('.wizard-step-indicator').forEach(indicator => {
-            const indicatorStep = parseInt(indicator.getAttribute('data-step'));
-            if (indicatorStep === index + 1) {
-                indicator.classList.add('active');
-            } else if (indicatorStep < index + 1) {
-                indicator.classList.add('completed');
+    // ─── Required fields per step ───────────────────────────────────────────
+    const REQUIRED = {
+        0: [
+            { id: 'officeName', label: 'Post Office Name' }
+        ],
+        1: [
+            { id: 'areaId',     label: 'Area'             },
+            { id: 'regionId',   label: 'Region'             },
+            { id: 'provinceId', label: 'Province'            },
+            { id: 'cityMunId',  label: 'City / Municipality' }
+        ]
+    };
+
+    // ─── Validation helpers ─────────────────────────────────────────────────
+    function markInvalid(el) { if (!el) return; el.classList.add('is-invalid'); el.classList.remove('is-valid'); }
+    function markValid(el)   { if (!el) return; el.classList.remove('is-invalid'); el.classList.add('is-valid'); }
+    function clearMark(el)   { if (!el) return; el.classList.remove('is-invalid', 'is-valid'); }
+
+    const touched = new Set();
+
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('focus', () => touched.add(el.id), { once: false });
+        ['input', 'change'].forEach(evt =>
+            el.addEventListener(evt, () => {
+                if (!touched.has(el.id)) return;
+                const isReq = Object.values(REQUIRED).flat().some(f => f.id === el.id);
+                if (el.value && el.value.trim() !== '') markValid(el);
+                else if (isReq) markInvalid(el);
+                else clearMark(el);
+            })
+        );
+    });
+
+    // ─── Step validation ────────────────────────────────────────────────────
+    function validateStep(index) {
+        const required = REQUIRED[index];
+        if (!required) return true;
+
+        let valid = true;
+        const missing = [];
+
+        required.forEach(({ id, label }) => {
+            const el = document.getElementById(id);
+            touched.add(id);
+            if (!el || !el.value || el.value.trim() === '') {
+                markInvalid(el);
+                missing.push(label);
+                valid = false;
+            } else {
+                markValid(el);
             }
         });
-        
+
+        if (index === 1) {
+            const latEl = document.getElementById('latitude');
+            const lngEl = document.getElementById('longitude');
+            const lat   = latEl?.value !== '' ? parseFloat(latEl.value) : null;
+            const lng   = lngEl?.value !== '' ? parseFloat(lngEl.value) : null;
+
+            if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) {
+                markInvalid(latEl); missing.push('Latitude (must be -90 to 90)'); valid = false;
+            } else if (lat !== null) { markValid(latEl); }
+
+            if (lng !== null && (isNaN(lng) || lng < -180 || lng > 180)) {
+                markInvalid(lngEl); missing.push('Longitude (must be -180 to 180)'); valid = false;
+            } else if (lng !== null) { markValid(lngEl); }
+        }
+
+        if (!valid) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Required Fields Missing',
+                html: `<p style="margin-bottom:8px">Please fill in the following before proceeding:</p>
+                       <ul style="text-align:left;display:inline-block;margin:0;padding-left:1.2em;">
+                         ${missing.map(m => `<li><strong>${m}</strong></li>`).join('')}
+                       </ul>`,
+                confirmButtonColor: '#3085d6'
+            });
+        }
+        return valid;
+    }
+
+    // ─── Full validation ─────────────────────────────────────────────────────
+    function validateAll() {
+        const all = [
+            { id: 'officeName', label: 'Post Office Name',   step: 1 },
+            { id: 'areaId',     label: 'Area',               step: 2 },
+            { id: 'regionId',   label: 'Region',             step: 2 },
+            { id: 'provinceId', label: 'Province',           step: 2 },
+            { id: 'cityMunId',  label: 'City / Municipality',step: 2 }
+        ];
+
+        let valid = true;
+        const missing = [];
+
+        all.forEach(({ id, label, step }) => {
+            const el = document.getElementById(id);
+            touched.add(id);
+            if (!el || !el.value || el.value.trim() === '') {
+                markInvalid(el); missing.push({ label, step }); valid = false;
+            } else { markValid(el); }
+        });
+
+        if (!valid) {
+            const firstStep = Math.min(...missing.map(m => m.step));
+            Swal.fire({
+                icon: 'error',
+                title: 'Cannot Save — Required Fields Incomplete',
+                html: `<p style="margin-bottom:8px">Please complete the following before saving:</p>
+                       <ul style="text-align:left;display:inline-block;margin:0;padding-left:1.2em;">
+                         ${missing.map(m => `<li><strong>${m.label}</strong><span style="color:#6c757d;font-size:.85em;"> — Step ${m.step}</span></li>`).join('')}
+                       </ul>`,
+                confirmButtonText: `<i class="fas fa-arrow-left"></i> Go to Step ${firstStep}`,
+                confirmButtonColor: '#d33'
+            }).then(() => {
+                showStep(firstStep - 1);
+                document.getElementById(missing[0].id)?.focus();
+            });
+        }
+        return valid;
+    }
+
+    // ─── Step navigation ────────────────────────────────────────────────────
+    function showStep(index) {
+        document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('step-' + (index + 1));
+        if (!target) return;
+        target.classList.add('active');
+
+        document.querySelectorAll('.wizard-step-indicator').forEach(ind => {
+            ind.classList.remove('active', 'completed');
+            const n = parseInt(ind.getAttribute('data-step'));
+            if (n === index + 1)    ind.classList.add('active');
+            else if (n < index + 1) ind.classList.add('completed');
+        });
+
         currentStep = index;
+        const totalSteps = document.querySelectorAll('.wizard-step-indicator').length;
+        const pct = totalSteps > 1 ? (index / (totalSteps - 1)) * 100 : 0;
+        document.querySelector('.wizard-steps')?.style.setProperty('--wizard-progress', pct + '%');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function validateStep(index) {
-        // Example validation per step
-        if (index === 0) { // Basic Info
-            const requiredFields = ['officeName', 'areaId'];
-            for (let id of requiredFields) {
-                const el = document.getElementById(id);
-                if (!el || !el.value) {
-                    Swal.fire('Missing Information', `Please fill ${el?.name || id}`, 'warning');
-                    el?.focus();
-                    return false;
-                }
-            }
+    document.querySelectorAll('.btn-next').forEach(btn =>
+        btn.addEventListener('click', () => {
+            if (validateStep(currentStep) && currentStep < steps.length - 1)
+                showStep(currentStep + 1);
+        })
+    );
+
+    document.querySelectorAll('.btn-prev').forEach(btn =>
+        btn.addEventListener('click', () => { if (currentStep > 0) showStep(currentStep - 1); })
+    );
+
+    document.querySelectorAll('.wizard-step-indicator').forEach((ind, i) =>
+        ind.addEventListener('click', () => {
+            if (i > currentStep) { if (validateStep(currentStep)) showStep(i); }
+            else showStep(i);
+        })
+    );
+
+    // ─── Status Dropdowns (Connection + Office) ──────────────────────────────
+
+    function nowLocal() {
+        const d = new Date(), pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function initStatusDropdowns() {
+        const connSelect  = document.getElementById('connectionStatusSelect');
+        const connCheck   = document.getElementById('connectionStatus');
+        const dateConn    = document.getElementById('dateConnected');
+        const dateDisconn = document.getElementById('dateDisconnected');
+
+        // Set initial date state (default = Inactive)
+        if (dateConn)    dateConn.disabled    = true;
+        if (dateDisconn) {
+            dateDisconn.disabled = false;
+            if (!dateDisconn.value) dateDisconn.value = nowLocal();
         }
 
-        if (index === 1) { // Location validation
-            const requiredFields = ['regionId', 'provinceId', 'cityMunId'];
-            for (let id of requiredFields) {
-                const el = document.getElementById(id);
-                if (!el || !el.value) {
-                    Swal.fire('Missing Information', `Please select ${el?.name || id}`, 'warning');
-                    el?.focus();
-                    return false;
-                }
-            }
-            
-            const lat = parseFloat(document.getElementById('latitude')?.value || 0);
-            const lng = parseFloat(document.getElementById('longitude')?.value || 0);
-            if (lat && (lat < -90 || lat > 90)) {
-                Swal.fire('Invalid Latitude', 'Must be between -90 and 90', 'error');
-                return false;
-            }
-            if (lng && (lng < -180 || lng > 180)) {
-                Swal.fire('Invalid Longitude', 'Must be between -180 and 180', 'error');
-                return false;
-            }
-        }
+        if (connSelect) {
+            connSelect.addEventListener('change', function () {
+                const isActive = this.value === 'active';
+                if (connCheck) connCheck.checked = isActive;
 
-        if (index === 2) { // Connectivity validation
-            const connectionStatus = document.getElementById('connectionStatus')?.checked;
-            if (connectionStatus) {
-                const requiredFields = ['internetServiceProvider', 'typeOfConnection'];
-                for (let id of requiredFields) {
-                    const el = document.getElementById(id);
-                    if (!el || !el.value) {
-                        Swal.fire('Missing Information', `Please fill ${el?.name || id}`, 'warning');
-                        el?.focus();
-                        return false;
+                if (dateConn && dateDisconn) {
+                    if (isActive) {
+                        if (!dateConn.value) dateConn.value = nowLocal();
+                        dateDisconn.value    = '';
+                        dateConn.disabled    = false;
+                        dateDisconn.disabled = true;
+                    } else {
+                        if (!dateDisconn.value) dateDisconn.value = nowLocal();
+                        dateConn.value       = '';
+                        dateConn.disabled    = true;
+                        dateDisconn.disabled = false;
                     }
                 }
-            }
+            });
         }
 
-        return true;
-    }
-
-    // Next buttons
-    document.querySelectorAll('.btn-next').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (validateStep(currentStep) && currentStep < steps.length - 1) {
-                showStep(currentStep + 1);
-            }
-        });
-    });
-
-    // Previous buttons
-    document.querySelectorAll('.btn-prev').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (currentStep > 0) showStep(currentStep - 1);
-        });
-    });
-
-    // Clickable indicators
-    indicators.forEach((ind, i) => {
-        ind.addEventListener('click', () => showStep(i));
-    });
-
-    // =======================
-    // Auto-set dates based on connection status
-    // =======================
-    const connectionStatusCheckbox = document.getElementById('connectionStatus');
-    const dateConnectedInput = document.getElementById('dateConnected');
-    const dateDisconnectedInput = document.getElementById('dateDisconnected');
-    
-    // Function to get current datetime in the format required by datetime-local input
-    function getCurrentDateTimeLocal() {
-        const now = new Date();
-        // Format: YYYY-MM-DDTHH:MM
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
-    
-    // Set initial date when page loads
-    if (connectionStatusCheckbox && dateConnectedInput && dateDisconnectedInput) {
-        // Set dateConnected initially (since connection is unchecked by default, we don't set it)
-        // But if it gets checked, we'll set it
-        
-        connectionStatusCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                // Active/Connected - set date_connected to current date, clear date_disconnected
-                if (!dateConnectedInput.value) {
-                    dateConnectedInput.value = getCurrentDateTimeLocal();
+        // Office Status functionality
+        const officeStatusSelect = document.getElementById('officeStatus');
+        if (officeStatusSelect) {
+            // Add validation styling when value changes
+            officeStatusSelect.addEventListener('change', function () {
+                if (this.value) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (touched.has(this.id)) {
+                        this.classList.add('is-invalid');
+                    }
                 }
-                dateDisconnectedInput.value = ''; // Clear disconnect date
-                dateDisconnectedInput.disabled = true;
-                dateConnectedInput.disabled = false;
-            } else {
-                // Inactive/Disconnected - set date_disconnected to current date, clear date_connected
-                if (!dateDisconnectedInput.value) {
-                    dateDisconnectedInput.value = getCurrentDateTimeLocal();
-                }
-                dateConnectedInput.value = ''; // Clear connect date
-                dateConnectedInput.disabled = true;
-                dateDisconnectedInput.disabled = false;
-            }
-        });
-        
-        // Set initial state (inactive by default)
-        if (!connectionStatusCheckbox.checked && !dateDisconnectedInput.value) {
-            dateDisconnectedInput.value = getCurrentDateTimeLocal();
-            dateConnectedInput.disabled = true;
-            dateDisconnectedInput.disabled = false;
+            });
+
+            // Mark as touched when user interacts with it
+            officeStatusSelect.addEventListener('focus', () => {
+                touched.add('officeStatus');
+            }, { once: false });
         }
     }
 
-    // Form submission
-    form?.addEventListener('submit', function(e) {
+    initStatusDropdowns();
+
+    // ─── Form submit ─────────────────────────────────────────────────────────
+    form?.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (!validateAll()) return;
 
-        if (!validateStep(currentStep)) return;
+        const officeName = document.getElementById('officeName')?.value?.trim() || '';
 
         Swal.fire({
-            title: 'Confirm Submission',
-            text: 'Add this post office?',
             icon: 'question',
+            title: 'Confirm Save',
+            html: `<p>Save this new post office?</p>
+                   <p style="font-weight:600;color:#002868;">${officeName}</p>`,
             showCancelButton: true,
-            confirmButtonText: 'Yes, Save'
-        }).then(result => {
-            if (result.isConfirmed) submitForm();
-        });
+            confirmButtonText: '<i class="fas fa-save"></i> Yes, Save',
+            cancelButtonText:  'Review Again',
+            confirmButtonColor: '#28a745'
+        }).then(r => { if (r.isConfirmed) submitForm(); });
     });
 
-    function getIntValue(id) {
-        const el = document.getElementById(id);
-        return el && el.value ? parseInt(el.value) : null;
-    }
+    // ─── Field value getters ─────────────────────────────────────────────────
+    const getStr   = id => { const e = document.getElementById(id); if (!e) return null; return e.value?.trim() || null; };
+    const getInt   = id => { const e = document.getElementById(id); return e?.value ? parseInt(e.value) : null; };
+    const getFloat = id => { const e = document.getElementById(id); return e?.value ? parseFloat(e.value) : null; };
+    const getBool  = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
-    function getFloatValue(id) {
-        const el = document.getElementById(id);
-        return el && el.value ? parseFloat(el.value) : null;
-    }
+    // Speed: user enters number only, we store as "N Mbps" string
+    const getSpeed = () => {
+        const e = document.getElementById('speed');
+        if (!e || !e.value || e.value.trim() === '') return null;
+        const num = parseFloat(e.value.trim());
+        return isNaN(num) ? null : num + ' Mbps';
+    };
 
-    function getStringValue(id) {
-        const el = document.getElementById(id);
-        return el && el.value ? el.value.trim() : null;
-    }
-
-    function getCheckedValue(id) {
-        const el = document.getElementById(id);
-        return el ? el.checked : false;
-    }
-
+    // ─── Submit to API ───────────────────────────────────────────────────────
     function submitForm() {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        const formData = {
-            name: getStringValue('officeName'),
-            postmaster: getStringValue('postmaster'),
-            address: getStringValue('address'),
-            zipCode: getStringValue('zipCode'),
-            areaId: getIntValue('areaId'),
-            regionId: getIntValue('regionId'),
-            provinceId: getIntValue('provinceId'),
-            cityMunId: getIntValue('cityMunId'),
-            barangayId: getIntValue('barangayId'),
-            latitude: getFloatValue('latitude'),
-            longitude: getFloatValue('longitude'),
-            connectionStatus: getCheckedValue('connectionStatus'),
-            dateConnected: getStringValue('dateConnected'),
-            dateDisconnected: getStringValue('dateDisconnected')
-        };
-
-        fetch('/api/postal-office/insert', {
+        fetch('/api/postal/postal-office/insert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                // ── Basic Info ────────────────────────────────────────────
+                name:                           getStr('officeName'),
+                postmaster:                     getStr('postmaster'),
+                postmasterContactNumber:        getStr('postmasterContactNumber'),
+                zipCode:                        getStr('zipCode'),
+
+                // ── Location ──────────────────────────────────────────────
+                areaId:                         getInt('areaId'),
+                regionId:                       getInt('regionId'),
+                provinceId:                     getInt('provinceId'),
+                cityMunId:                      getInt('cityMunId'),
+                barangayId:                     getInt('barangayId'),
+                latitude:                       getFloat('latitude'),
+                longitude:                      getFloat('longitude'),
+
+                // ── Connectivity ──────────────────────────────────────────
+                connectionStatus:               getBool('connectionStatus'),
+                officeStatus:                   getStr('officeStatus'),
+                internetServiceProvider:        getStr('internetServiceProvider'),
+                classification:                 getStr('classification'),
+                ownedOrShared:                  getStr('ownedOrShared'),
+                typeOfConnection:               getStr('typeOfConnection'),
+                speed:                          getSpeed(),
+                staticIpAddress:                getStr('staticIpAddress'),
+                ispContactPerson:               getStr('ispContactPerson'),
+                ispContactNumber:               getStr('ispContactNumber'),
+                planName:                       getStr('planName'),
+                planPrice:                      getFloat('planPrice'),
+                accountNumber:                  getStr('accountNumber'),
+                dateConnected:                  getStr('dateConnected'),
+                dateDisconnected:               getStr('dateDisconnected'),
+
+                // ── Contact ───────────────────────────────────────────────
+                postalOfficeContactPerson:      getStr('postalOfficeContactPerson'),
+                postalOfficeContactNumber:      getStr('postalOfficeContactNumber'),
+
+                // ── Additional ────────────────────────────────────────────
+                noOfEmployees:                  getInt('noOfEmployees'),
+                noOfPostalTellers:              getInt('noOfPostalTellers'),
+                noOfLetterCarriers:             getInt('noOfLetterCarriers'),
+                serviceProvided:                getStr('serviceProvided'),
+                remarks:                        getStr('remarks')
+            })
         })
-        .then(res => res.json())
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Success!', text: 'Post Office Added!', timer: 2000, showConfirmButton: false })
-                    .then(() => window.location.href = '/table');
-            } else {
-                throw new Error(data.message);
-            }
+                var officeId = data.id;
+
+                // Check if any photos were selected
+                var hasPhotos = ['insertProfilePhoto','insertCover1','insertCover2','insertCover3']
+                    .some(id => { var el = document.getElementById(id); return el && el.files && el.files[0]; });
+
+                if (hasPhotos && officeId) {
+                    Swal.fire({ title: 'Uploading Photos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    uploadInsertPhotos(officeId).then(() => {
+                        Swal.fire({
+                            icon: 'success', title: 'Saved!',
+                            text: 'Post Office and photos added successfully.',
+                            timer: 2000, showConfirmButton: false
+                        }).then(() => window.location.href = '/table');
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success', title: 'Saved!',
+                        text: 'Post Office added successfully.',
+                        timer: 2000, showConfirmButton: false
+                    }).then(() => window.location.href = '/table');
+                }
+            } else { throw new Error(data.message || 'Save failed'); }
         })
         .catch(err => {
-            Swal.fire('Error', err.message || 'Something went wrong', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Record';
+            Swal.fire('Error', err.message || 'Something went wrong.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Record';
         });
     }
 
-    showStep(currentStep);
-    console.log('Wizard Ready');
-    
-    // Show welcome message
-    Swal.fire({
-        icon: 'info',
-        title: 'Post Office Registration',
-        html: `
-            <p>Complete the 5-step process to add a new post office.</p>
-            <hr>
-            <p><small><strong>Steps:</strong></small></p>
-            <p><small>1. Basic Information â†’ 2. Location â†’ 3. Connectivity â†’ 4. Contact â†’ 5. Additional Info</small></p>
-        `,
-        toast: true,
-        position: 'top-end',
-        timer: 5000,
-        timerProgressBar: true,
-        showConfirmButton: false
+    // ─── Cascading dropdowns ─────────────────────────────────────────────────
+    function resetSelect(sel, placeholder, disabled) {
+        if (!sel) return;
+        sel.innerHTML = `<option value="">${placeholder}</option>`;
+        sel.disabled = disabled;
+        if (touched.has(sel.id)) clearMark(sel);
+    }
+    function loadingSelect(sel) {
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Loading...</option>';
+        sel.disabled = true;
+    }
+
+    document.getElementById('regionId')?.addEventListener('change', function () {
+        const provSel = document.getElementById('provinceId');
+        const citySel = document.getElementById('cityMunId');
+        const baraSel = document.getElementById('barangayId');
+        resetSelect(provSel, '-- Select Province --', true);
+        resetSelect(citySel, '-- Select City/Municipality --', true);
+        resetSelect(baraSel, '-- Select Barangay --', true);
+        if (!this.value) return;
+        loadingSelect(provSel);
+        fetch('/api/postal/provinces/by-region/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(provSel, '-- Select Province --', false);
+                list.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; provSel.appendChild(o); });
+            })
+            .catch(err => { resetSelect(provSel, '-- Error --', true); Swal.fire('Error', 'Failed to load provinces: ' + err.message, 'error'); });
     });
 
-    // =====================================================
-    // CASCADING DROPDOWN FUNCTIONALITY
-    // =====================================================
-    
-    function resetSelect(selectElement, placeholderText, disabled) {
-        if (!selectElement) return;
-        
-        selectElement.innerHTML = '';
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = placeholderText;
-        selectElement.appendChild(option);
-        selectElement.disabled = disabled;
-    }
-    
-    function setSelectLoading(selectElement, isLoading) {
-        if (!selectElement) return;
-        
-        if (isLoading) {
-            selectElement.disabled = true;
-            selectElement.innerHTML = '<option value="">Loading...</option>';
+    document.getElementById('provinceId')?.addEventListener('change', function () {
+        const citySel = document.getElementById('cityMunId');
+        const baraSel = document.getElementById('barangayId');
+        resetSelect(citySel, '-- Select City/Municipality --', true);
+        resetSelect(baraSel, '-- Select Barangay --', true);
+        if (!this.value) return;
+        loadingSelect(citySel);
+        fetch('/api/postal/cities/by-province/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(citySel, '-- Select City/Municipality --', false);
+                list.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; citySel.appendChild(o); });
+            })
+            .catch(err => { resetSelect(citySel, '-- Error --', true); Swal.fire('Error', 'Failed to load cities: ' + err.message, 'error'); });
+    });
+
+    document.getElementById('cityMunId')?.addEventListener('change', function () {
+        const baraSel = document.getElementById('barangayId');
+        resetSelect(baraSel, '-- Select Barangay --', true);
+        if (!this.value) return;
+        loadingSelect(baraSel);
+        fetch('/api/postal/barangays/by-city/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(baraSel, '-- Select Barangay (Optional) --', false);
+                list.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = b.name; baraSel.appendChild(o); });
+            })
+            .catch(err => { resetSelect(baraSel, '-- Error --', true); Swal.fire('Error', 'Failed to load barangays: ' + err.message, 'error'); });
+    });
+
+    // ─── Summary box (updates when Step 5 becomes active) ────────────────────
+    (function () {
+        function getSelectedText(id) {
+            const el = document.getElementById(id);
+            if (!el) return '—';
+            if (el.tagName === 'SELECT') return el.options[el.selectedIndex]?.text || '—';
+            return el.value?.trim() || '—';
         }
-    }
-    
-    // Region -> Province cascade
-    const regionSelect = document.getElementById('regionId');
-    if (regionSelect) {
-        regionSelect.addEventListener('change', function() {
-            const regionId = this.value;
-            const provinceSelect = document.getElementById('provinceId');
-            const citySelect = document.getElementById('cityMunId');
-            const barangaySelect = document.getElementById('barangayId');
-            
-            resetSelect(provinceSelect, '-- Select Province --', true);
-            resetSelect(citySelect, '-- Select City/Municipality --', true);
-            resetSelect(barangaySelect, '-- Select Barangay --', true);
-            
-            if (!regionId) return;
-            
-            setSelectLoading(provinceSelect, true);
-            
-            fetch('/api/provinces/by-region/' + regionId)
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Failed to load provinces');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(provinces => {
-                    if (provinces.success === false) {
-                        throw new Error(provinces.message || 'Failed to load provinces');
-                    }
-                    
-                    resetSelect(provinceSelect, '-- Select Province --', false);
-                    
-                    if (provinces.length === 0) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'No Provinces Found',
-                            text: 'No provinces found for this region',
-                            toast: true,
-                            position: 'top-end',
-                            timer: 3000,
-                            showConfirmButton: false
-                        });
-                        return;
-                    }
-                    
-                    provinces.forEach(province => {
-                        const option = document.createElement('option');
-                        option.value = province.id;
-                        option.textContent = province.name;
-                        provinceSelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading provinces:', error);
-                    resetSelect(provinceSelect, '-- Error Loading Provinces --', true);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load provinces. Please try again.',
-                        confirmButtonColor: '#d33'
-                    });
-                });
-        });
-    }
-    
-    // Province -> City/Municipality cascade
-    const provinceSelect2 = document.getElementById('provinceId');
-    if (provinceSelect2) {
-        provinceSelect2.addEventListener('change', function() {
-            const provinceId = this.value;
-            const citySelect2 = document.getElementById('cityMunId');
-            const barangaySelect = document.getElementById('barangayId');
-            
-            resetSelect(citySelect2, '-- Select City/Municipality --', true);
-            resetSelect(barangaySelect, '-- Select Barangay --', true);
-            
-            if (!provinceId) return;
-            
-            setSelectLoading(citySelect2, true);
-            
-            fetch('/api/cities/by-province/' + provinceId)
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Failed to load cities');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(cities => {
-                    if (cities.success === false) {
-                        throw new Error(cities.message || 'Failed to load cities');
-                    }
-                    
-                    resetSelect(citySelect2, '-- Select City/Municipality --', false);
-                    
-                    if (cities.length === 0) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'No Cities Found',
-                            text: 'No cities/municipalities found for this province',
-                            toast: true,
-                            position: 'top-end',
-                            timer: 3000,
-                            showConfirmButton: false
-                        });
-                        return;
-                    }
-                    
-                    cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        citySelect2.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading cities:', error);
-                    resetSelect(citySelect2, '-- Error Loading Cities --', true);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load cities/municipalities. Please try again.',
-                        confirmButtonColor: '#d33'
-                    });
-                });
-        });
-    }
-    
-    // City/Municipality -> Barangay cascade
-    const citySelect3 = document.getElementById('cityMunId');
-    if (citySelect3) {
-        citySelect3.addEventListener('change', function() {
-            const cityId = this.value;
-            const barangaySelect = document.getElementById('barangayId');
-            
-            resetSelect(barangaySelect, '-- Select Barangay --', true);
-            
-            if (!cityId) return;
-            
-            setSelectLoading(barangaySelect, true);
-            
-            fetch('/api/barangays/by-city/' + cityId)
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Failed to load barangays');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(barangays => {
-                    if (barangays.success === false) {
-                        throw new Error(barangays.message || 'Failed to load barangays');
-                    }
-                    
-                    resetSelect(barangaySelect, '-- Select Barangay (Optional) --', false);
-                    
-                    if (barangays.length === 0) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'No Barangays Found',
-                            text: 'No barangays found for this city/municipality',
-                            toast: true,
-                            position: 'top-end',
-                            timer: 3000,
-                            showConfirmButton: false
-                        });
-                        return;
-                    }
-                    
-                    barangays.forEach(barangay => {
-                        const option = document.createElement('option');
-                        option.value = barangay.id;
-                        option.textContent = barangay.name;
-                        barangaySelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading barangays:', error);
-                    resetSelect(barangaySelect, '-- Error Loading Barangays --', true);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load barangays. Please try again.',
-                        confirmButtonColor: '#d33'
-                    });
-                });
-        });
-    }
+
+        function updateSummary() {
+            // Office name (plain text)
+            const nameEl = document.getElementById('summaryName');
+            if (nameEl) nameEl.textContent = document.getElementById('officeName')?.value?.trim() || '—';
+
+            // Select / input fields
+            const fieldMap = {
+                summaryArea:           'areaId',
+                summaryRegion:         'regionId',
+                summaryProvince:       'provinceId',
+                summaryCity:           'cityMunId',
+                summaryISP:            'internetServiceProvider',
+                summaryClassification: 'classification'
+            };
+            Object.entries(fieldMap).forEach(([sid, srcId]) => {
+                const el = document.getElementById(sid);
+                if (el) el.textContent = getSelectedText(srcId);
+            });
+
+            // Connectivity badge
+            const statusEl  = document.getElementById('summaryStatus');
+            const connCheck = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.innerHTML = connCheck?.checked
+                    ? '<span class="badge badge-success">Active</span>'
+                    : '<span class="badge badge-secondary">Inactive</span>';
+            }
+        }
+
+        const observer = new MutationObserver(mutations =>
+            mutations.forEach(m => {
+                if (m.target.id === 'step-5' && m.target.classList.contains('active')) updateSummary();
+            })
+        );
+        document.querySelectorAll('.wizard-step').forEach(s =>
+            observer.observe(s, { attributes: true, attributeFilter: ['class'] })
+        );
+    })();
+
+    // ─── Init ────────────────────────────────────────────────────────────────
+    showStep(0);
+    console.log('Wizard ready.');
 });

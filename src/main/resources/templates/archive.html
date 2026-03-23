@@ -35,11 +35,11 @@
             </div>
         </div>
 
-        <!-- Toolbar -->
+        <!-- Table Card -->
         <div class="card shadow-sm">
             <div class="card-body">
 
-                <!-- Bulk Action Bar (hidden until rows are selected) -->
+                <!-- Bulk Action Bar -->
                 <div id="bulkActionBar" class="mb-3" style="display:none;">
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted mr-2"><span id="selectedCount">0</span> selected</span>
@@ -53,6 +53,7 @@
                 </div>
 
                 <!-- Table -->
+                <!-- Iterates over ArchivedOffice records (record.postalOffice = PostalOffice entity) -->
                 <div class="table-responsive">
                     <table id="archiveTable" class="table table-hover table-striped" style="width:100%">
                         <thead class="thead-light">
@@ -67,39 +68,51 @@
                                 <th>Postmaster</th>
                                 <th>Archived On</th>
                                 <th>Reason</th>
+                                <th>Archived By</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="office, iter : ${archivedOffices}">
+                            <!-- record = ArchivedOffice, record.postalOffice = PostalOffice -->
+                            <tr th:each="record, iter : ${archivedRecords}">
                                 <td>
                                     <input type="checkbox" class="row-checkbox"
-                                           th:data-id="${office.id}">
+                                           th:data-id="${record.postalOffice.id}">
                                 </td>
                                 <td th:text="${iter.count}"></td>
-                                <td th:text="${office.name}"></td>
-                                <td th:text="${office.area != null ? office.area.areaName : 'N/A'}"></td>
-                                <td th:text="${office.cityMunicipality != null ? office.cityMunicipality.name : 'N/A'}"></td>
-                                <td th:text="${office.postmaster != null ? office.postmaster : 'N/A'}"></td>
+                                <td th:text="${record.postalOffice.name}"></td>
+                                <td th:text="${record.postalOffice.area != null ? record.postalOffice.area.areaName : 'N/A'}"></td>
+                                <td th:text="${record.postalOffice.cityMunicipality != null ? record.postalOffice.cityMunicipality.name : 'N/A'}"></td>
+                                <td th:text="${record.postalOffice.postmaster != null ? record.postalOffice.postmaster : 'N/A'}"></td>
+                                <!-- archivedAt now comes from ArchivedOffice record, not PostalOffice -->
                                 <td>
-                                    <span th:if="${office.archivedAt != null}"
-                                          th:text="${#temporals.format(office.archivedAt, 'MMM dd, yyyy')}">
+                                    <span th:if="${record.archivedAt != null}"
+                                          th:text="${#temporals.format(record.archivedAt, 'MMM dd, yyyy')}">
                                     </span>
-                                    <span th:unless="${office.archivedAt != null}" class="text-muted">—</span>
+                                    <span th:unless="${record.archivedAt != null}" class="text-muted">—</span>
                                 </td>
+                                <!-- archiveReason from ArchivedOffice record -->
                                 <td>
-                                    <span th:if="${office.archiveReason != null and !#strings.isEmpty(office.archiveReason)}"
-                                          th:text="${office.archiveReason}"
+                                    <span th:if="${record.archiveReason != null and !#strings.isEmpty(record.archiveReason)}"
+                                          th:text="${record.archiveReason}"
                                           class="badge badge-light text-wrap text-left"
                                           style="max-width:160px;white-space:normal;">
                                     </span>
-                                    <span th:unless="${office.archiveReason != null and !#strings.isEmpty(office.archiveReason)}"
+                                    <span th:unless="${record.archiveReason != null and !#strings.isEmpty(record.archiveReason)}"
                                           class="text-muted">—</span>
+                                </td>
+                                <!-- archivedBy — new column from ArchivedOffice -->
+                                <td>
+                                    <span th:if="${record.archivedBy != null}"
+                                          th:text="${record.archivedBy}"
+                                          class="text-muted" style="font-size:12px;">
+                                    </span>
+                                    <span th:unless="${record.archivedBy != null}" class="text-muted">—</span>
                                 </td>
                                 <td class="text-center">
                                     <button class="btn btn-sm btn-success btn-restore"
-                                            th:data-office-id="${office.id}"
-                                            th:data-office-name="${office.name}"
+                                            th:data-office-id="${record.postalOffice.id}"
+                                            th:data-office-name="${record.postalOffice.name}"
                                             title="Restore Office">
                                         <i class="fas fa-undo"></i> Restore
                                     </button>
@@ -107,8 +120,8 @@
                             </tr>
 
                             <!-- Empty state -->
-                            <tr th:if="${#lists.isEmpty(archivedOffices)}">
-                                <td colspan="9" class="text-center text-muted py-5">
+                            <tr th:if="${#lists.isEmpty(archivedRecords)}">
+                                <td colspan="10" class="text-center text-muted py-5">
                                     <i class="fas fa-archive fa-2x mb-2 d-block"></i>
                                     No archived post offices found.
                                 </td>
@@ -122,8 +135,7 @@
 
     </div>
 
-    <!-- ── Archive Reason Modal ─────────────────────────────────────────── -->
-    <!-- This modal is triggered by the "Archive" button on table.html      -->
+    <!-- ── Archive Reason Modal (triggered by .btn-archive on table.html) ── -->
     <div class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -141,7 +153,7 @@
                         This office will be hidden from all views but can be restored later.
                     </p>
                     <div class="form-group">
-                        <label for="archiveReasonInput">Reason for archiving <small class="text-muted">(optional)</small></label>
+                        <label for="archiveReasonInput">Reason <small class="text-muted">(optional)</small></label>
                         <textarea id="archiveReasonInput" class="form-control" rows="3"
                                   placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
                     </div>

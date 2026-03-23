@@ -1,0 +1,327 @@
+/* =================================
+   REPORT PAGE STYLES
+   ================================= */
+
+/* ── Quarterly breakdown table ── */
+#quarterlyBreakdownTable thead th {
+    font-size: 0.78rem;
+    letter-spacing: 0.4px;
+    vertical-align: middle;
+}
+
+#quarterlyBreakdownTable tbody td {
+    vertical-align: middle;
+    font-size: 0.88rem;
+}
+
+#quarterlyBreakdownTable tbody tr.table-active {
+    background: #eef2ff !important;
+}
+
+/* ── Print button loading state ── */
+#applyFiltersBtn.loading {
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+/* ── Gap utility ── */
+.gap-2 { gap: 0.5rem !important; }
+
+/* ── Quarter total row ── */
+.quarter-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #dee2e6;
+}
+
+.total-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #495057;
+}
+
+.total-value-green {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1cc88a;
+    background: #e9f7f1;
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+.total-value-red {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e74a3b;
+    background: #fdf0ee;
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+/* =====================================================
+   PRINT STYLES
+   ===================================================== */
+@media print {
+    /* Hide chrome */
+    #sidebar,
+    .main-header,
+    .main-footer,
+    #printReportBtn,
+    #exportCsvBtn,
+    #applyFiltersBtn,
+    #clearFiltersBtn,
+    #toggleFiltersBtn,
+    .filter-panel,
+    .filter-tag,
+    nav {
+        display: none !important;
+    }
+
+    /* Full width */
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    body, .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Print header */
+    .container-fluid::before {
+        content: "PHLPost — Connectivity Report";
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+        color: #002868;
+        border-bottom: 3px solid #002868;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+
+    /* Cards */
+    .card, .connectivity-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+
+    /* Table */
+    #quarterlyBreakdownTable {
+        font-size: 11px;
+    }
+
+    thead tr {
+        background: #002868 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .header-with-connectivity,
+    .header-without-connectivity {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .total-value-green,
+    .total-value-red {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Avoid breaking cards across pages */
+    .row.mb-4 {
+        page-break-inside: avoid;
+    }
+}
+
+/* ── Future quarter rows — muted/greyed out ── */
+.quarter-future {
+    opacity: 0.55;
+    background: #f9f9f9 !important;
+    border-left: 4px solid #ced4da !important;
+}
+
+.quarter-future .quarter-title {
+    color: #adb5bd;
+}
+
+/* ── Quarterly Breakdown Card Layout ── */
+.qb-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.qb-card {
+    border: 1px solid #e3e6f0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    transition: box-shadow 0.2s;
+}
+.qb-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+.qb-current {
+    border-left: 4px solid #17a2b8 !important;
+    background: #f8ffff;
+}
+.qb-future {
+    opacity: 0.55;
+    background: #f9f9f9;
+}
+
+.qb-header {
+    background: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.qb-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    letter-spacing: 0.3px;
+}
+
+.qb-future-msg {
+    padding: 18px 16px;
+    text-align: center;
+}
+
+.qb-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+}
+
+.qb-stat-box {
+    padding: 14px 16px;
+    border-right: 1px solid #f0f2f5;
+    min-width: 0;
+}
+.qb-stat-box:last-child { border-right: none; }
+
+.qb-connected    { border-top: 3px solid #28a745; }
+.qb-newly-connected { border-top: 3px solid #5cb85c; }
+.qb-disconnected { border-top: 3px solid #dc3545; }
+.qb-newly-disconnected { border-top: 3px solid #e74a3b; }
+
+.qb-stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.qb-stat-num {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: opacity 0.15s;
+}
+.qb-stat-num:hover { opacity: 0.75; }
+.qb-stat-num span { font-size: 1.6rem; }
+
+.qb-chevron {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+    opacity: 0.6;
+}
+.qb-stat-num.open .qb-chevron { transform: rotate(180deg); }
+
+/* Scrollable office list */
+.qb-list {
+    display: none;
+    margin-top: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #fafbff;
+}
+.qb-list.open { display: block; }
+.qb-list::-webkit-scrollbar { width: 4px; }
+.qb-list::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+.qb-list-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #f0f2f5;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.qb-list-item:last-child { border-bottom: none; }
+
+.qb-area-tag {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #2c3e50;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+.qb-office-name {
+    color: #2c3e50;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .qb-stats { grid-template-columns: 1fr 1fr; }
+    .qb-stat-box { border-bottom: 1px solid #f0f2f5; }
+}
+@media (max-width: 480px) {
+    .qb-stats { grid-template-columns: 1fr; }
+}
+/* ── PO Name list in table cells ── */
+.qb-names-list {
+    display: none !important;
+    margin-top: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #fafbff;
+    text-align: left;
+}
+.qb-names-list.open { display: block !important; }
+.qb-names-list::-webkit-scrollbar { width: 4px; }
+.qb-names-list::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+.qb-names-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #f0f2f5;
+    white-space: nowrap;
+}
+.qb-names-item:last-child { border-bottom: none; }

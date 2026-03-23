@@ -1,277 +1,247 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>User Modal</title>
-</head>
-<body>
+<!-- User Modal Styles Fragment -->
+<style th:fragment="userModalStyles">
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: none;
+    }
+    .modal-title { font-weight: 600; font-size: 1.25rem; }
+    .modal-body { padding: 2rem; }
+    .form-group label { font-weight: 500; color: #495057; margin-bottom: 0.5rem; }
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none; padding: 0.5rem 1.5rem; font-weight: 500;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%); }
+    .btn-secondary { background: #6c757d; border: none; padding: 0.5rem 1.5rem; font-weight: 500; }
 
-<!-- User Modal Fragment -->
-<div th:fragment="userModal">
-    <!-- Add/Edit User Modal -->
-    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">
-                        <i class="fas fa-user-plus me-2"></i> Add New User
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="userForm">
-                        <input type="hidden" id="userId">
-                        <input type="hidden" id="isEdit">
+    /* CSS-only default avatar */
+    .avatar-placeholder {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        border: 3px solid #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem; color: white; font-weight: bold;
+        margin: 0 auto; position: relative; cursor: pointer;
+    }
+    .avatar-upload { text-align: center; margin-bottom: 1rem; }
+    .avatar-upload label { cursor: pointer; display: inline-block; position: relative; }
+    .avatar-upload input[type="file"] { display: none; }
+    .avatar-upload .upload-overlay {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.3s;
+    }
+    .avatar-upload label:hover .upload-overlay { opacity: 1; }
+</style>
 
-                        <!-- Username -->
-                        <div class="mb-3">
-                            <label for="username" class="form-label">
-                                Username <span class="required">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="username" 
-                                   placeholder="Enter username" required minlength="3">
-                            <div class="invalid-feedback">Username must be at least 3 characters</div>
-                        </div>
+<!-- ========================================================= -->
+<!-- User Modal Fragment                                        -->
+<!-- ========================================================= -->
+<div th:fragment="userModal" class="modal fade" id="userModal" tabindex="-1"
+     role="dialog" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label for="email" class="form-label">
-                                Email <span class="required">*</span>
-                            </label>
-                            <input type="email" class="form-control" id="email" 
-                                   placeholder="Enter email address" required>
-                            <div class="invalid-feedback">Please enter a valid email</div>
-                        </div>
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    <span id="modalTitle">Add New User</span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
 
-                        <!-- Password -->
-                        <div class="mb-3">
-                            <label for="password" class="form-label">
-                                Password <span class="required" id="passwordRequired">*</span>
-                            </label>
-                            <input type="password" class="form-control" id="password" 
-                                   placeholder="Enter password" minlength="6">
-                            <div class="password-strength">
-                                <div class="password-strength-bar" id="passwordStrengthBar"></div>
+            <div class="modal-body">
+                <form id="userForm" autocomplete="off">
+                    <input type="hidden" id="userId"  name="userId">
+                    <input type="hidden" id="isEdit"  name="isEdit" value="false">
+
+                    <!-- Avatar -->
+                    <div class="avatar-upload">
+                        <label for="avatarInput">
+                            <img id="avatarPreview" src="" alt="Avatar"
+                                 style="display:none; width:80px; height:80px; border-radius:50%;
+                                        border:3px solid #667eea; object-fit:cover;">
+                            <div id="avatarPlaceholder" class="avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                                <div class="upload-overlay">
+                                    <i class="fas fa-camera text-white" style="font-size:1.2rem;"></i>
+                                </div>
                             </div>
-                            <div class="password-strength-text" id="passwordStrengthText"></div>
-                            <div class="invalid-feedback">Password must be at least 6 characters</div>
-                            <small class="text-muted" id="passwordHint" style="display:none;">
-                                Leave blank to keep current password
+                        </label>
+                        <input type="file" id="avatarInput" accept="image/*"
+                               onchange="previewAvatar(this)">
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                <i class="fas fa-camera mr-1"></i>Click to change photo
                             </small>
                         </div>
+                    </div>
 
-                        <!-- Confirm Password -->
-                        <div class="mb-3" id="confirmPasswordGroup">
-                            <label for="confirmPassword" class="form-label">
-                                Confirm Password <span class="required" id="confirmRequired">*</span>
-                            </label>
-                            <input type="password" class="form-control" id="confirmPassword" 
-                                   placeholder="Confirm password">
-                            <div class="invalid-feedback">Passwords do not match</div>
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="username">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" name="username"
+                               placeholder="Enter username" required>
+                        <div class="invalid-feedback">Username must be at least 3 characters.</div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               placeholder="Enter email" required>
+                        <div class="invalid-feedback">Please enter a valid email address.</div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password">
+                            Password
+                            <span id="passwordRequired" class="text-danger">*</span>
+                        </label>
+                        <input type="password" class="form-control" id="password"
+                               placeholder="Enter password">
+                        <small id="passwordHint" class="form-text text-muted" style="display:none;">
+                            Leave blank to keep current password
+                        </small>
+                        <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label for="confirmPassword">
+                            Confirm Password
+                            <span id="confirmRequired" class="text-danger">*</span>
+                        </label>
+                        <input type="password" class="form-control" id="confirmPassword"
+                               placeholder="Confirm password">
+                        <div id="passwordStrengthText" class="mt-1" style="font-size:0.8rem;"></div>
+                        <div class="progress mt-1" style="height:5px;">
+                            <div id="passwordStrengthBar" class="progress-bar" style="width:0;"></div>
                         </div>
+                        <div class="invalid-feedback">Passwords do not match.</div>
+                    </div>
 
-                        <!-- Role -->
-                        <div class="mb-3">
-                            <label for="role" class="form-label">
-                                Role <span class="required">*</span>
-                            </label>
-                            <select class="form-select" id="role" required>
-                                <option value="">Select role...</option>
-                                <option value="1">Admin</option>
-                                <option value="2">User</option>
-                                <option value="3">Manager</option>
-                            </select>
-                            <div class="invalid-feedback">Please select a role</div>
-                        </div>
-
-                        <!-- Area ID -->
-                        <div class="mb-3">
-                            <label for="areaId" class="form-label">
-                                Area ID <small class="text-muted">(Optional)</small>
-                            </label>
-                            <input type="number" class="form-control" id="areaId" 
-                                   placeholder="Enter area ID">
-                        </div>
-
-                        <!-- Active Status -->
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" 
-                                       id="enabled" checked>
-                                <label class="form-check-label" for="enabled">
-                                    Account is active
-                                </label>
+                    <!-- Role & Status -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="role">Role <span class="text-danger">*</span></label>
+                                <!-- ✅ onRoleChange defined in users-management.js -->
+                                <select class="form-control" id="role" name="role"
+                                        required onchange="onRoleChange()">
+                                    <option value="">-- Select Role --</option>
+                                    <option value="1">System Admin</option>
+                                    <option value="2">Area Admin</option>
+                                    <option value="3">User</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a role.</div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-modal-save" onclick="saveUser()">
-                        <i class="fas fa-save me-2"></i> Save User
-                    </button>
-                </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <div class="mt-2">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input"
+                                               id="enabled" name="enabled" checked>
+                                        <label class="custom-control-label" for="enabled">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ Area Dropdown (shown/hidden by onRoleChange in users-management.js) -->
+                    <div class="form-group" id="areaGroup" style="display:none;">
+                        <label for="areaId">Assigned Area <span class="text-danger">*</span></label>
+                        <select class="form-control" id="areaId" name="areaId">
+                            <option value="">-- Select Area --</option>
+                            <option value="1">Area 1</option>
+                            <option value="2">Area 2</option>
+                            <option value="3">Area 3</option>
+                            <option value="4">Area 4</option>
+                            <option value="5">Area 5</option>
+                            <option value="6">Area 6</option>
+                            <option value="7">Area 7</option>
+                            <option value="8">Area 8</option>
+                            <option value="9">Area 9</option>
+                            <!-- Full Access — shown only for System Admin -->
+                            <option value="0" id="fullAccessOption"
+                                    style="display:none; font-weight:bold; background:#d1ecf1; color:#0c5460;">
+                                ★ Full Access (All Areas)
+                            </option>
+                        </select>
+                        <!-- Hint for Area Admin / User -->
+                        <small id="areaHintNormal" class="form-text text-muted" style="display:none;">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This user will only see postal offices in the selected area.
+                        </small>
+                        <!-- Hint for System Admin -->
+                        <small id="areaHintAdmin" class="form-text text-info" style="display:none;">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            System Admin has <strong>Full Access</strong> to all areas (Area 1–9).
+                        </small>
+                        <div class="invalid-feedback">Please select an area.</div>
+                    </div>
+
+                </form>
+            </div><!-- /.modal-body -->
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">
+                    <i class="fas fa-save mr-1"></i> Save User
+                </button>
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- Modal Styles Fragment -->
-<div th:fragment="userModalStyles">
-    <style>
-        /* Modal Styles */
-        .modal-content {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-            padding: 20px 30px;
-        }
-
-        .modal-header .modal-title {
-            font-weight: 700;
-            font-size: 20px;
-        }
-
-        .modal-header .btn-close {
-            filter: brightness(0) invert(1);
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .modal-footer {
-            padding: 20px 30px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        /* Form Styles */
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-            display: block;
-            font-size: 14px;
-        }
-
-        .form-label .required {
-            color: #e74a3b;
-            margin-left: 3px;
-        }
-
-        .form-control, .form-select {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #4e73df;
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
-        }
-
-        .form-control.is-invalid {
-            border-color: #e74a3b;
-        }
-
-        .invalid-feedback {
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        /* Modal Buttons */
-        .btn-modal-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .btn-modal-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-
-        .btn-modal-cancel {
-            background: white;
-            border: 2px solid #e0e0e0;
-            color: #666;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
-        .btn-modal-cancel:hover {
-            background: #f8f9fc;
-            border-color: #4e73df;
-            color: #4e73df;
-        }
-
-        /* Password Strength Indicator */
-        .password-strength {
-            height: 5px;
-            border-radius: 3px;
-            margin-top: 8px;
-            background: #e0e0e0;
-            overflow: hidden;
-        }
-
-        .password-strength-bar {
-            height: 100%;
-            transition: all 0.3s ease;
-            width: 0%;
-        }
-
-        .password-strength-bar.weak {
-            background: #e74a3b;
-            width: 33%;
-        }
-
-        .password-strength-bar.medium {
-            background: #f6c23e;
-            width: 66%;
-        }
-
-        .password-strength-bar.strong {
-            background: #1cc88a;
-            width: 100%;
-        }
-
-        .password-strength-text {
-            font-size: 12px;
-            margin-top: 5px;
-            color: #666;
-        }
-
-        .form-check {
-            padding-left: 1.8em;
-        }
-
-        .form-check-input {
-            width: 1.2em;
-            height: 1.2em;
-            margin-top: 0.15em;
-        }
-
-        .form-check-label {
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
+<!-- ========================================================= -->
+<!-- Delete Confirmation Modal                                  -->
+<!-- ========================================================= -->
+<div th:fragment="deleteUserModal" class="modal fade" id="deleteUserModal"
+     tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Delete User
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this user?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <div id="deleteUserInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash mr-1"></i> Delete User
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
-
-</body>
-</html>
+<!-- ✅ NO <script> tag here — all JS is in users-management.js -->

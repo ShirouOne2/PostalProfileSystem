@@ -9,6 +9,80 @@ body {
     background: #f5f5f0;
 }
 
+/* ===== SPLASH SCREEN ===== */
+#splashScreen {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease;
+}
+
+#splashScreen.splash-fade-out {
+    opacity: 0;
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.splash-gif {
+    width: 800px;
+    height: 500px;
+    object-fit: contain;
+    animation: splash-bounce 0.8s ease infinite alternate;
+}
+
+@keyframes splash-bounce {
+    from { transform: translateY(0px); }
+    to   { transform: translateY(-10px); }
+}
+
+.splash-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f59e0b;
+    letter-spacing: 1px;
+}
+
+.splash-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.splash-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f59e0b;
+    animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40%            { transform: scale(1.0); opacity: 1; }
+}
+
+/* Login fade-in */
+.login-fade-in {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+/* ===== END SPLASH SCREEN ===== */
+
 .split-container {
     display: flex;
     min-height: 100vh;
@@ -113,16 +187,45 @@ body {
     font-size: 14px;
 }
 
-.remember-forgot label {
+.remember-label {
     display: flex;
     align-items: center;
+    gap: 8px;
     color: #6b7280;
     cursor: pointer;
+    user-select: none;
 }
 
-.remember-forgot input[type="checkbox"] {
-    margin-right: 6px;
-    cursor: pointer;
+.remember-label input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.remember-label input[type="checkbox"]:checked + .custom-checkbox {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.remember-label input[type="checkbox"]:checked + .custom-checkbox::after {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    display: block;
 }
 
 .forgot-password { 
@@ -224,5 +327,10 @@ body {
     
     .right-section {
         padding: 30px 20px;
+    }
+
+    .splash-gif {
+        width: 130px;
+        height: 130px;
     }
 }

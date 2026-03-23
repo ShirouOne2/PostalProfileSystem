@@ -1,18 +1,40 @@
-// Global variables
+// ============================================================
+// users-management.js — Bootstrap 4 + Area/Role fix
+// ============================================================
+
 let usersTable;
-let userModal;
 let isEditMode = false;
 
-// Initialize when document is ready
-$(document).ready(function() {
+// Role map — matches CustomUserDetailsService
+const ROLES = {
+    1: 'System Admin',
+    2: 'Area Admin',
+    3: 'User'
+};
+
+// Area map
+const AREAS = {
+    1: 'Area 1', 2: 'Area 2', 3: 'Area 3',
+    4: 'Area 4', 5: 'Area 5', 6: 'Area 6',
+    7: 'Area 7', 8: 'Area 8', 9: 'Area 9'
+};
+
+// ============================================================
+// INIT
+// ============================================================
+$(document).ready(function () {
     initializeDataTable();
-    initializeModal();
     loadUsers();
     attachEventListeners();
 });
 
-// Initialize DataTable
 function initializeDataTable() {
+    // Destroy existing DataTable instance if present (prevents double-binding
+    // when navigating back to this page without a full browser reload).
+    if ($.fn.DataTable.isDataTable('#usersTable')) {
+        $('#usersTable').DataTable().destroy();
+    }
+    
     usersTable = $('#usersTable').DataTable({
         responsive: true,
         pageLength: 10,
@@ -28,64 +50,42 @@ function initializeDataTable() {
             emptyTable: "No users available"
         },
         columnDefs: [
-            { orderable: false, targets: 6 } // Actions column not sortable
+            { orderable: false, targets: 6 }
         ]
     });
 }
 
-// Initialize Bootstrap Modal
-function initializeModal() {
-    userModal = new bootstrap.Modal(document.getElementById('userModal'));
-}
-
-// Attach event listeners
 function attachEventListeners() {
-    // Password strength checker
-    $('#password').on('input', function() {
+    $('#password').on('input', function () {
         checkPasswordStrength($(this).val());
         validatePasswordMatch();
     });
-
-    // Confirm password validation
     $('#confirmPassword').on('input', validatePasswordMatch);
-
-    // Remove invalid state on input
-    $('.form-control, .form-select').on('input change', function() {
+    $('.form-control').on('input change', function () {
         $(this).removeClass('is-invalid');
     });
 }
 
-// Load all users
+// ============================================================
+// LOAD & DISPLAY USERS
+// ============================================================
 async function loadUsers() {
     showLoading(true);
-    
     try {
         const response = await fetch('/api/users');
-        
-        if (!response.ok) {
-            throw new Error('Failed to load users');
-        }
-        
+        if (!response.ok) throw new Error('Failed to load users');
         const users = await response.json();
         displayUsers(users);
-        
     } catch (error) {
         console.error('Error loading users:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load users. Please try again.',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load users. Please try again.', confirmButtonColor: '#667eea' });
     } finally {
         showLoading(false);
     }
 }
 
-// Display users in DataTable
 function displayUsers(users) {
     usersTable.clear();
-    
     if (users && users.length > 0) {
         users.forEach(user => {
             usersTable.row.add([
@@ -93,19 +93,17 @@ function displayUsers(users) {
                 user.username,
                 user.email || 'N/A',
                 createRoleBadge(user.role),
-                user.areaId || 'N/A',
+                getAreaLabel(user.role, user.areaId),
                 createStatusBadge(user.enabled),
                 createActionButtons(user.id)
             ]);
         });
     }
-    
     usersTable.draw();
 }
 
-// Create user cell with avatar
 function createUserCell(user) {
-    const initial = user.username.charAt(0).toUpperCase();
+    const initial = (user.username || '?').charAt(0).toUpperCase();
     return `
         <div class="user-info">
             <div class="user-avatar">${initial}</div>
@@ -113,226 +111,265 @@ function createUserCell(user) {
                 <div class="user-name">${user.username}</div>
                 <div class="user-email">${user.email || ''}</div>
             </div>
-        </div>
-    `;
+        </div>`;
 }
 
-// Create role badge
 function createRoleBadge(roleId) {
-    const roles = {
-        1: 'Admin',
-        2: 'User',
-        3: 'Manager'
-    };
-    const roleName = roles[roleId] || 'Unknown';
-    return `<span class="badge badge-role">${roleName}</span>`;
+    const colors = { 1: '#dc3545', 2: '#fd7e14', 3: '#28a745' };
+    const label  = ROLES[roleId] || 'Unknown';
+    const color  = colors[roleId] || '#6c757d';
+    return `<span class="badge" style="background:${color}; color:white; padding:4px 10px; border-radius:12px;">${label}</span>`;
 }
 
-// Create status badge
-function createStatusBadge(enabled) {
-    if (enabled) {
-        return '<span class="badge badge-active"><i class="fas fa-check-circle me-1"></i> Active</span>';
-    } else {
-        return '<span class="badge badge-inactive"><i class="fas fa-times-circle me-1"></i> Inactive</span>';
+function getAreaLabel(roleId, areaId) {
+    if (roleId === 1 && !areaId) {
+        return '<span class="badge" style="background:#17a2b8; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-shield-alt mr-1"></i> Full Access</span>';
     }
+    return areaId ? (AREAS[areaId] || 'Area ' + areaId) : 'N/A';
 }
 
-// Create action buttons
+function createStatusBadge(enabled) {
+    return enabled
+        ? '<span class="badge" style="background:#28a745; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-check-circle mr-1"></i> Active</span>'
+        : '<span class="badge" style="background:#e74a3b; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-times-circle mr-1"></i> Inactive</span>';
+}
+
 function createActionButtons(userId) {
     return `
         <div class="action-buttons">
-            <button class="btn-action btn-view" onclick="viewUser(${userId})" title="View">
-                <i class="fas fa-eye"></i>
-            </button>
-            <button class="btn-action btn-edit" onclick="editUser(${userId})" title="Edit">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-action btn-delete" onclick="deleteUser(${userId})" title="Delete">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
+            <button class="btn-action btn-view"   onclick="viewUser(${userId})"   title="View">   <i class="fas fa-eye"></i>   </button>
+            <button class="btn-action btn-edit"   onclick="editUser(${userId})"   title="Edit">   <i class="fas fa-edit"></i>  </button>
+            <button class="btn-action btn-delete" onclick="deleteUser(${userId})" title="Delete"> <i class="fas fa-trash"></i> </button>
+        </div>`;
 }
 
-// Show Add User Modal
+// ============================================================
+// AREA / ROLE DROPDOWN LOGIC
+// ============================================================
+function onRoleChange() {
+    const role = parseInt($('#role').val());
+
+    if (role === 1) {
+        // System Admin → Full Access pre-selected
+        $('#areaGroup').show();
+        $('#fullAccessOption').show();
+        $('#areaId').val('0');
+        $('#areaId').prop('required', false);
+        $('#areaHintNormal').hide();
+        $('#areaHintAdmin').show();
+    } else if (role === 2 || role === 3) {
+        // Area Admin / User → Area 1-9 only
+        $('#areaGroup').show();
+        $('#fullAccessOption').hide();
+        if ($('#areaId').val() === '0') $('#areaId').val('');
+        $('#areaId').prop('required', true);
+        $('#areaHintAdmin').hide();
+        $('#areaHintNormal').show();
+    } else {
+        $('#areaGroup').hide();
+        $('#areaId').val('').prop('required', false);
+        $('#areaHintNormal').hide();
+        $('#areaHintAdmin').hide();
+    }
+}
+
+// ============================================================
+// AVATAR
+// ============================================================
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            $('#avatarPreview').attr('src', e.target.result).show();
+            $('#avatarPlaceholder').hide();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function resetAvatar() {
+    $('#avatarPreview').attr('src', '').hide();
+    $('#avatarPlaceholder').show();
+    $('#avatarInput').val('');
+}
+
+// ============================================================
+// SHOW ADD MODAL
+// ============================================================
 function showAddModal() {
     isEditMode = false;
     $('#userForm')[0].reset();
     $('#userId').val('');
     $('#isEdit').val('false');
-    
-    // Update modal title
-    $('#modalTitle').html('<i class="fas fa-user-plus me-2"></i> Add New User');
-    
-    // Make password required for new users
+
+    $('#modalTitle').html('<i class="fas fa-user-plus mr-2"></i> Add New User');
+
+    // Password required for new user
     $('#password').prop('required', true);
     $('#confirmPassword').prop('required', true);
     $('#passwordRequired').show();
     $('#confirmRequired').show();
     $('#passwordHint').hide();
-    
-    // Clear validation states
-    $('.form-control, .form-select').removeClass('is-invalid');
+
+    // Clear validation
+    $('.form-control').removeClass('is-invalid');
     $('#passwordStrengthBar').removeClass('weak medium strong').css('width', '0');
     $('#passwordStrengthText').text('');
-    
-    // Set defaults
+
+    // Defaults
     $('#enabled').prop('checked', true);
-    
-    userModal.show();
+    $('#role').val('');
+    $('#areaGroup').hide();
+    $('#areaId').val('');
+    $('#areaHintNormal').hide();
+    $('#areaHintAdmin').hide();
+
+    resetAvatar();
+
+    // ✅ Bootstrap 4
+    $('#userModal').modal('show');
 }
 
-// View User Details
+// ============================================================
+// VIEW USER
+// ============================================================
 async function viewUser(userId) {
     showLoading(true);
-    
     try {
         const response = await fetch(`/api/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error('User not found');
-        }
-        
+        if (!response.ok) throw new Error('User not found');
         const user = await response.json();
-        
-        const roles = { 1: 'Admin', 2: 'User', 3: 'Manager' };
-        
+
         Swal.fire({
             title: '<strong>User Details</strong>',
             html: `
-                <div style="text-align: left; padding: 20px;">
+                <div style="text-align:left; padding:10px;">
                     <p><strong>ID:</strong> ${user.id}</p>
                     <p><strong>Username:</strong> ${user.username}</p>
                     <p><strong>Email:</strong> ${user.email || 'N/A'}</p>
-                    <p><strong>Role:</strong> ${roles[user.role] || 'Unknown'}</p>
-                    <p><strong>Area ID:</strong> ${user.areaId || 'N/A'}</p>
-                    <p><strong>Status:</strong> ${user.enabled ? '<span style="color: #1cc88a;">Active</span>' : '<span style="color: #e74a3b;">Inactive</span>'}</p>
-                </div>
-            `,
+                    <p><strong>Role:</strong> ${ROLES[user.role] || 'Unknown'}</p>
+                    <p><strong>Area:</strong> ${getAreaLabel(user.role, user.areaId)}</p>
+                    <p><strong>Status:</strong> ${user.enabled
+                        ? '<span style="color:#1cc88a; font-weight:bold;">Active</span>'
+                        : '<span style="color:#e74a3b; font-weight:bold;">Inactive</span>'}</p>
+                </div>`,
             confirmButtonColor: '#667eea',
             confirmButtonText: 'Close'
         });
-        
     } catch (error) {
         console.error('Error viewing user:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load user details',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load user details', confirmButtonColor: '#667eea' });
     } finally {
         showLoading(false);
     }
 }
 
-// Edit User
+// ============================================================
+// EDIT USER
+// ============================================================
 async function editUser(userId) {
     showLoading(true);
-    
     try {
         const response = await fetch(`/api/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error('User not found');
-        }
-        
+        if (!response.ok) throw new Error('User not found');
         const user = await response.json();
-        
-        // Set form values
+
         $('#userId').val(user.id);
         $('#isEdit').val('true');
         $('#username').val(user.username);
         $('#email').val(user.email);
-        $('#role').val(user.role);
-        $('#areaId').val(user.areaId || '');
         $('#enabled').prop('checked', user.enabled);
-        
-        // Clear password fields
+
+        // ✅ Set role first, then trigger dropdown logic
+        $('#role').val(user.role);
+        onRoleChange();
+
+        // ✅ Set areaId after dropdown is shown
+        if (user.role === 1) {
+            $('#areaId').val(user.areaId ? user.areaId : '0');
+        } else {
+            $('#areaId').val(user.areaId || '');
+        }
+
+        // Password optional for edit
         $('#password').val('');
         $('#confirmPassword').val('');
-        
-        // Make password optional for editing
         $('#password').prop('required', false);
         $('#confirmPassword').prop('required', false);
         $('#passwordRequired').hide();
         $('#confirmRequired').hide();
         $('#passwordHint').show();
-        
-        // Update modal title
-        $('#modalTitle').html('<i class="fas fa-edit me-2"></i> Edit User');
-        
-        // Clear validation states
-        $('.form-control, .form-select').removeClass('is-invalid');
+
+        $('#modalTitle').html('<i class="fas fa-edit mr-2"></i> Edit User');
+
+        $('.form-control').removeClass('is-invalid');
         $('#passwordStrengthBar').removeClass('weak medium strong').css('width', '0');
         $('#passwordStrengthText').text('');
-        
+
+        resetAvatar();
         isEditMode = true;
-        userModal.show();
-        
+
+        // ✅ Bootstrap 4
+        $('#userModal').modal('show');
+
     } catch (error) {
         console.error('Error loading user:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load user details',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load user details', confirmButtonColor: '#667eea' });
     } finally {
         showLoading(false);
     }
 }
 
-// Save User (Create or Update)
+// ============================================================
+// SAVE USER
+// ============================================================
 async function saveUser() {
-    // Validate form
     if (!validateForm()) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Validation Error',
-            text: 'Please fill in all required fields correctly',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please fill in all required fields correctly.', confirmButtonColor: '#667eea' });
         return;
     }
-    
-    const userId = $('#userId').val();
-    const isEdit = $('#isEdit').val() === 'true';
-    
-    // Prepare data
+
+    const userId  = $('#userId').val();
+    const isEdit  = $('#isEdit').val() === 'true';
+    const roleVal = parseInt($('#role').val());
+    const areaVal = $('#areaId').val();
+
+    // ✅ System Admin + Full Access → areaId = null
+    let areaId = null;
+    if (roleVal !== 1) {
+        areaId = areaVal ? parseInt(areaVal) : null;
+    } else if (areaVal && areaVal !== '0') {
+        areaId = parseInt(areaVal);
+    }
+
     const userData = {
         username: $('#username').val().trim(),
-        email: $('#email').val().trim(),
-        role: parseInt($('#role').val()),
-        enabled: $('#enabled').is(':checked'),
-        areaId: $('#areaId').val() ? parseInt($('#areaId').val()) : null
+        email:    $('#email').val().trim(),
+        role:     roleVal,
+        enabled:  $('#enabled').is(':checked'),
+        areaId:   areaId
     };
-    
-    // Add password only if provided
+
     const password = $('#password').val();
-    if (password) {
-        userData.password = password;
-    }
-    
+    if (password) userData.password = password;
+
     showLoading(true);
-    
     try {
-        const url = isEdit ? `/api/users/${userId}` : '/api/users';
+        const url    = isEdit ? `/api/users/${userId}` : '/api/users';
         const method = isEdit ? 'PUT' : 'POST';
-        
+
         const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            method,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
-            userModal.hide();
-            
+            // ✅ Bootstrap 4
+            $('#userModal').modal('hide');
+
             await Swal.fire({
                 icon: 'success',
                 title: 'Success!',
@@ -340,26 +377,22 @@ async function saveUser() {
                 confirmButtonColor: '#667eea',
                 timer: 2000
             });
-            
+
             loadUsers();
         } else {
             throw new Error(result.message || 'Failed to save user');
         }
-        
     } catch (error) {
         console.error('Error saving user:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to save user. Please try again.',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to save user. Please try again.', confirmButtonColor: '#667eea' });
     } finally {
         showLoading(false);
     }
 }
 
-// Delete User
+// ============================================================
+// DELETE USER
+// ============================================================
 async function deleteUser(userId) {
     const result = await Swal.fire({
         title: 'Are you sure?',
@@ -367,149 +400,118 @@ async function deleteUser(userId) {
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e74a3b',
-        cancelButtonColor: '#858796',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
+        cancelButtonColor:  '#858796',
+        confirmButtonText:  'Yes, delete it!',
+        cancelButtonText:   'Cancel'
     });
-    
-    if (!result.isConfirmed) {
-        return;
-    }
-    
+    if (!result.isConfirmed) return;
+
     showLoading(true);
-    
     try {
-        const response = await fetch(`/api/users/${userId}`, {
-            method: 'DELETE'
-        });
-        
+        const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
         if (response.ok) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: 'User has been deleted.',
-                confirmButtonColor: '#667eea',
-                timer: 2000
-            });
-            
+            await Swal.fire({ icon: 'success', title: 'Deleted!', text: 'User has been deleted.', confirmButtonColor: '#667eea', timer: 2000 });
             loadUsers();
         } else {
-            const result = await response.json();
-            throw new Error(result.message || 'Failed to delete user');
+            const res = await response.json();
+            throw new Error(res.message || 'Failed to delete user');
         }
-        
     } catch (error) {
         console.error('Error deleting user:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to delete user. Please try again.',
-            confirmButtonColor: '#667eea'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to delete user.', confirmButtonColor: '#667eea' });
     } finally {
         showLoading(false);
     }
 }
 
-// Validate Form
+// ============================================================
+// VALIDATION
+// ============================================================
 function validateForm() {
     let isValid = true;
-    
-    // Clear previous validation
-    $('.form-control, .form-select').removeClass('is-invalid');
-    
-    // Username validation
-    const username = $('#username').val().trim();
-    if (username.length < 3) {
+    $('.form-control').removeClass('is-invalid');
+
+    // Username
+    if ($('#username').val().trim().length < 3) {
         $('#username').addClass('is-invalid');
         isValid = false;
     }
-    
-    // Email validation
-    const email = $('#email').val().trim();
+
+    // Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test($('#email').val().trim())) {
         $('#email').addClass('is-invalid');
         isValid = false;
     }
-    
-    // Password validation (only if provided or for new users)
+
+    // Password
     const password = $('#password').val();
-    const isEdit = $('#isEdit').val() === 'true';
-    
+    const isEdit   = $('#isEdit').val() === 'true';
     if (!isEdit || password) {
         if (password.length < 6) {
             $('#password').addClass('is-invalid');
             isValid = false;
         }
-        
-        // Confirm password
-        if (!validatePasswordMatch()) {
-            isValid = false;
-        }
+        if (!validatePasswordMatch()) isValid = false;
     }
-    
-    // Role validation
+
+    // Role required
     if (!$('#role').val()) {
         $('#role').addClass('is-invalid');
         isValid = false;
     }
-    
+
+    // Area required for Area Admin and User
+    const role = parseInt($('#role').val());
+    if ((role === 2 || role === 3) && !$('#areaId').val()) {
+        $('#areaId').addClass('is-invalid');
+        isValid = false;
+    }
+
     return isValid;
 }
 
-// Check password strength
 function checkPasswordStrength(password) {
-    const strengthBar = $('#passwordStrengthBar');
-    const strengthText = $('#passwordStrengthText');
-    
-    if (!password || password.length === 0) {
-        strengthBar.removeClass('weak medium strong').css('width', '0');
-        strengthText.text('');
-        return;
-    }
-    
+    const bar  = $('#passwordStrengthBar');
+    const text = $('#passwordStrengthText');
+    if (!password) { bar.removeClass('weak medium strong').css('width', '0'); text.text(''); return; }
+
     let strength = 0;
-    
-    if (password.length >= 6) strength++;
+    if (password.length >= 6)  strength++;
     if (password.length >= 10) strength++;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
+    if (/\d/.test(password))   strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
-    
-    strengthBar.removeClass('weak medium strong');
-    
-    if (strength <= 2) {
-        strengthBar.addClass('weak');
-        strengthText.text('Weak password').css('color', '#e74a3b');
-    } else if (strength <= 3) {
-        strengthBar.addClass('medium');
-        strengthText.text('Medium password').css('color', '#f6c23e');
-    } else {
-        strengthBar.addClass('strong');
-        strengthText.text('Strong password').css('color', '#1cc88a');
-    }
+
+    bar.removeClass('weak medium strong');
+    if      (strength <= 2) { bar.addClass('weak');   text.text('Weak password').css('color', '#e74a3b'); }
+    else if (strength <= 3) { bar.addClass('medium'); text.text('Medium password').css('color', '#f6c23e'); }
+    else                    { bar.addClass('strong'); text.text('Strong password').css('color', '#1cc88a'); }
 }
 
-// Validate password match
 function validatePasswordMatch() {
-    const password = $('#password').val();
-    const confirmPassword = $('#confirmPassword');
-    
-    if (confirmPassword.val() && password !== confirmPassword.val()) {
-        confirmPassword.addClass('is-invalid');
+    const pw      = $('#password').val();
+    const confirm = $('#confirmPassword');
+    if (confirm.val() && pw !== confirm.val()) {
+        confirm.addClass('is-invalid');
         return false;
-    } else {
-        confirmPassword.removeClass('is-invalid');
-        return true;
     }
+    confirm.removeClass('is-invalid');
+    return true;
 }
 
-// Show/Hide loading spinner
+// ============================================================
+// LOADING SPINNER
+// ============================================================
 function showLoading(show) {
-    if (show) {
-        $('#loadingSpinner').addClass('show');
-    } else {
-        $('#loadingSpinner').removeClass('show');
-    }
+    show ? $('#loadingSpinner').addClass('show') : $('#loadingSpinner').removeClass('show');
 }
+
+// ── Cleanup on navigation ────────────────────────────────────────────────
+// Destroy DataTable instance before page unload to prevent memory leaks
+// and double-binding issues when navigating back to this page.
+window.addEventListener('beforeunload', function () {
+    if (usersTable && $.fn.DataTable.isDataTable('#usersTable')) {
+        usersTable.destroy();
+    }
+});

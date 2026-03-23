@@ -30,10 +30,14 @@
     <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
-    <!-- Custom CSS -->
+    <!-- Custom CSS - Optimized Loading -->
     <link rel="stylesheet" th:href="@{/css/header.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar-dropdown.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+    
+    <!-- Page-specific CSS - Only load when needed -->
+    <link th:if="${activePage == 'dashboard'}" rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table-custom.css}">
     <link th:if="${activePage == 'users'}" rel="stylesheet" th:href="@{/css/users-management.css}">
@@ -148,9 +152,11 @@
         }
     </style>
     
-    <!-- Include Modal Styles -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModalStyles}"></div>
-    <div th:if="${activePage == 'users'}" th:replace="~{fragments/modals/User-modal :: userModalStyles}"></div>
+    <!-- ✅ FIX: Use th:block instead of <div> inside <head> -->
+    <th:block th:if="${activePage == 'users'}"
+              th:replace="~{fragments/modals/User-modal :: userModalStyles}">
+    </th:block>
+
 </head>
 
 <body>
@@ -186,38 +192,32 @@
 
     </div>
 
-    <!-- Insert Postal Office Modal -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModal}"></div>
-
     <!-- Edit Postal Office Modal -->
-    <div th:if="${activePage == 'table'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
+    <div th:if="${activePage == 'table' or activePage == 'profile'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
     <!-- ============================================ -->
     <!-- SCRIPTS - LOAD IN CORRECT ORDER -->
     <!-- ============================================ -->
     
-    <!-- 1. jQuery MUST load first -->
+    <!-- 1. jQuery MUST load first - no defer for dependencies -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    
     <!-- 2. Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" defer></script>
     
     <!-- 3. Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" defer></script>
 
-    <!-- 4. SweetAlert2 - MUST LOAD BEFORE dashboard.js -->
+    <!-- 4. SweetAlert2 - MUST LOAD BEFORE dashboard.js - no defer for dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- 5. Sidebar Toggle Script -->
     <script>
-        // Mobile sidebar toggle
         $(document).ready(function() {
             $('#sidebarToggle, #sidebarToggleTop').on('click', function() {
                 $('#sidebar').toggleClass('active');
             });
 
-            // Close sidebar when clicking outside on mobile
             $(document).on('click', function(e) {
                 if ($(window).width() < 768) {
                     if (!$(e.target).closest('#sidebar, #sidebarToggle, #sidebarToggleTop').length) {
@@ -228,36 +228,57 @@
         });
     </script>
     
-    <!-- 6. Insert Modal Script -->
-    <div th:replace="~{fragments/modals/insert-modal :: insertModalScript}"></div>
-    
     <!-- 7. Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-    
     <!-- 8. Dashboard JS -->
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
-    <!-- 9. DataTables JS - AFTER jQuery! Use compatible version 2.1.8 -->
+    <!-- 9. DataTables JS - AFTER jQuery! -->
     <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive'}" 
-            src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+            src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js" defer></script>
     
-    <!-- 10. Table JS - Load LAST -->
+    <!-- 10. Table JS -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
-   <!-- 10.1. Edit Modal JS - Load with table page -->
+   <!-- 10.1. Edit Modal JS -->
    <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal-photos.js}"></script>
    
-   <!-- 11. Quarters JS - Load AFTER jQuery and DataTables -->
+   <!-- 11. Quarters JS -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
    
-   <!-- 12. Users Management JS - Load AFTER jQuery and DataTables -->
+   <!-- 12. Users Management JS -->
    <script th:if="${activePage == 'users'}" th:src="@{/js/users-management.js}"></script>
 
-   <!-- 13. Archive JS - Loads on archive page AND table page (for the archive button) -->
+   <!-- 13. Archive JS -->
    <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
 
-   <!-- 14. Session Timeout - MUST load AFTER SweetAlert2, runs on all authenticated pages -->
+   <!-- 14. Insert Office Wizard JS -->
+   <script th:if="${activePage == 'insert'}" th:src="@{/js/insert-office-wizard.js}"></script>
+
+   <!-- 15. Profile JS -->
+   <script th:if="${activePage == 'profile'}" th:src="@{/js/profile.js}"></script>
+   <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
+
+   <!-- 16. Session Timeout -->
    <script th:src="@{/js/session-timeout.js}"></script>
+
+   <!-- 17. Sidebar Dropdown -->
+   <script th:src="@{/js/sidebar-dropdown.js}"></script>
+
+   <!-- 18. Notifications (SSE bell — admin only, guards itself internally) -->
+   <script th:src="@{/js/notifications.js}"></script>
+
+   <!-- 19. Navigation Performance Optimizer -->
+   <script th:src="@{/js/navigation-optimizer.js}"></script>
+
+   <!-- 20. SheetJS (xlsx) -->
+   <script th:if="${activePage == 'report'}" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+
+   <!-- 21. Report JS -->
+   <script th:if="${activePage == 'report'}" th:src="@{/js/report.js}"></script>
+
 </body>
 </html>

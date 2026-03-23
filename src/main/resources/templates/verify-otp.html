@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POST OFFICE - Verify OTP</title>
+  <link rel="stylesheet" th:href="@{/css/login.css}">
+  <link rel="stylesheet" th:href="@{/css/forgot-password.css}">
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
+
+<div class="split-container">
+  <div class="left-section">
+    <img th:src="@{/images/background.jpg}" class="background-img" alt="Background">
+  </div>
+  <div class="right-section">
+    <div class="login-card">
+      <img th:src="@{/images/logo.jpg}" class="logo" alt="Logo">
+
+      <!-- Step Indicator -->
+      <div class="fp-steps">
+        <div class="fp-step completed">
+          <div class="fp-step-circle"><ion-icon name="checkmark-outline"></ion-icon></div>
+          <span>Email</span>
+        </div>
+        <div class="fp-step-line active"></div>
+        <div class="fp-step active">
+          <div class="fp-step-circle">2</div>
+          <span>OTP</span>
+        </div>
+        <div class="fp-step-line"></div>
+        <div class="fp-step">
+          <div class="fp-step-circle">3</div>
+          <span>Reset</span>
+        </div>
+      </div>
+
+      <div class="welcome-text">
+        <h1>Enter OTP</h1>
+        <p id="otpSubtext">We sent a 6-digit code to your email.</p>
+      </div>
+
+      <!-- OTP 6-box input -->
+      <div class="otp-boxes" id="otpBoxes">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      </div>
+
+      <!-- Countdown -->
+      <div class="otp-timer">
+        <span id="timerText">Code expires in <strong id="countdown">05:00</strong></span>
+        <a href="#" id="resendLink" class="resend-link" style="display:none;">Resend OTP</a>
+      </div>
+
+      <button class="login-button" id="verifyBtn">Verify OTP</button>
+
+      <div class="fp-back-link">
+        <a th:href="@{/request-otp}">
+          <ion-icon name="arrow-back-outline"></ion-icon> Back
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/verify-otp.js}"></script>
+</body>
+</html>

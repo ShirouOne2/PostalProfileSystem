@@ -31,7 +31,7 @@ public class PostalOfficeService {
      * Get all postal offices
      */
     public List<PostalOffice> getAllPostalOffices() {
-        return postalOfficeRepository.findAll();
+        return postalOfficeRepository.findAllNonArchivedWithConnectivity();
     }
 
     /**
@@ -45,8 +45,9 @@ public class PostalOfficeService {
      * Get all postal offices with area for map display
      */
     public List<Map<String, Object>> getAllPostalOfficesForMap() {
-        return postalOfficeRepository.findAllWithAreaForMap()
+        return postalOfficeRepository.findAllNonArchivedWithConnectivity()
             .stream()
+            .filter(po -> po.getLatitude() != null && po.getLongitude() != null)
             .map(this::convertToMapDTO)
             .collect(Collectors.toList());
     }
@@ -55,7 +56,7 @@ public class PostalOfficeService {
      * Get all postal offices for table display (includes those without coordinates)
      */
     public List<Map<String, Object>> getAllPostalOfficesForTable() {
-        return postalOfficeRepository.findAll()
+        return postalOfficeRepository.findAllNonArchivedWithConnectivity()
             .stream()
             .map(this::convertToMapDTO)
             .collect(Collectors.toList());
@@ -219,19 +220,19 @@ public class PostalOfficeService {
      * Get counts
      */
     public long getTotalCount() {
-        return postalOfficeRepository.count();
+        return postalOfficeRepository.countNonArchived();
     }
 
     public long getActiveCount() {
-        return postalOfficeRepository.countByConnectionStatus(true);
+        return postalOfficeRepository.countNonArchivedByConnectionStatus(true);
     }
 
     public long getInactiveCount() {
-        return postalOfficeRepository.countByConnectionStatus(false);
+        return postalOfficeRepository.countNonArchivedByConnectionStatus(false);
     }
 
     public long getDistinctAreasCount() {
-        return postalOfficeRepository.countDistinctAreas();
+        return postalOfficeRepository.countDistinctAreasNonArchived();
     }
 
     /**
@@ -474,9 +475,27 @@ public class PostalOfficeService {
         if (source.getProvince() != null) target.setProvince(source.getProvince());
         if (source.getCityMunicipality() != null) target.setCityMunicipality(source.getCityMunicipality());
         if (source.getBarangay() != null) target.setBarangay(source.getBarangay());
-        if (source.getLatitude() != null) target.setLatitude(source.getLatitude());
-        if (source.getLongitude() != null) target.setLongitude(source.getLongitude());
+        if (source.getLatitude() != null && isValidLatitude(source.getLatitude())) {
+            target.setLatitude(source.getLatitude());
+        }
+        if (source.getLongitude() != null && isValidLongitude(source.getLongitude())) {
+            target.setLongitude(source.getLongitude());
+        }
         if (source.getConnectionStatus() != null) target.setConnectionStatus(source.getConnectionStatus());
         if (source.getInternetServiceProvider() != null) target.setInternetServiceProvider(source.getInternetServiceProvider());
+    }
+
+    /**
+     * Validate latitude range (-90 to 90)
+     */
+    private boolean isValidLatitude(Double latitude) {
+        return latitude != null && latitude >= -90.0 && latitude <= 90.0;
+    }
+
+    /**
+     * Validate longitude range (-180 to 180)
+     */
+    private boolean isValidLongitude(Double longitude) {
+        return longitude != null && longitude >= -180.0 && longitude <= 180.0;
     }
 }
