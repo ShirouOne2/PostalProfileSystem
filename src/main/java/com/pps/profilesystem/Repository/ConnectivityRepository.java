@@ -18,50 +18,40 @@ public interface ConnectivityRepository extends JpaRepository<Connectivity, Inte
     List<Connectivity> findByIsWiredTrue();
     List<Connectivity> findByIsFreeTrue();
 
-    // ── Date-range queries (with eager fetch to avoid LazyInit) ───────────────
+    // ── Date-range queries ────────────────────────────────────────────────────
+    // Use NOT EXISTS correlated subquery to exclude archived offices —
+    // avoids Hibernate deriving postal_office_id from the JPQL path.
 
     @Query("SELECT c FROM Connectivity c JOIN FETCH c.postalOffice po LEFT JOIN FETCH po.area " +
            "WHERE COALESCE(c.dateConnected, c.createdStamp) BETWEEN :startDate AND :endDate " +
-           "AND po.isArchived = false")
+           "AND NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<Connectivity> findByDateConnectedBetween(
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate")   LocalDateTime endDate);
 
     @Query("SELECT c FROM Connectivity c JOIN FETCH c.postalOffice po LEFT JOIN FETCH po.area " +
            "WHERE c.dateDisconnected BETWEEN :startDate AND :endDate " +
-           "AND po.isArchived = false")
+           "AND NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<Connectivity> findByDateDisconnectedBetween(
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate")   LocalDateTime endDate);
 
-    // ── Active during a quarter (used by QuartersApiController table) ─────────
-
     @Query("SELECT c FROM Connectivity c JOIN FETCH c.postalOffice po LEFT JOIN FETCH po.area " +
            "WHERE c.dateConnected <= :quarterEnd " +
            "AND (c.dateDisconnected IS NULL OR c.dateDisconnected >= :quarterStart) " +
-           "AND po.isArchived = false")
+           "AND NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<Connectivity> findActiveInQuarter(
         @Param("quarterStart") LocalDateTime quarterStart,
         @Param("quarterEnd")   LocalDateTime quarterEnd);
 
-    // ── Active at a specific point in time ───────────────────────────────────
-    // Uses COALESCE(dateConnected, createdStamp) as the effective connect date.
-    // This handles records that were encoded after-the-fact (dateConnected defaults
-    // to now() on @PrePersist but the office may have been connected earlier).
-    // Rule: connected if effective_date <= checkDate AND not yet disconnected at checkDate.
-
     @Query("SELECT c FROM Connectivity c JOIN FETCH c.postalOffice po LEFT JOIN FETCH po.area " +
-           "WHERE po.isArchived = false " +
+           "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po) " +
            "AND COALESCE(c.dateConnected, c.createdStamp) <= :checkDate " +
            "AND (c.dateDisconnected IS NULL OR c.dateDisconnected > :checkDate)")
     List<Connectivity> findActiveAtDate(@Param("checkDate") LocalDateTime checkDate);
 
-    // ── Inactive at a specific point in time ─────────────────────────────────
-    // An office is inactive at checkDate if its LATEST connectivity record
-    // was disconnected on or before checkDate (i.e. not reconnected afterward).
-
     @Query("SELECT c FROM Connectivity c JOIN FETCH c.postalOffice po LEFT JOIN FETCH po.area " +
-           "WHERE po.isArchived = false " +
+           "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po) " +
            "AND c.dateDisconnected IS NOT NULL " +
            "AND c.dateDisconnected <= :checkDate " +
            "AND NOT EXISTS (" +
@@ -71,8 +61,6 @@ public interface ConnectivityRepository extends JpaRepository<Connectivity, Inte
            "  AND (c2.dateDisconnected IS NULL OR c2.dateDisconnected > :checkDate)" +
            ")")
     List<Connectivity> findInactiveAtDate(@Param("checkDate") LocalDateTime checkDate);
-
-    // ── Misc queries ──────────────────────────────────────────────────────────
 
     @Query("SELECT c FROM Connectivity c WHERE c.dateConnected IS NOT NULL AND c.dateDisconnected IS NULL")
     List<Connectivity> findAllActive();

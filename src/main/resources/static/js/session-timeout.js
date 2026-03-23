@@ -163,4 +163,18 @@
         console.log('[SessionTimeout] Initialized — expires in', SESSION_DURATION_MS / 60000, 'min');
     }
 
+    // ── Cleanup on navigation ────────────────────────────────────────────────
+    // Clear all timers and remove activity listeners before the page unloads
+    // to prevent dangling timeouts and memory leaks across navigations.
+    window.addEventListener('beforeunload', function () {
+        clearAllTimers();
+        if (activityThrottle) {
+            clearTimeout(activityThrottle);
+            activityThrottle = null;
+        }
+        ACTIVITY_EVENTS.forEach(function (evt) {
+            document.removeEventListener(evt, onUserActivity);
+        });
+    });
+
 })();

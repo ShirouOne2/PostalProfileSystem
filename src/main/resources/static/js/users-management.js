@@ -29,6 +29,12 @@ $(document).ready(function () {
 });
 
 function initializeDataTable() {
+    // Destroy existing DataTable instance if present (prevents double-binding
+    // when navigating back to this page without a full browser reload).
+    if ($.fn.DataTable.isDataTable('#usersTable')) {
+        $('#usersTable').DataTable().destroy();
+    }
+    
     usersTable = $('#usersTable').DataTable({
         responsive: true,
         pageLength: 10,
@@ -500,3 +506,12 @@ function validatePasswordMatch() {
 function showLoading(show) {
     show ? $('#loadingSpinner').addClass('show') : $('#loadingSpinner').removeClass('show');
 }
+
+// ── Cleanup on navigation ────────────────────────────────────────────────
+// Destroy DataTable instance before page unload to prevent memory leaks
+// and double-binding issues when navigating back to this page.
+window.addEventListener('beforeunload', function () {
+    if (usersTable && $.fn.DataTable.isDataTable('#usersTable')) {
+        usersTable.destroy();
+    }
+});

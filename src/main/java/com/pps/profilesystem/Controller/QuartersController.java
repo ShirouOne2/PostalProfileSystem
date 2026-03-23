@@ -1,6 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/quarters")
@@ -28,6 +28,9 @@ public class QuartersController {
 
     @Autowired
     private AreaRepository areaRepository;
+
+    @Autowired
+    private ArchivedOfficeRepository archivedOfficeRepository;
 
     @GetMapping
     public String showQuartersPage(
@@ -250,7 +253,7 @@ public class QuartersController {
 
     private long countTotal(Integer areaId) {
         if (areaId == null) {
-            return postalOfficeRepository.countByIsArchivedFalse();
+            return postalOfficeRepository.countNonArchived();
         }
         return postalOfficeRepository.findByIsArchivedFalse().stream()
             .filter(po -> po.getArea() != null && areaId.equals(po.getArea().getId()))
@@ -262,7 +265,7 @@ public class QuartersController {
     private long countNewlyConnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
@@ -276,7 +279,7 @@ public class QuartersController {
     private long countNewlyDisconnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))

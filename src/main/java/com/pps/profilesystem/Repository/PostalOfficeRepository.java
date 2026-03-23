@@ -8,83 +8,93 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * PostalOfficeRepository
+ *
+ * Archive data lives in archived_offices table (postal_office_id FK).
+ * Native SQL subqueries use 'postal_office_id' — the exact column name
+ * Hibernate derives from the Java field 'postalOffice'.
+ * JPQL fetch-join queries use NOT EXISTS correlated subquery.
+ */
 @Repository
 public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Integer> {
 
     List<PostalOffice> findByConnectionStatus(Boolean status);
-
     List<PostalOffice> findByNameContainingIgnoreCase(String name);
-
     List<PostalOffice> findByCityMunicipalityId(Integer cityMunId);
-
     long countByConnectionStatus(Boolean status);
 
     @Query("SELECT COUNT(DISTINCT po.area.id) FROM PostalOffice po WHERE po.area IS NOT NULL")
     long countDistinctAreas();
 
-    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL")
+    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area " +
+           "WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL")
     List<PostalOffice> findAllWithAreaForMap();
 
     @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
-           "YEAR(c.dateConnected) = :year AND " +
-           "MONTH(c.dateConnected) BETWEEN :startMonth AND :endMonth")
+           "YEAR(c.dateConnected) = :year AND MONTH(c.dateConnected) BETWEEN :startMonth AND :endMonth")
     long countConnectedInQuarter(@Param("year") int year, @Param("startMonth") int startMonth, @Param("endMonth") int endMonth);
 
     @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
-           "YEAR(c.dateDisconnected) = :year AND " +
-           "MONTH(c.dateDisconnected) BETWEEN :startMonth AND :endMonth")
+           "YEAR(c.dateDisconnected) = :year AND MONTH(c.dateDisconnected) BETWEEN :startMonth AND :endMonth")
     long countDisconnectedInQuarter(@Param("year") int year, @Param("startMonth") int startMonth, @Param("endMonth") int endMonth);
 
     @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c WHERE " +
-           "c.dateConnected <= :quarterEnd AND " +
-           "(c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
+           "c.dateConnected <= :quarterEnd AND (c.dateDisconnected IS NULL OR c.dateDisconnected > :quarterEnd)")
     long countActiveAtQuarterEnd(@Param("quarterEnd") LocalDateTime quarterEnd);
 
-    @Query("SELECT DISTINCT po FROM PostalOffice po " +
-           "JOIN Connectivity c ON po.id = c.postalOffice.id " +
+    @Query("SELECT DISTINCT po FROM PostalOffice po JOIN Connectivity c ON po.id = c.postalOffice.id " +
            "WHERE c.dateConnected BETWEEN :startDate AND :endDate")
     List<PostalOffice> findByDateConnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT DISTINCT po FROM PostalOffice po " +
-           "JOIN Connectivity c ON po.id = c.postalOffice.id " +
+    @Query("SELECT DISTINCT po FROM PostalOffice po JOIN Connectivity c ON po.id = c.postalOffice.id " +
            "WHERE c.dateDisconnected BETWEEN :startDate AND :endDate")
     List<PostalOffice> findByDateDisconnectedBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
+    // ── Non-archived queries ──────────────────────────────────────────────────
+
+    @Query(value = "SELECT * FROM postal_offices WHERE id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
     List<PostalOffice> findByIsArchivedFalse();
 
-    // Fetch all non-archived offices with all required relationships
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "LEFT JOIN FETCH po.activeConnectivity " +
            "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.region " +
            "LEFT JOIN FETCH po.cityMunicipality " +
            "LEFT JOIN FETCH po.cityMunicipality.province " +
            "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
-           "WHERE po.isArchived = false")
+           "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<PostalOffice> findAllNonArchivedWithConnectivity();
 
-    // ✅ NEW: Fetch non-archived offices filtered by area_id (for Area Admin / User)
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "LEFT JOIN FETCH po.activeConnectivity " +
            "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.region " +
            "LEFT JOIN FETCH po.cityMunicipality " +
            "LEFT JOIN FETCH po.cityMunicipality.province " +
            "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
-           "WHERE po.isArchived = false AND po.area.id = :areaId")
+           "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po) " +
+           "AND po.area.id = :areaId")
     List<PostalOffice> findAllNonArchivedByArea(@Param("areaId") Integer areaId);
 
-    List<PostalOffice> findByIsArchivedTrue();
+    @Query(value = "SELECT COUNT(*) FROM postal_offices WHERE id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
+    long countNonArchived();
 
-    long countByIsArchivedTrue();
+    @Query(value = "SELECT COUNT(*) FROM postal_offices WHERE connection_status = :status " +
+                   "AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
+    long countNonArchivedByConnectionStatus(@Param("status") Boolean status);
 
-    long countByIsArchivedFalse();
-
-    long countByConnectionStatusAndIsArchivedFalse(Boolean status);
-
-    @Query("SELECT COUNT(DISTINCT po.area.id) FROM PostalOffice po WHERE po.area IS NOT NULL AND po.isArchived = false")
+    @Query(value = "SELECT COUNT(DISTINCT area_id) FROM postal_offices " +
+                   "WHERE area_id IS NOT NULL AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
     long countDistinctAreasNonArchived();
 
-    @Query("SELECT po FROM PostalOffice po LEFT JOIN FETCH po.area " +
-           "WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL AND po.isArchived = false")
+    @Query(value = "SELECT * FROM postal_offices WHERE latitude IS NOT NULL AND longitude IS NOT NULL " +
+                   "AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
     List<PostalOffice> findAllWithAreaForMapNonArchived();
 
     @Query("SELECT po FROM PostalOffice po WHERE po.longitude = :longitude AND po.latitude = :latitude")
@@ -92,16 +102,29 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
 
     List<PostalOffice> findByZipCode(String zipCode);
 
-    @Query("SELECT COUNT(DISTINCT c.postalOffice) FROM Connectivity c " +
-           "WHERE c.dateConnected <= :refDate " +
-           "AND (c.dateDisconnected IS NULL OR c.dateDisconnected > :refDate) " +
-           "AND c.postalOffice.isArchived = false " +
-           "AND (:areaId IS NULL OR c.postalOffice.area.id = :areaId)")
-    long countActiveAtYearEndByArea(@Param("refDate") LocalDateTime refDate,
-                                    @Param("areaId") Integer areaId);
+    @Query(value = "SELECT COUNT(DISTINCT c.OfficeID) FROM connectivity c " +
+                   "WHERE c.date_connected <= :refDate " +
+                   "AND (c.date_disconnected IS NULL OR c.date_disconnected > :refDate) " +
+                   "AND c.OfficeID NOT IN (SELECT postal_office_id FROM archived_offices) " +
+                   "AND (:areaId IS NULL OR (SELECT area_id FROM postal_offices WHERE id = c.OfficeID) = :areaId)",
+           nativeQuery = true)
+    long countActiveAtYearEndByArea(@Param("refDate") LocalDateTime refDate, @Param("areaId") Integer areaId);
 
-    @Query("SELECT COUNT(po) FROM PostalOffice po " +
-           "WHERE po.isArchived = false " +
-           "AND (:areaId IS NULL OR po.area.id = :areaId)")
-    long countByIsArchivedFalseAndArea(@Param("areaId") Integer areaId);
+    @Query(value = "SELECT COUNT(*) FROM postal_offices " +
+                   "WHERE id NOT IN (SELECT postal_office_id FROM archived_offices) " +
+                   "AND (:areaId IS NULL OR area_id = :areaId)",
+           nativeQuery = true)
+    long countNonArchivedByArea(@Param("areaId") Integer areaId);
+
+    @Query(value = "SELECT COUNT(*) FROM postal_offices " +
+                   "WHERE office_status = 'OPEN' " +
+                   "AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
+    long countOpenOffices();
+
+    @Query(value = "SELECT COUNT(*) FROM postal_offices " +
+                   "WHERE office_status = 'CLOSED' " +
+                   "AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
+           nativeQuery = true)
+    long countClosedOffices();
 }

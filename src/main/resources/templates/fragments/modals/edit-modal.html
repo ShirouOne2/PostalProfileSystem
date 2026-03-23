@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="editModal" class="modal fade" id="editOfficeModal" tabindex="-1" role="dialog">
+
+    <script th:inline="javascript">
+        window.CURRENT_USER_ROLE_ID = /*[[${loggedInRoleId}]]*/ null;
+        window.CURRENT_USER_AREA_ID = /*[[${loggedInAreaId}]]*/ null;
+    </script>
+
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
@@ -14,16 +20,19 @@
             <div class="modal-body">
                 <form id="editOfficeForm">
                     <input type="hidden" id="editOfficeId">
-                    
+                    <input type="hidden" id="editAreaIdHidden">
+
+                    <!-- ── Basic Information ──────────────────────────────── -->
+                    <h6 class="mt-2 mb-2 text-primary">
+                        <i class="fas fa-info-circle mr-1"></i>Basic Information
+                    </h6>
                     <div class="row">
-                        <!-- Basic Information -->
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="editName">Office Name <span class="text-danger">*</span></label>
+                                <label for="editName">Post Office Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="editName" required>
                             </div>
                         </div>
-                        
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editPostmaster">Postmaster</label>
@@ -31,126 +40,108 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="editAddress">Address</label>
-                        <textarea class="form-control" id="editAddress" rows="2"></textarea>
-                    </div>
-                    
                     <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editClassification">Classification</label>
+                                <select class="form-control" id="editClassification">
+                                    <option value="xxx" disabled>Choose Classification</option>
+                                    <option value="">-- None --</option>
+                                    <option value="REGULAR">REGULAR</option>
+                                    <option value="EXTENSION">EXTENSION</option>
+                                    <option value="DELIVERY">DELIVERY</option>
+                                    <option value="NON-DELIVERY">NON-DELIVERY</option>
+                                    <option value="ACCEPTANCE WITH DELIVERY">ACCEPTANCE WITH DELIVERY</option>
+                                    <option value="ACCEPTANCE">ACCEPTANCE</option>
+                                    <option value="MOTHER">MOTHER</option>
+                                    <option value="PERSONNEL HANDLING DELIVERY">PERSONNEL HANDLING DELIVERY</option>
+                                    <option value="POST SHOP">POST SHOP</option>
+                                    <option value="CAMPUS">CAMPUS</option>
+                                    <option value="MALL BASED">MALL BASED</option>
+                                    <option value="POSTAL STATION - LGU">POSTAL STATION - LGU</option>
+                                    <option value="BARANGAY BASED">BARANGAY BASED</option>
+                                    <option value="PRIVATE">PRIVATE</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editServiceProvided">Services Provided</label>
+                                <select class="form-control" id="editServiceProvided">
+                                    <option value="">-- Select Service --</option>
+                                    <option value="DELIVERY">DELIVERY</option>
+                                    <option value="ACCEPTANCE">ACCEPTANCE</option>
+                                    <option value="ACCEPTANCE AND DELIVERY">ACCEPTANCE AND DELIVERY</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Location ───────────────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-map-marker-alt mr-1"></i>Location
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editAreaId">Area</label>
+                                <select class="form-control" id="editAreaId">
+                                    <option value="">-- Select Area --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editRegionId">Region</label>
+                                <select class="form-control" id="editRegionId">
+                                    <option value="">-- Select Region --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editProvinceId">Province</label>
+                                <select class="form-control" id="editProvinceId" disabled>
+                                    <option value="">-- Select Province --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editCityMunId">City / Municipality</label>
+                                <select class="form-control" id="editCityMunId" disabled>
+                                    <option value="">-- Select City/Municipality --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editBarangayId">Barangay</label>
+                                <select class="form-control" id="editBarangayId" disabled>
+                                    <option value="">-- Select Barangay --</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editZipCode">Zip Code</label>
                                 <input type="text" class="form-control" id="editZipCode">
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editStatus">Status <span class="text-danger">*</span></label>
-                                <select class="form-control" id="editStatus" required>
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
-                    
-                    <!-- ISP Information -->
-                    <h6 class="mt-3 mb-2 text-primary">Internet Service Provider</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editISP">ISP</label>
-                                <input type="text" class="form-control" id="editISP">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editSpeed">Speed</label>
-                                <input type="text" class="form-control" id="editSpeed" placeholder="e.g., 100 Mbps">
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="editAddress">Complete Address</label>
+                        <textarea class="form-control" id="editAddress" rows="2"></textarea>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editTypeOfConnection">Connection Type</label>
-                                <input type="text" class="form-control" id="editTypeOfConnection" placeholder="e.g., Fiber, DSL">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editStaticIP">Static IP Address</label>
-                                <input type="text" class="form-control" id="editStaticIP">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Staff Information -->
-                    <h6 class="mt-3 mb-2 text-primary">Staff Information</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="editNoOfEmployees">No. of Employees</label>
-                                <input type="number" class="form-control" id="editNoOfEmployees" min="0">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="editNoOfTellers">No. of Tellers</label>
-                                <input type="number" class="form-control" id="editNoOfTellers" min="0">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="editNoOfCarriers">No. of Carriers</label>
-                                <input type="number" class="form-control" id="editNoOfCarriers" min="0">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Contact Information -->
-                    <h6 class="mt-3 mb-2 text-primary">Contact Information</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editContactPerson">Office Contact Person</label>
-                                <input type="text" class="form-control" id="editContactPerson">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editContactNumber">Office Contact Number</label>
-                                <input type="text" class="form-control" id="editContactNumber">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editISPContactPerson">ISP Contact Person</label>
-                                <input type="text" class="form-control" id="editISPContactPerson">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editISPContactNumber">ISP Contact Number</label>
-                                <input type="text" class="form-control" id="editISPContactNumber">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Location Coordinates -->
-                    <h6 class="mt-3 mb-2 text-primary">Location Coordinates</h6>
+
+                    <!-- ── Coordinates ────────────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-crosshairs mr-1"></i>Coordinates
+                    </h6>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -158,7 +149,6 @@
                                 <input type="number" class="form-control" id="editLatitude" step="0.000001">
                             </div>
                         </div>
-                        
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editLongitude">Longitude</label>
@@ -166,18 +156,286 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ══════════════════════════════════════════════════════
+                         CONNECTIVITY — Connection Status + Office Status
+                         ══════════════════════════════════════════════════ -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-wifi mr-1"></i>Connectivity &amp; Office Status
+                    </h6>
+
+                    <div class="row mb-3">
+                        <!-- Connection Status -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editStatus">
+                                    <i class="fas fa-wifi mr-1 text-primary"></i>
+                                    Connection Status <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-control" id="editStatus" required>
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Office Status -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editOfficeStatus">
+                                    <i class="fas fa-door-open mr-1 text-info"></i>
+                                    Office Status <small class="text-muted">(Physical)</small>
+                                </label>
+                                <select class="form-control" id="editOfficeStatus">
+                                    <option value="">-- Select --</option>
+                                    <option value="OPEN">OPEN</option>
+                                    <option value="CLOSED">CLOSED</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ISP + Connection details -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editISP">
+                                    <i class="fas fa-network-wired mr-1"></i>ISP
+                                </label>
+                                <select class="form-control" id="editISP">
+                                    <option value="">-- Select ISP --</option>
+                                    <option value="PLDT">PLDT</option>
+                                    <option value="Globe">Globe</option>
+                                    <option value="Smart">Smart</option>
+                                    <option value="Converge">Converge</option>
+                                    <option value="Sky Broadband">Sky Broadband</option>
+                                    <option value="Eastern Telecoms">Eastern Telecoms</option>
+                                    <option value="DITO">DITO</option>
+                                    <option value="Radius Telecoms">Radius Telecoms</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editTypeOfConnection">Type of Connection</label>
+                                <select class="form-control" id="editTypeOfConnection">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="Fiber">Fiber Optic</option>
+                                    <option value="DSL">DSL</option>
+                                    <option value="Cable">Cable</option>
+                                    <option value="Wireless">Wireless</option>
+                                    <option value="Satellite">Satellite</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editSpeed">Connection Speed</label>
+                                <input type="text" class="form-control" id="editSpeed"
+                                       placeholder="e.g., 100 Mbps">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editStaticIP">Static IP Address</label>
+                                <input type="text" class="form-control" id="editStaticIP">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Staff Information ──────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-users mr-1"></i>Staff Information
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editNoOfEmployees">No. of Employees</label>
+                                <input type="number" class="form-control" id="editNoOfEmployees" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editNoOfTellers">No. of Tellers</label>
+                                <input type="number" class="form-control" id="editNoOfTellers" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editNoOfCarriers">No. of Carriers</label>
+                                <input type="number" class="form-control" id="editNoOfCarriers" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Contact Information ────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-address-book mr-1"></i>Contact Information
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editContactPerson">Postal Office Contact Person</label>
+                                <input type="text" class="form-control" id="editContactPerson">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editContactNumber">Postal Office Contact Number</label>
+                                <input type="text" class="form-control" id="editContactNumber">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editISPContactPerson">ISP Contact Person</label>
+                                <input type="text" class="form-control" id="editISPContactPerson">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editISPContactNumber">ISP Contact Number</label>
+                                <input type="text" class="form-control" id="editISPContactNumber">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Remarks ─────────────────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-sticky-note mr-1"></i>Remarks
+                    </h6>
+                    <div class="form-group">
+                        <label for="editRemarks">Remarks / Notes</label>
+                        <textarea class="form-control" id="editRemarks" rows="3"
+                                  placeholder="Any additional notes or remarks..."></textarea>
+                    </div>
+
+                    <!-- ── Photos ─────────────────────────────────────────── -->
+                    <h6 class="mt-4 mb-2 text-primary">
+                        <i class="fas fa-camera mr-1"></i>Photos
+                    </h6>
+                    <div id="editPhotoSection">
+                        <div class="row" id="editPhotoSlots">
+                            <!-- Profile Photo -->
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <label style="font-size:.78rem;font-weight:600;color:#5a5c69;display:block;margin-bottom:4px;">
+                                    <i class="fas fa-user-circle mr-1"></i> Profile Photo
+                                </label>
+                                <div class="edit-photo-box" id="editProfileBox" data-type="profile">
+                                    <div class="edit-photo-placeholder" id="editProfilePlaceholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <img id="editProfilePreview" class="edit-photo-preview" style="display:none" alt="">
+                                    <div class="edit-photo-overlay">
+                                        <label class="edit-photo-change-btn" for="editProfileInput">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                        <button type="button" class="edit-photo-delete-btn" data-type="profile" style="display:none">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="file" id="editProfileInput" accept="image/*" style="display:none"
+                                       onchange="editModalUploadPhoto(this,'profile',0)">
+                            </div>
+                            <!-- Cover Photo 1 -->
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <label style="font-size:.78rem;font-weight:600;color:#5a5c69;display:block;margin-bottom:4px;">
+                                    <i class="fas fa-image mr-1"></i> Cover Photo 1
+                                </label>
+                                <div class="edit-photo-box" id="editCover1Box" data-type="cover" data-slot="1">
+                                    <div class="edit-photo-placeholder" id="editCover1Placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <img id="editCover1Preview" class="edit-photo-preview" style="display:none" alt="">
+                                    <div class="edit-photo-overlay">
+                                        <label class="edit-photo-change-btn" for="editCover1Input">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                        <button type="button" class="edit-photo-delete-btn" data-type="cover" data-slot="1" style="display:none">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="file" id="editCover1Input" accept="image/*" style="display:none"
+                                       onchange="editModalUploadPhoto(this,'cover',1)">
+                            </div>
+                            <!-- Cover Photo 2 -->
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <label style="font-size:.78rem;font-weight:600;color:#5a5c69;display:block;margin-bottom:4px;">
+                                    <i class="fas fa-image mr-1"></i> Cover Photo 2
+                                </label>
+                                <div class="edit-photo-box" id="editCover2Box" data-type="cover" data-slot="2">
+                                    <div class="edit-photo-placeholder" id="editCover2Placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <img id="editCover2Preview" class="edit-photo-preview" style="display:none" alt="">
+                                    <div class="edit-photo-overlay">
+                                        <label class="edit-photo-change-btn" for="editCover2Input">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                        <button type="button" class="edit-photo-delete-btn" data-type="cover" data-slot="2" style="display:none">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="file" id="editCover2Input" accept="image/*" style="display:none"
+                                       onchange="editModalUploadPhoto(this,'cover',2)">
+                            </div>
+                            <!-- Cover Photo 3 -->
+                            <div class="col-sm-6 col-md-3 mb-3">
+                                <label style="font-size:.78rem;font-weight:600;color:#5a5c69;display:block;margin-bottom:4px;">
+                                    <i class="fas fa-image mr-1"></i> Cover Photo 3
+                                </label>
+                                <div class="edit-photo-box" id="editCover3Box" data-type="cover" data-slot="3">
+                                    <div class="edit-photo-placeholder" id="editCover3Placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Upload</span>
+                                    </div>
+                                    <img id="editCover3Preview" class="edit-photo-preview" style="display:none" alt="">
+                                    <div class="edit-photo-overlay">
+                                        <label class="edit-photo-change-btn" for="editCover3Input">
+                                            <i class="fas fa-camera"></i>
+                                        </label>
+                                        <button type="button" class="edit-photo-delete-btn" data-type="cover" data-slot="3" style="display:none">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="file" id="editCover3Input" accept="image/*" style="display:none"
+                                       onchange="editModalUploadPhoto(this,'cover',3)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Scoped Styles ──────────────────────────────────── -->
+                    <link rel="stylesheet" href="/css/edit-modal-photos.css">
+
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-danger mr-auto" id="editModalArchiveBtn">
+                    <i class="fas fa-archive"></i> Archive
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-
                 <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- ── Photo upload script ───────────────────────────────────── -->
+    <script src="/js/edit-modal-photos.js"></script>
+
 </div>
 </html>

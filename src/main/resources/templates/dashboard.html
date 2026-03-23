@@ -9,12 +9,8 @@
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-    .custom-popup .leaflet-popup-content {
-        margin: 0;
-    }
-    .custom-popup .leaflet-popup-tip {
-        display: none;
-    }
+    .custom-popup .leaflet-popup-content { margin: 0; }
+    .custom-popup .leaflet-popup-tip { display: none; }
   </style>
 </head>
 
@@ -22,47 +18,61 @@
 
 <div th:fragment="content">
 
-
     <title>Dashboard</title>
 
-    <!-- Boxicons for icons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <div class="bg-white rounded shadow-sm p-4">
 
-        <!-- QUICK STATS -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-buildings' style="font-size: 2rem; color: #6c757d;"></i>
-                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
+        <!-- QUICK STATS — 6 cards in 2 rows of 3 -->
+        <div class="row mb-2">
+            <!-- Total Post Offices -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100">
+                    <i class='bx bxs-buildings' style="font-size:2rem;color:#6c757d;"></i>
                     <h5 class="mb-0 mt-2" id="totalOffices" th:text="${totalOffices}">0</h5>
-                    <small class="text-muted">Total Post Offices</small>
+                    <small class="text-muted">Total Offices</small>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-check-circle' style="font-size: 2rem; color: #28a745;"></i>
-                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
-                    <h5 class="mb-0 mt-2" id="activeOffices" th:text="${activeOffices}">0</h5>
-                    <small class="text-muted">Active Locations</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-x-circle' style="font-size: 2rem; color: #dc3545;"></i>
-                    <!-- FIX: use Thymeleaf server-side value instead of JS-populated "0" -->
-                    <h5 class="mb-0 mt-2" id="inactiveOffices" th:text="${inactiveOffices}">0</h5>
-                    <small class="text-muted">Inactive Locations</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="border rounded p-3 text-center">
-                    <i class='bx bxs-map' style="font-size: 2rem; color: #6c757d;"></i>
+            <!-- Coverage Areas -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100">
+                    <i class='bx bxs-map' style="font-size:2rem;color:#6c757d;"></i>
                     <h5 class="mb-0 mt-2" id="coverageAreas">0</h5>
-                    <small class="text-muted">Coverage Areas</small>
+                    <small class="text-muted">Areas</small>
+                </div>
+            </div>
+            <!-- Connected -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100" style="border-left:4px solid #28a745!important;">
+                    <i class='bx bxs-check-circle' style="font-size:2rem;color:#28a745;"></i>
+                    <h5 class="mb-0 mt-2 text-success" id="activeOffices" th:text="${activeOffices}">0</h5>
+                    <small class="text-muted">Connected</small>
+                </div>
+            </div>
+            <!-- Not Connected -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100" style="border-left:4px solid #dc3545!important;">
+                    <i class='bx bxs-x-circle' style="font-size:2rem;color:#dc3545;"></i>
+                    <h5 class="mb-0 mt-2 text-danger" id="inactiveOffices" th:text="${inactiveOffices}">0</h5>
+                    <small class="text-muted">Not Connected</small>
+                </div>
+            </div>
+            <!-- Office Open -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100" style="border-left:4px solid #17a2b8!important;">
+                    <i class='bx bx-door-open' style="font-size:2rem;color:#17a2b8;"></i>
+                    <h5 class="mb-0 mt-2" style="color:#17a2b8;" th:text="${openOffices}">0</h5>
+                    <small class="text-muted">Office Open</small>
+                </div>
+            </div>
+            <!-- Office Closed -->
+            <div class="col-md-2 col-sm-4 mb-3">
+                <div class="border rounded p-3 text-center h-100" style="border-left:4px solid #ffc107!important;">
+                    <i class='bx bx-x-circle' style="font-size:2rem;color:#ffc107;"></i>
+                    <h5 class="mb-0 mt-2" style="color:#856404;" th:text="${closedOffices}">0</h5>
+                    <small class="text-muted">Office Closed</small>
                 </div>
             </div>
         </div>

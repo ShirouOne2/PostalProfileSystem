@@ -9,6 +9,14 @@ $(document).ready(function () {
     initializeExportExcel();
 });
 
+/* ── Toggle expandable office list in QB cards ── */
+function toggleQbList(btn) {
+    var list = btn.nextElementSibling;
+    if (!list || !list.classList.contains('qb-list')) return;
+    var isOpen = list.classList.toggle('open');
+    btn.classList.toggle('open', isOpen);
+}
+
 /* =====================================================
    FILTER PANEL
 ===================================================== */
@@ -129,10 +137,28 @@ function initializePrint() {
             if (cells.length < 6) return;
             var isCurrent = $(this).hasClass('table-active') || $(this).hasClass('font-weight-bold');
             var rowStyle  = isCurrent ? 'background:#eef2ff;font-weight:bold;' : '';
+
+            // Extract newly connected names with area badges
+            var newlyConnHtml = cells.eq(3).find('.po-name-item').map(function() {
+                var area = $(this).find('.badge').text().trim();
+                var name = $(this).find('span:last').text().trim();
+                return (area ? '<span style="background:#e2e8f0;border-radius:3px;padding:0 4px;font-size:10px;font-weight:700;">' + area + '</span> ' : '') + name;
+            }).get().join('<br>') || cells.eq(3).find('.badge-secondary').length ? '—' : cells.eq(3).find('.badge-success').text().trim();
+
+            var newlyDiscHtml = cells.eq(5).find('.po-name-item').map(function() {
+                var area = $(this).find('.badge').text().trim();
+                var name = $(this).find('span:last').text().trim();
+                return (area ? '<span style="background:#e2e8f0;border-radius:3px;padding:0 4px;font-size:10px;font-weight:700;">' + area + '</span> ' : '') + name;
+            }).get().join('<br>') || cells.eq(5).find('.badge-secondary').length ? '—' : cells.eq(5).find('.badge-danger').text().trim();
+
             tableRows += '<tr style="' + rowStyle + '">';
-            for (var i = 0; i < 7; i++) {
-                tableRows += '<td>' + (cells.eq(i).text().trim() || '') + '</td>';
-            }
+            tableRows += '<td>' + (cells.eq(0).text().trim() || '') + '</td>';
+            tableRows += '<td>' + (cells.eq(1).text().trim() || '') + '</td>';
+            tableRows += '<td>' + (cells.eq(2).text().trim() || '') + '</td>';
+            tableRows += '<td>' + (cells.eq(3).find('.badge-success').text().trim() || '—') + (newlyConnHtml ? '<div style="margin-top:3px;font-size:10px;line-height:1.6;">' + newlyConnHtml + '</div>' : '') + '</td>';
+            tableRows += '<td>' + (cells.eq(4).text().trim() || '') + '</td>';
+            tableRows += '<td>' + (cells.eq(5).find('.badge-danger').text().trim() || '—') + (newlyDiscHtml ? '<div style="margin-top:3px;font-size:10px;line-height:1.6;">' + newlyDiscHtml + '</div>' : '') + '</td>';
+            tableRows += '<td>' + (cells.eq(6).text().trim() || '') + '</td>';
             tableRows += '</tr>';
         });
 

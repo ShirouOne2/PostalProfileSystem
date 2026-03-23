@@ -2,6 +2,7 @@ package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Connectivity;
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class QuartersApiController {
     @Autowired
     private ConnectivityRepository connectivityRepository;
 
+    @Autowired
+    private ArchivedOfficeRepository archivedOfficeRepository;
+
     /**
      * Main endpoint for the Quarters page table.
      * Filters offices by year, quarter, area, and status.
@@ -36,70 +40,85 @@ public class QuartersApiController {
             @RequestParam(required = false) String area,
             @RequestParam(required = false) String status) {
 
-        // Parse params
-        Integer yearInt    = parseInteger(year);
-        Integer quarterInt = parseQuarter(quarter);
-        Integer areaInt    = parseInteger(area);
+        try {
+            // Parse params
+            Integer yearInt    = parseInteger(year);
+            Integer quarterInt = parseQuarter(quarter);
+            Integer areaInt    = parseInteger(area);
 
-        // Resolve year/quarter — default to current if not provided
-        int resolvedYear    = (yearInt != null) ? yearInt : LocalDateTime.now().getYear();
-        int resolvedQuarter = (quarterInt != null) ? quarterInt
-                            : (LocalDateTime.now().getMonthValue() - 1) / 3 + 1;
+            // Resolve year/quarter — default to current if not provided
+            int resolvedYear    = (yearInt != null) ? yearInt : LocalDateTime.now().getYear();
+            int resolvedQuarter = (quarterInt != null) ? quarterInt
+                                : (LocalDateTime.now().getMonthValue() - 1) / 3 + 1;
 
-        LocalDateTime[] range  = getQuarterDateRange(resolvedYear, resolvedQuarter);
-        LocalDateTime qStart   = range[0];
-        LocalDateTime qEnd     = range[1];
+            LocalDateTime[] range  = getQuarterDateRange(resolvedYear, resolvedQuarter);
+            LocalDateTime qStart   = range[0];
+            LocalDateTime qEnd     = range[1];
 
-        List<Map<String, Object>> offices;
+            List<Map<String, Object>> offices;
 
-        if ("newly_connected".equals(status)) {
-            // Only show offices that ACTUALLY connected within this quarter
-            List<Connectivity> records = connectivityRepository.findByDateConnectedBetween(qStart, qEnd);
-            offices = toUniqueDTOsWithFlag(records, true, true);
-        } else if ("newly_disconnected".equals(status)) {
-            // Offices that DISCONNECTED within the quarter
-            List<Connectivity> records = connectivityRepository.findByDateDisconnectedBetween(qStart, qEnd);
-            offices = toUniqueDTOsWithFlag(records, false, false);
-        } else {
-            // Show ALL non-archived offices (active + inactive)
-            // Use connectionStatus from PostalOffice as source of truth
+            if ("newly_connected".equals(status)) {
+                // Only show offices that ACTUALLY connected within this quarter
+                List<Connectivity> records = connectivityRepository.findByDateConnectedBetween(qStart, qEnd);
+                offices = toUniqueDTOsWithFlag(records, true, true);
+            } else if ("newly_disconnected".equals(status)) {
+                // Offices that DISCONNECTED within quarter
+                List<Connectivity> records = connectivityRepository.findByDateDisconnectedBetween(qStart, qEnd);
+                offices = toUniqueDTOsWithFlag(records, false, false);
+            } else {
+                // Show ALL non-archived offices (active + inactive)
+                // Use connectionStatus from PostalOffice as source of truth
 
-            Set<Integer> newlyConnectedIds = connectivityRepository.findByDateConnectedBetween(qStart, qEnd)
-                .stream()
-                .filter(c -> c.getPostalOffice() != null && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
-                .map(c -> c.getPostalOffice().getId())
-                .collect(Collectors.toSet());
+                Set<Integer> newlyConnectedIds = connectivityRepository.findByDateConnectedBetween(qStart, qEnd)
+                    .stream()
+                    .filter(c -> c.getPostalOffice() != null && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
+                    .map(c -> c.getPostalOffice().getId())
+                    .collect(Collectors.toSet());
 
-            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
-                .stream()
-                .map(po -> {
-                    Map<String, Object> dto = convertToDTO(po);
-                    dto.put("newThisQuarter", newlyConnectedIds.contains(po.getId()));
-                    return dto;
-                })
-                .collect(Collectors.toList());
+                offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
+                    .stream()
+                    .map(po -> {
+                        Map<String, Object> dto = convertToDTO(po);
+                        dto.put("newThisQuarter", newlyConnectedIds.contains(po.getId()));
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+            }
+
+            // Apply area filter
+            if (areaInt != null) {
+                final Integer ai = areaInt;
+                offices = offices.stream()
+                    .filter(o -> ai.equals(o.get("areaId")))
+                    .collect(Collectors.toList());
+            }
+
+            // Apply active / inactive status filter
+            if ("active".equals(status)) {
+                offices = offices.stream()
+                    .filter(o -> Boolean.TRUE.equals(o.get("status")))
+                    .collect(Collectors.toList());
+            } else if ("inactive".equals(status)) {
+                offices = offices.stream()
+                    .filter(o -> !Boolean.TRUE.equals(o.get("status")))
+                    .collect(Collectors.toList());
+            }
+
+            return offices;
+            
+        } catch (Exception e) {
+            // Log the error and return empty list with error info
+            System.err.println("Error in getQuartersPostOffices: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Return empty list with error info for debugging
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("message", "Failed to load post offices: " + e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now().toString());
+            
+            return List.of(errorResponse);
         }
-
-        // Apply area filter
-        if (areaInt != null) {
-            final Integer ai = areaInt;
-            offices = offices.stream()
-                .filter(o -> ai.equals(o.get("areaId")))
-                .collect(Collectors.toList());
-        }
-
-        // Apply active / inactive status filter
-        if ("active".equals(status)) {
-            offices = offices.stream()
-                .filter(o -> Boolean.TRUE.equals(o.get("status")))
-                .collect(Collectors.toList());
-        } else if ("inactive".equals(status)) {
-            offices = offices.stream()
-                .filter(o -> !Boolean.TRUE.equals(o.get("status")))
-                .collect(Collectors.toList());
-        }
-
-        return offices;
     }
 
     @GetMapping("/export")
@@ -116,16 +135,6 @@ public class QuartersApiController {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private List<Map<String, Object>> toUniqueDTOs(List<Connectivity> records) {
-        Map<Integer, PostalOffice> seen = new LinkedHashMap<>();
-        for (Connectivity c : records) {
-            PostalOffice po = c.getPostalOffice();
-            if (po == null || Boolean.TRUE.equals(po.getIsArchived())) continue;
-            seen.putIfAbsent(po.getId(), po);
-        }
-        return seen.values().stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
-
     /**
      * Like toUniqueDTOs but overrides the status field and marks newThisQuarter.
      * @param statusOverride  the boolean status to set in the DTO (true=active, false=inactive)
@@ -136,7 +145,7 @@ public class QuartersApiController {
         Map<Integer, PostalOffice> seen = new LinkedHashMap<>();
         for (Connectivity c : records) {
             PostalOffice po = c.getPostalOffice();
-            if (po == null || Boolean.TRUE.equals(po.getIsArchived())) continue;
+            if (po == null || archivedOfficeRepository.existsByPostalOfficeId(po.getId())) continue;
             seen.putIfAbsent(po.getId(), po);
         }
         return seen.values().stream().map(po -> {
@@ -170,6 +179,7 @@ public class QuartersApiController {
         dto.put("ispContactNumber",  po.getIspContactNumber());
         dto.put("latitude",  po.getLatitude());
         dto.put("longitude", po.getLongitude());
+        dto.put("remarks",   po.getRemarks());
         return dto;
     }
 

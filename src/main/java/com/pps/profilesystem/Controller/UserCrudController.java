@@ -2,6 +2,7 @@ package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.UserRepository;
+import com.pps.profilesystem.Service.UserCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,9 @@ public class UserCrudController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserCacheService userCacheService;
 
     /**
      * CREATE - Add new user
@@ -206,6 +210,13 @@ public class UserCrudController {
             
             // Save updated user
             User updatedUser = userRepository.save(existingUser);
+
+            // Evict cached user so GlobalModelAdvice picks up the new data
+            userCacheService.evictUser(updatedUser.getEmail());
+            // Also evict old email in case the email itself was changed
+            if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+                userCacheService.evictUser(existingUser.getEmail());
+            }
             
             // Prepare success response
             response.put("success", true);
@@ -236,6 +247,9 @@ public class UserCrudController {
                 return ResponseEntity.notFound().build();
             }
             
+            // Evict from cache before deleting
+            userRepository.findById(id).ifPresent(u -> userCacheService.evictUser(u.getEmail()));
+
             // Delete user
             userRepository.deleteById(id);
             

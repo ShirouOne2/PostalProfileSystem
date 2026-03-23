@@ -66,9 +66,9 @@
                                     <i class="fas fa-calendar text-primary mr-1"></i> Year
                                 </label>
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
-                                    <option value="">All Years</option>
+                                    <option value="">Select Years</option>
                                     <!-- Thymeleaf: generate year options dynamically -->
-                                    <option th:each="y : ${#numbers.sequence(2023, 2027)}"
+                                    <option th:each="y : ${#numbers.sequence(1993, 2027)}"
                                             th:value="${y}"
                                             th:text="${y}"
                                             th:selected="${y == currentYear}">2026</option>
@@ -81,7 +81,7 @@
                                     <i class="fas fa-layer-group text-warning mr-1"></i> Quarter
                                 </label>
                                 <select id="quarterFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Quarters</option>
+                                    <option value="">Choose Quarters</option>
                                     <option value="Q1"
                                             th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan Mar)</option>
                                     <option value="Q2"
@@ -99,7 +99,7 @@
                                     <i class="fas fa-map-marker-alt text-danger mr-1"></i> Area
                                 </label>
                                 <select id="areaFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Areas</option>
+                                    <option value="">Select Areas</option>
                                     <option th:each="area : ${areas}"
                                             th:value="${area.id}"
                                             th:text="${area.areaName}"
@@ -115,7 +115,7 @@
                                     <i class="fas fa-wifi text-success mr-1"></i> Status
                                 </label>
                                 <select id="statusFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Status</option>
+                                    <option value="">Select Status</option>
                                     <option value="active"
                                             th:selected="${selectedStatusFilter == 'active'}">
                                         <i class="fas fa-check-circle"></i> Active
@@ -257,8 +257,9 @@
                             <th>ADDRESS</th>
                             <th>ZIP CODE</th>
                             <th>SPEED</th>
-                            <th>STATUS</th>
+                            <th>CONNECTION STATUS</th>
                             <th>POSTMASTER</th>
+                            <th>REMARKS</th>
                             <th>ACTION</th>
                         </tr>
                     </thead>

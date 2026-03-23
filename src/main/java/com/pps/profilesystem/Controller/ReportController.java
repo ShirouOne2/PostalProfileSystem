@@ -1,6 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class ReportController {
 
     @Autowired
     private AreaRepository areaRepository;
+
+    @Autowired
+    private ArchivedOfficeRepository archivedOfficeRepository;
 
     @GetMapping
     public String showReportPage(
@@ -113,6 +117,8 @@ public class ReportController {
 
             List<String> newlyConnectedNames    = getNewlyConnectedNames(qStart, snapshotEnd, areaId);
             List<String> newlyDisconnectedNames = getNewlyDisconnectedNames(qStart, snapshotEnd, areaId);
+            List<String> connectedNames         = getConnectedNames(snapshotEnd, areaId);
+            List<String> disconnectedNames      = getDisconnectedNames(snapshotEnd, areaId);
 
             // Capture PREVIOUS totals BEFORE updating running totals
             long prevConnected    = runningConnected;
@@ -137,8 +143,10 @@ public class ReportController {
             row.put("isFuture",             false);
             row.put("previousConnected",    prevConnected);
             row.put("previousDisconnected", prevDisconnected);
-            row.put("newlyConnectedNames",  newlyConnectedNames);
+            row.put("newlyConnectedNames",    newlyConnectedNames);
             row.put("newlyDisconnectedNames", newlyDisconnectedNames);
+            row.put("connectedNames",         connectedNames);
+            row.put("disconnectedNames",      disconnectedNames);
 
             if ("active".equals(statusFilter)) {
                 row.put("connected",         runningConnected);
@@ -236,7 +244,7 @@ public class ReportController {
     private long countActiveAt(LocalDateTime snap, Integer areaId) {
         return connectivityRepository.findActiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
@@ -250,7 +258,7 @@ public class ReportController {
     private long countInactiveAt(LocalDateTime snap, Integer areaId) {
         return connectivityRepository.findInactiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
@@ -262,7 +270,7 @@ public class ReportController {
     private long countNewlyConnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
@@ -274,7 +282,7 @@ public class ReportController {
     private long countNewlyDisconnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
@@ -307,17 +315,23 @@ public class ReportController {
     private List<String> getNewlyConnectedNames(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> c.getPostalOffice().getName() != null ? c.getPostalOffice().getName() : "",
+                c -> {
+                    String area = c.getPostalOffice().getArea() != null
+                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
+                    String name = c.getPostalOffice().getName() != null
+                        ? c.getPostalOffice().getName() : "";
+                    return area + " | " + name;
+                },
                 (a, b) -> a
             ))
             .values().stream()
-            .filter(name -> !name.isEmpty())
+            .filter(entry -> !entry.isEmpty())
             .sorted()
             .collect(java.util.stream.Collectors.toList());
     }
@@ -325,17 +339,73 @@ public class ReportController {
     private List<String> getNewlyDisconnectedNames(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
-                && !Boolean.TRUE.equals(c.getPostalOffice().getIsArchived()))
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
             .filter(c -> areaId == null
                 || (c.getPostalOffice().getArea() != null
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> c.getPostalOffice().getName() != null ? c.getPostalOffice().getName() : "",
+                c -> {
+                    String area = c.getPostalOffice().getArea() != null
+                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
+                    String name = c.getPostalOffice().getName() != null
+                        ? c.getPostalOffice().getName() : "";
+                    return area + " | " + name;
+                },
                 (a, b) -> a
             ))
             .values().stream()
-            .filter(name -> !name.isEmpty())
+            .filter(entry -> !entry.isEmpty())
+            .sorted()
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    // ── All active offices at a snapshot date ─────────────────────────────────
+    private List<String> getConnectedNames(LocalDateTime snap, Integer areaId) {
+        return connectivityRepository.findActiveAtDate(snap).stream()
+            .filter(c -> c.getPostalOffice() != null
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
+            .filter(c -> areaId == null
+                || (c.getPostalOffice().getArea() != null
+                    && areaId.equals(c.getPostalOffice().getArea().getId())))
+            .collect(java.util.stream.Collectors.toMap(
+                c -> c.getPostalOffice().getId(),
+                c -> {
+                    String area = c.getPostalOffice().getArea() != null
+                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
+                    String name = c.getPostalOffice().getName() != null
+                        ? c.getPostalOffice().getName() : "";
+                    return area + " | " + name;
+                },
+                (a, b) -> a
+            ))
+            .values().stream()
+            .filter(entry -> !entry.isEmpty())
+            .sorted()
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    // ── All inactive offices at a snapshot date ───────────────────────────────
+    private List<String> getDisconnectedNames(LocalDateTime snap, Integer areaId) {
+        return connectivityRepository.findInactiveAtDate(snap).stream()
+            .filter(c -> c.getPostalOffice() != null
+                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
+            .filter(c -> areaId == null
+                || (c.getPostalOffice().getArea() != null
+                    && areaId.equals(c.getPostalOffice().getArea().getId())))
+            .collect(java.util.stream.Collectors.toMap(
+                c -> c.getPostalOffice().getId(),
+                c -> {
+                    String area = c.getPostalOffice().getArea() != null
+                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
+                    String name = c.getPostalOffice().getName() != null
+                        ? c.getPostalOffice().getName() : "";
+                    return area + " | " + name;
+                },
+                (a, b) -> a
+            ))
+            .values().stream()
+            .filter(entry -> !entry.isEmpty())
             .sorted()
             .collect(java.util.stream.Collectors.toList());
     }

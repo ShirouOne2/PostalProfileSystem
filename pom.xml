@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
+		<version>4.0.4</version>
 		<relativePath/>
 	</parent>
 	<groupId>com.pps</groupId>
@@ -56,10 +56,23 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- ✅ ITO ANG KULANG — Thymeleaf + Spring Security integration -->
+		<!-- Thymeleaf + Spring Security integration -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+
+		<!-- Spring Cache abstraction (enables @EnableCaching + @Cacheable) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- Caffeine: fast in-memory cache backend used by Spring Cache -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<!-- version managed by spring-boot-starter-parent -->
 		</dependency>
 
 	</dependencies>

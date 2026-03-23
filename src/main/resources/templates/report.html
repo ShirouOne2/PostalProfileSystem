@@ -61,8 +61,8 @@
                                     <i class="fas fa-calendar text-primary mr-1"></i> Year
                                 </label>
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
-                                    <option value="">All Years</option>
-                                    <option th:each="y : ${#numbers.sequence(2023, 2027)}"
+                                    <option value="">Select Years</option>
+                                    <option th:each="y : ${#numbers.sequence(1993, 2027)}"
                                             th:value="${y}" th:text="${y}"
                                             th:selected="${selectedYearFilter != null and selectedYearFilter == y.toString()}">2026</option>
                                 </select>
@@ -72,7 +72,7 @@
                                     <i class="fas fa-layer-group text-warning mr-1"></i> Quarter
                                 </label>
                                 <select id="quarterFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Quarters</option>
+                                    <option value="">Select Quarters</option>
                                     <option value="Q1" th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan–Mar)</option>
                                     <option value="Q2" th:selected="${selectedQuarterFilter == 'Q2'}">Q2 (Apr–Jun)</option>
                                     <option value="Q3" th:selected="${selectedQuarterFilter == 'Q3'}">Q3 (Jul–Sep)</option>
@@ -84,7 +84,7 @@
                                     <i class="fas fa-map-marker-alt text-danger mr-1"></i> Area
                                 </label>
                                 <select id="areaFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Areas</option>
+                                    <option value="">Select Areas</option>
                                     <option th:each="area : ${areas}"
                                             th:value="${area.id}" th:text="${area.areaName}"
                                             th:selected="${selectedAreaFilter != null and selectedAreaFilter == area.id.toString()}">Area 1</option>
@@ -95,7 +95,7 @@
                                     <i class="fas fa-wifi text-success mr-1"></i> Status
                                 </label>
                                 <select id="statusFilter" class="form-control form-control-sm filter-select">
-                                    <option value="">All Status</option>
+                                    <option value="">Select Status</option>
                                     <option value="active"             th:selected="${selectedStatusFilter == 'active'}">Active</option>
                                     <option value="inactive"           th:selected="${selectedStatusFilter == 'inactive'}">Inactive</option>
                                     <option value="newly_connected"    th:selected="${selectedStatusFilter == 'newly_connected'}">Newly Connected</option>
@@ -119,109 +119,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- ===== CONNECTIVITY CARDS ===== -->
-        <div class="row mb-4">
-
-            <!-- WITH CONNECTIVITY -->
-            <div class="col-lg-6 mb-3">
-                <div class="connectivity-card h-100">
-                    <div class="connectivity-header header-with-connectivity">
-                        <i class="fas fa-wifi mr-2"></i> With Connectivity
-                    </div>
-                    <div class="p-3">
-                        <div class="quarter-item"
-                             th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-active' : (quarter.isFuture ? 'quarter-future' : '')}">
-                            <div class="quarter-header">
-                                <span class="quarter-title" th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span th:if="${!quarter.isFuture}" class="new-badge qs-newly-connected"
-                                      th:classappend="${quarter.newlyConnected != null and quarter.newlyConnected > 0 ? 'new-badge-positive' : 'new-badge-neutral'}"
-                                      th:text="${quarter.newlyConnected != null ? ('+' + quarter.newlyConnected) : '—'}">+0</span>
-                                <span th:if="${quarter.isFuture}" class="badge badge-light text-muted" style="font-size:0.75rem;">Upcoming</span>
-                            </div>
-                            <div th:if="${!quarter.isFuture}">
-                                <div class="quarter-stats">
-                                    <span class="stat-label">Previous Connected:</span>
-                                    <span class="stat-value qs-prev-connected"
-                                          th:text="${quarter.previousConnected != null ? quarter.previousConnected : 0}">0</span>
-                                </div>
-                                <div class="quarter-stats">
-                                    <span class="stat-label">New This Quarter:</span>
-                                    <span class="new-this-quarter qs-new-connected"
-                                          th:text="${quarter.newlyConnected != null ? quarter.newlyConnected : 0}">0</span>
-                                </div>
-                                <div class="quarter-total">
-                                    <span class="total-label">TOTAL</span>
-                                    <span class="total-value-green qs-total-connected"
-                                          th:text="${quarter.connected != null ? quarter.connected : 0}">0</span>
-                                </div>
-                            </div>
-                            <div th:if="${quarter.isFuture}" class="text-muted" style="font-size:0.85rem; padding:4px 0;">N/A</div>
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i> <span>In Progress</span>
-                            </div>
-                            <span class="d-none qs-quarter-label" th:text="${quarter.quarter + ' ' + quarter.year}"></span>
-                            <span class="d-none qs-status-label">
-                                <span th:if="${quarter.isCurrent}">In Progress</span>
-                                <span th:if="${!quarter.isCurrent and !quarter.isFuture}">Completed</span>
-                                <span th:if="${quarter.isFuture}">Upcoming</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- WITHOUT CONNECTIVITY -->
-            <div class="col-lg-6 mb-3">
-                <div class="connectivity-card h-100">
-                    <div class="connectivity-header header-without-connectivity">
-                        <i class="fas fa-wifi-slash mr-2"></i> Without Connectivity
-                    </div>
-                    <div class="p-3">
-                        <div class="quarter-item quarterly-summary-card qs-disconnected"
-                             th:each="quarter : ${quartersData}"
-                             th:classappend="${quarter.isCurrent ? 'current-quarter-inactive' : (quarter.isFuture ? 'quarter-future' : '')}">
-                            <div class="quarter-header">
-                                <span class="quarter-title qs-quarter-label"
-                                      th:text="${quarter.quarter + ' ' + quarter.year}">Q1 2026</span>
-                                <span th:if="${!quarter.isFuture}" class="new-badge qs-newly-disconnected"
-                                      th:classappend="${quarter.newlyDisconnected != null and quarter.newlyDisconnected > 0 ? 'new-badge-negative' : 'new-badge-neutral'}"
-                                      th:text="${quarter.newlyDisconnected != null ? ('+' + quarter.newlyDisconnected) : '—'}">+0</span>
-                                <span th:if="${quarter.isFuture}" class="badge badge-light text-muted" style="font-size:0.75rem;">Upcoming</span>
-                            </div>
-                            <div th:if="${!quarter.isFuture}">
-                                <div class="quarter-stats">
-                                    <span class="stat-label">Previous Disconnected:</span>
-                                    <span class="stat-value qs-prev-disconnected"
-                                          th:text="${quarter.previousDisconnected != null ? quarter.previousDisconnected : 0}">0</span>
-                                </div>
-                                <div class="quarter-stats">
-                                    <span class="stat-label">New This Quarter:</span>
-                                    <span class="new-this-quarter-red qs-new-disconnected"
-                                          th:text="${quarter.newlyDisconnected != null ? quarter.newlyDisconnected : 0}">0</span>
-                                </div>
-                                <div class="quarter-total">
-                                    <span class="total-label">TOTAL</span>
-                                    <span class="total-value-red qs-total-disconnected"
-                                          th:text="${quarter.disconnected != null ? quarter.disconnected : 0}">0</span>
-                                </div>
-                            </div>
-                            <div th:if="${quarter.isFuture}" class="text-muted" style="font-size:0.85rem; padding:4px 0;">N/A</div>
-                            <div th:if="${quarter.isCurrent}" class="current-quarter-badge">
-                                <i class="fas fa-info-circle"></i> <span>In Progress</span>
-                            </div>
-                            <span class="d-none qs-status-label">
-                                <span th:if="${quarter.isCurrent}">In Progress</span>
-                                <span th:if="${!quarter.isCurrent and !quarter.isFuture}">Completed</span>
-                                <span th:if="${quarter.isFuture}">Upcoming</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- ===== OVERALL STATISTICS ===== -->
@@ -261,7 +158,7 @@
             </div>
         </div>
 
-        <!-- ===== QUARTERLY BREAKDOWN TABLE ===== -->
+        <!-- ===== QUARTERLY BREAKDOWN ===== -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="bg-white rounded shadow-sm p-3">
@@ -269,94 +166,179 @@
                         <i class="fas fa-table text-primary mr-2"></i>
                         Quarterly Breakdown
                     </h5>
+
+                    <!-- Quarterly Breakdown Table -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-sm mb-0" id="quarterlyBreakdownTable">
+                        <table class="table table-bordered table-hover mb-0" id="quarterlyBreakdownTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>Quarter</th>
-                                    <th>Year</th>
-                                    <th class="text-success">Connected</th>
-                                    <th class="text-success">Newly Connected</th>
-                                    <th class="text-danger">Disconnected</th>
-                                    <th class="text-danger">Newly Disconnected</th>
-                                    <th>Status</th>
+                                    <th style="width:80px;">Quarter</th>
+                                    <th style="width:70px;">Year</th>
+                                    <th class="text-center text-success">
+                                        <i class="fas fa-wifi mr-1"></i>Connected
+                                    </th>
+                                    <th class="text-center text-success">
+                                        <i class="fas fa-plus-circle mr-1"></i>Newly Connected
+                                    </th>
+                                    <th class="text-center text-danger">
+                                        <i class="fas fa-wifi-slash mr-1"></i>Disconnected
+                                    </th>
+                                    <th class="text-center text-danger">
+                                        <i class="fas fa-minus-circle mr-1"></i>Newly Disconnected
+                                    </th>
+                                    <th class="text-center" style="width:120px;">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:each="quarter : ${quartersData}"
-                                    th:class="${quarter.isCurrent ? 'table-active font-weight-bold' : (quarter.isFuture ? 'text-muted' : '')}">
-                                    <td th:text="${quarter.quarter}">Q1</td>
+                                    th:class="${quarter.isCurrent ? 'table-info font-weight-bold' : (quarter.isFuture ? 'text-muted' : '')}">
+
+                                    <!-- Quarter + Year -->
+                                    <td class="font-weight-bold" th:text="${quarter.quarter}">Q1</td>
                                     <td th:text="${quarter.year}">2026</td>
-                                    <td class="text-success font-weight-bold">
-                                        <span th:if="${!quarter.isFuture}" th:text="${quarter.connected}">0</span>
+
+                                    <!-- Connected -->
+                                    <td class="text-center">
                                         <span th:if="${quarter.isFuture}" class="text-muted">—</span>
+                                        <span th:unless="${quarter.isFuture}">
+                                            <span class="font-weight-bold text-success" th:text="${quarter.connected}">0</span>
+                                            <!-- Expandable names -->
+                                            <div th:if="${quarter.connectedNames != null and !#lists.isEmpty(quarter.connectedNames)}"
+                                                 class="mt-1">
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-success"
+                                                        style="font-size:11px;"
+                                                        onclick="toggleNames(this)">
+                                                    <i class="fas fa-chevron-down mr-1"></i>show offices
+                                                </button>
+                                                <div class="qb-names-list">
+                                                    <div th:each="entry : ${quarter.connectedNames}"
+                                                         class="qb-names-item">
+                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </span>
                                     </td>
-                                    <td>
+
+                                    <!-- Newly Connected -->
+                                    <td class="text-center">
                                         <span th:if="${quarter.isFuture}" class="text-muted">—</span>
-                                        <div th:if="${!quarter.isFuture}">
+                                        <span th:unless="${quarter.isFuture}">
                                             <span th:if="${quarter.newlyConnected != null and quarter.newlyConnected > 0}"
-                                                  class="badge badge-success mb-1"
+                                                  class="badge badge-success"
                                                   th:text="${'+' + quarter.newlyConnected}">+0</span>
-                                            <span th:if="${quarter.newlyConnected == null or quarter.newlyConnected == 0}"
-                                                  class="badge badge-secondary">—</span>
+                                            <span th:unless="${quarter.newlyConnected != null and quarter.newlyConnected > 0}"
+                                                  class="text-muted">—</span>
                                             <div th:if="${quarter.newlyConnectedNames != null and !#lists.isEmpty(quarter.newlyConnectedNames)}"
-                                                 class="po-name-list mt-1">
-                                                <div th:each="name : ${quarter.newlyConnectedNames}"
-                                                     class="po-name-item text-success">
-                                                    <i class="fas fa-circle fa-xs mr-1"></i>
-                                                    <span th:text="${name}">Office Name</span>
+                                                 class="mt-1">
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-success"
+                                                        style="font-size:11px;"
+                                                        onclick="toggleNames(this)">
+                                                    <i class="fas fa-chevron-down mr-1"></i>show offices
+                                                </button>
+                                                <div class="qb-names-list">
+                                                    <div th:each="entry : ${quarter.newlyConnectedNames}"
+                                                         class="qb-names-item">
+                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </span>
                                     </td>
-                                    <td class="text-danger font-weight-bold">
-                                        <span th:if="${!quarter.isFuture}" th:text="${quarter.disconnected}">0</span>
+
+                                    <!-- Disconnected -->
+                                    <td class="text-center">
                                         <span th:if="${quarter.isFuture}" class="text-muted">—</span>
+                                        <span th:unless="${quarter.isFuture}">
+                                            <span class="font-weight-bold text-danger" th:text="${quarter.disconnected}">0</span>
+                                            <div th:if="${quarter.disconnectedNames != null and !#lists.isEmpty(quarter.disconnectedNames)}"
+                                                 class="mt-1">
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                                        style="font-size:11px;"
+                                                        onclick="toggleNames(this)">
+                                                    <i class="fas fa-chevron-down mr-1"></i>show offices
+                                                </button>
+                                                <div class="qb-names-list">
+                                                    <div th:each="entry : ${quarter.disconnectedNames}"
+                                                         class="qb-names-item">
+                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </span>
                                     </td>
-                                    <td>
+
+                                    <!-- Newly Disconnected -->
+                                    <td class="text-center">
                                         <span th:if="${quarter.isFuture}" class="text-muted">—</span>
-                                        <div th:if="${!quarter.isFuture}">
+                                        <span th:unless="${quarter.isFuture}">
                                             <span th:if="${quarter.newlyDisconnected != null and quarter.newlyDisconnected > 0}"
-                                                  class="badge badge-danger mb-1"
+                                                  class="badge badge-danger"
                                                   th:text="${'+' + quarter.newlyDisconnected}">+0</span>
-                                            <span th:if="${quarter.newlyDisconnected == null or quarter.newlyDisconnected == 0}"
-                                                  class="badge badge-secondary">—</span>
+                                            <span th:unless="${quarter.newlyDisconnected != null and quarter.newlyDisconnected > 0}"
+                                                  class="text-muted">—</span>
                                             <div th:if="${quarter.newlyDisconnectedNames != null and !#lists.isEmpty(quarter.newlyDisconnectedNames)}"
-                                                 class="po-name-list mt-1">
-                                                <div th:each="name : ${quarter.newlyDisconnectedNames}"
-                                                     class="po-name-item text-danger">
-                                                    <i class="fas fa-circle fa-xs mr-1"></i>
-                                                    <span th:text="${name}">Office Name</span>
+                                                 class="mt-1">
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                                                        style="font-size:11px;"
+                                                        onclick="toggleNames(this)">
+                                                    <i class="fas fa-chevron-down mr-1"></i>show offices
+                                                </button>
+                                                <div class="qb-names-list">
+                                                    <div th:each="entry : ${quarter.newlyDisconnectedNames}"
+                                                         class="qb-names-item">
+                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </span>
                                     </td>
-                                    <td>
+
+                                    <!-- Status -->
+                                    <td class="text-center">
                                         <span th:if="${quarter.isCurrent}" class="badge badge-info">
-                                            <i class="fas fa-circle mr-1"></i>In Progress
+                                            <i class="fas fa-circle mr-1" style="font-size:7px;"></i>In Progress
+                                        </span>
+                                        <span th:if="${quarter.isFuture}" class="badge badge-secondary">
+                                            <i class="fas fa-clock mr-1"></i>Upcoming
                                         </span>
                                         <span th:if="${!quarter.isCurrent and !quarter.isFuture}" class="badge badge-success">
                                             <i class="fas fa-check mr-1"></i>Completed
                                         </span>
-                                        <span th:if="${quarter.isFuture}" class="badge badge-light text-muted">
-                                            <i class="fas fa-clock mr-1"></i>Upcoming
-                                        </span>
                                     </td>
                                 </tr>
+
                                 <tr th:if="${#lists.isEmpty(quartersData)}">
                                     <td colspan="7" class="text-center text-muted py-4">
                                         <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                                        No quarterly data available for the selected filters.
+                                        No quarterly data available.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </div>
         </div>
 
     </div><!-- end container-fluid -->
+
+    <script>
+    function toggleNames(btn) {
+        var list = btn.parentElement.querySelector('.qb-names-list');
+        if (!list) return;
+        var isOpen = list.classList.toggle('open');
+        btn.innerHTML = isOpen
+            ? '<i class="fas fa-chevron-up mr-1"></i>hide offices'
+            : '<i class="fas fa-chevron-down mr-1"></i>show offices';
+    }
+    </script>
+
 </div><!-- end th:fragment="content" -->
 
 </body>

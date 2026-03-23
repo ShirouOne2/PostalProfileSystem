@@ -42,13 +42,7 @@ $(function () {
     $(document).on('click', '#profileEditBtn', function () {
         var d = window.OFFICE_DATA;
         if (!d || !d.id) { Swal.fire('Error', 'Office data not available.', 'error'); return; }
-        // Fetch full data from API (includes IDs for dropdowns)
-        $.getJSON('/api/postal-office/' + d.id)
-            .done(function (data) { openModal(data); })
-            .fail(function () {
-                // Fallback to window.OFFICE_DATA if API fails
-                openModal(d);
-            });
+        openModal(d);
     });
 
     /* ─── TABLE PAGE: per-row edit buttons ─────────────────────────────────── */
@@ -71,6 +65,10 @@ $(function () {
                 fillModal(d);
                 applyAreaLock(d);
                 resetEditPhotoUI();
+                // Sync the visual toggle buttons to match the filled values
+                if (typeof window.syncStatusTogglesToModal === 'function') {
+                    window.syncStatusTogglesToModal();
+                }
                 $('#editOfficeModal').modal('show');
                 if (d.id && typeof editModalLoadPhotos === 'function') editModalLoadPhotos(d.id);
             },
@@ -78,6 +76,10 @@ $(function () {
                 fillModal(d);
                 applyAreaLock(d);
                 resetEditPhotoUI();
+                // Sync the visual toggle buttons to match the filled values
+                if (typeof window.syncStatusTogglesToModal === 'function') {
+                    window.syncStatusTogglesToModal();
+                }
                 $('#editOfficeModal').modal('show');
                 if (d.id && typeof editModalLoadPhotos === 'function') editModalLoadPhotos(d.id);
             }

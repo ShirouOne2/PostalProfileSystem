@@ -35,6 +35,18 @@ $(document).ready(function () {
         $('#quartersArchiveModal').modal('hide');
         performArchive(id, name, reason);
     });
+
+    // ── Restore scroll position on return from profile ──────────────────────────
+    // Filters are already restored by the server via URL params (quartersReturnUrl).
+    // We only need to scroll back to where the user was.
+    const _qScroll = sessionStorage.getItem('quartersReturnScroll');
+    if (_qScroll) {
+        sessionStorage.removeItem('quartersReturnScroll');
+        // Wait for table AJAX to finish loading before scrolling
+        setTimeout(function () {
+            window.scrollTo({ top: parseInt(_qScroll), behavior: 'instant' });
+        }, 600);
+    }
 });
 
 
@@ -240,7 +252,73 @@ function initializeTable() {
         serverSide: false,
         ajax: {
             url: ajaxUrl,
-            dataSrc: ''
+            dataSrc: '',
+            timeout: 30000, // 30 second timeout
+            error: function(xhr, error, code) {
+                console.error('DataTable AJAX Error:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    response: xhr.responseText,
+                    error: error,
+                    code: code
+                });
+                
+                // Check if response contains error information
+                let errorMessage = 'Failed to load post office data.';
+                let isServerError = false;
+                
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = 'Server error: ' + xhr.responseJSON.message;
+                    isServerError = true;
+                    console.error('Server error details:', xhr.responseJSON);
+                } else if (xhr.responseText) {
+                    try {
+                        const responseObj = JSON.parse(xhr.responseText);
+                        if (responseObj.error) {
+                            errorMessage = 'Server error: ' + responseObj.message;
+                            isServerError = true;
+                        }
+                    } catch (e) {
+                        // Not JSON, use default handling
+                    }
+                }
+                
+                // Handle specific error cases
+                if (!isServerError) {
+                    if (xhr.status === 0) {
+                        errorMessage = 'Network error. Please check your connection.';
+                    } else if (xhr.status === 408) {
+                        errorMessage = 'Request timeout. The server took too long to respond.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Server error. Please try again later.';
+                    } else if (xhr.status >= 400 && xhr.status < 500) {
+                        errorMessage = 'Invalid request. Please check your filters.';
+                    }
+                }
+                
+                // Show user-friendly error message
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Data Loading Error',
+                        html: `<p>${errorMessage}</p>
+                               <p><small>Status: ${xhr.status} - ${xhr.statusText}</small></p>`,
+                        confirmButtonText: 'Retry',
+                        showCancelButton: true,
+                        cancelButtonText: 'Refresh Page'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Retry AJAX call
+                            table.ajax.reload();
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            // Refresh the entire page
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    alert(errorMessage + ' Please refresh the page.');
+                }
+            }
         },
         columns: [
             { data: null,      render: (d, t, r, m) => m.row + 1 },
@@ -269,6 +347,11 @@ function initializeTable() {
                 }
             },
             { data: 'postmaster', defaultContent: 'N/A' },
+            {
+                data: 'remarks',
+                defaultContent: '—',
+                render: d => d ? `<span style="font-size:12px;color:#555;">${d}</span>` : '—'
+            },
             {
                 data: null,
                 render: (d, t, row) => `
@@ -891,6 +974,14 @@ function createEditModal() {
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Remarks -->
+                            <h6 class="mt-3 mb-2 text-primary">Remarks</h6>
+                            <div class="form-group">
+                                <label for="editRemarks">Remarks / Notes</label>
+                                <textarea class="form-control" id="editRemarks" rows="3"
+                                          placeholder="Any additional notes or remarks..."></textarea>
+                            </div>
                             
                             <!-- Location Coordinates -->
                             <h6 class="mt-3 mb-2 text-primary">Location Coordinates</h6>
@@ -935,6 +1026,26 @@ function createEditModal() {
  * View office profile with loading animation
  */
 function viewOffice(id, officeName) {
+    // Build current quarters URL with all active filters so Back button
+    // returns to the exact same filtered state (server-side render)
+    const year    = document.getElementById('yearSelector')?.value    || '';
+    const quarter = document.getElementById('quarterFilter')?.value   || '';
+    const area    = document.getElementById('areaFilter')?.value      || '';
+    const status  = document.getElementById('statusFilter')?.value    || '';
+    const scrollY = window.scrollY;
+
+    const params = [];
+    if (year)    params.push('year='          + encodeURIComponent(year));
+    if (quarter) params.push('quarterFilter=' + encodeURIComponent(quarter));
+    if (area)    params.push('areaFilter='    + encodeURIComponent(area));
+    if (status)  params.push('statusFilter='  + encodeURIComponent(status));
+
+    const quartersUrl = '/quarters' + (params.length ? '?' + params.join('&') : '');
+
+    // Save the exact return URL + scroll position
+    sessionStorage.setItem('quartersReturnUrl',    quartersUrl);
+    sessionStorage.setItem('quartersReturnScroll', scrollY);
+
     // Show loading dialog
     Swal.fire({
         title: 'Loading Profile...',
@@ -942,14 +1053,11 @@ function viewOffice(id, officeName) {
         allowOutsideClick: false,
         allowEscapeKey: false,
         showConfirmButton: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
-    
-    // Navigate to profile page after brief delay
+
     setTimeout(() => {
-        window.location.href = '/profile/' + id;
+        window.location.href = '/profile/' + id + '?source=quarters';
     }, 500);
 }
 
@@ -995,6 +1103,7 @@ function editOffice(id) {
             $('#editISPContactNumber').val(office.ispContactNumber || '');
             $('#editLatitude').val(office.latitude || '');
             $('#editLongitude').val(office.longitude || '');
+            $('#editRemarks').val(office.remarks || '');
             
             // Show modal
             $('#editOfficeModal').modal('show');
@@ -1046,7 +1155,8 @@ function saveOfficeChanges() {
         ispContactPerson: $('#editISPContactPerson').val() || null,
         ispContactNumber: $('#editISPContactNumber').val() || null,
         latitude: $('#editLatitude').val() ? parseFloat($('#editLatitude').val()) : null,
-        longitude: $('#editLongitude').val() ? parseFloat($('#editLongitude').val()) : null
+        longitude: $('#editLongitude').val() ? parseFloat($('#editLongitude').val()) : null,
+        remarks: $('#editRemarks').val() || null
     };
     
     // Show saving progress
@@ -1212,3 +1322,15 @@ function performDelete(id, officeName) {
         }
     });
 }
+
+// ── Restore quarters filter state on return from profile ─────────────────────
+// Runs inside DOMContentLoaded in quarters $(document).ready — see bottom of file
+
+// ── Cleanup on navigation ────────────────────────────────────────────────
+// Destroy DataTable instance before page unload to prevent memory leaks
+// and double-binding issues when navigating back to this page.
+window.addEventListener('beforeunload', function () {
+    if ($.fn.DataTable.isDataTable('#postOfficeTable')) {
+        $('#postOfficeTable').DataTable().destroy();
+    }
+});

@@ -1,3 +1,28 @@
+// ── Global: called by onchange on the Connection Status select ────────────
+function syncConnectionStatus(select) {
+    const isActive    = select.value === 'active';
+    const connCheck   = document.getElementById('connectionStatus');
+    const dateConn    = document.getElementById('dateConnected');
+    const dateDisconn = document.getElementById('dateDisconnected');
+    const pad = n => String(n).padStart(2, '0');
+    const nowLocal = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+    if (connCheck) connCheck.checked = isActive;
+    if (dateConn && dateDisconn) {
+        if (isActive) {
+            if (!dateConn.value) dateConn.value = nowLocal();
+            dateDisconn.value    = '';
+            dateConn.disabled    = false;
+            dateDisconn.disabled = true;
+        } else {
+            if (!dateDisconn.value) dateDisconn.value = nowLocal();
+            dateConn.value       = '';
+            dateConn.disabled    = true;
+            dateDisconn.disabled = false;
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 
     console.log('Insert Office Wizard initializing...');
@@ -9,10 +34,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // ─── Required fields per step ───────────────────────────────────────────
     const REQUIRED = {
         0: [
-            { id: 'officeName', label: 'Post Office Name' },
-            { id: 'areaId',     label: 'Area'             }
+            { id: 'officeName', label: 'Post Office Name' }
         ],
         1: [
+            { id: 'areaId',     label: 'Area'             },
             { id: 'regionId',   label: 'Region'             },
             { id: 'provinceId', label: 'Province'            },
             { id: 'cityMunId',  label: 'City / Municipality' }
@@ -92,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateAll() {
         const all = [
             { id: 'officeName', label: 'Post Office Name',   step: 1 },
-            { id: 'areaId',     label: 'Area',               step: 1 },
+            { id: 'areaId',     label: 'Area',               step: 2 },
             { id: 'regionId',   label: 'Region',             step: 2 },
             { id: 'provinceId', label: 'Province',           step: 2 },
             { id: 'cityMunId',  label: 'City / Municipality',step: 2 }
@@ -167,45 +192,84 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     );
 
-    // ─── Connection status → auto-set dates ─────────────────────────────────
-    const connCheck   = document.getElementById('connectionStatus');
-    const dateConn    = document.getElementById('dateConnected');
-    const dateDisconn = document.getElementById('dateDisconnected');
+    // ─── Status Dropdowns (Connection + Office) ──────────────────────────────
 
     function nowLocal() {
         const d = new Date(), pad = n => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
-    if (connCheck && dateConn && dateDisconn) {
-        connCheck.addEventListener('change', function () {
-            if (this.checked) {
-                if (!dateConn.value) dateConn.value = nowLocal();
-                dateDisconn.value = ''; dateConn.disabled = false; dateDisconn.disabled = true;
-            } else {
-                if (!dateDisconn.value) dateDisconn.value = nowLocal();
-                dateConn.value = ''; dateConn.disabled = true; dateDisconn.disabled = false;
-            }
-        });
-        if (!connCheck.checked) {
+    function initStatusDropdowns() {
+        const connSelect  = document.getElementById('connectionStatusSelect');
+        const connCheck   = document.getElementById('connectionStatus');
+        const dateConn    = document.getElementById('dateConnected');
+        const dateDisconn = document.getElementById('dateDisconnected');
+
+        // Set initial date state (default = Inactive)
+        if (dateConn)    dateConn.disabled    = true;
+        if (dateDisconn) {
+            dateDisconn.disabled = false;
             if (!dateDisconn.value) dateDisconn.value = nowLocal();
-            dateConn.disabled = true; dateDisconn.disabled = false;
+        }
+
+        if (connSelect) {
+            connSelect.addEventListener('change', function () {
+                const isActive = this.value === 'active';
+                if (connCheck) connCheck.checked = isActive;
+
+                if (dateConn && dateDisconn) {
+                    if (isActive) {
+                        if (!dateConn.value) dateConn.value = nowLocal();
+                        dateDisconn.value    = '';
+                        dateConn.disabled    = false;
+                        dateDisconn.disabled = true;
+                    } else {
+                        if (!dateDisconn.value) dateDisconn.value = nowLocal();
+                        dateConn.value       = '';
+                        dateConn.disabled    = true;
+                        dateDisconn.disabled = false;
+                    }
+                }
+            });
+        }
+
+        // Office Status functionality
+        const officeStatusSelect = document.getElementById('officeStatus');
+        if (officeStatusSelect) {
+            // Add validation styling when value changes
+            officeStatusSelect.addEventListener('change', function () {
+                if (this.value) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (touched.has(this.id)) {
+                        this.classList.add('is-invalid');
+                    }
+                }
+            });
+
+            // Mark as touched when user interacts with it
+            officeStatusSelect.addEventListener('focus', () => {
+                touched.add('officeStatus');
+            }, { once: false });
         }
     }
+
+    initStatusDropdowns();
 
     // ─── Form submit ─────────────────────────────────────────────────────────
     form?.addEventListener('submit', function (e) {
         e.preventDefault();
         if (!validateAll()) return;
 
-        const fullName = (document.getElementById('officeName')?.value?.trim() || '') +
-                         ' ' + (document.getElementById('officeNameSuffix')?.value || 'PO');
+        const officeName = document.getElementById('officeName')?.value?.trim() || '';
 
         Swal.fire({
             icon: 'question',
             title: 'Confirm Save',
             html: `<p>Save this new post office?</p>
-                   <p style="font-weight:600;color:#002868;">${fullName}</p>`,
+                   <p style="font-weight:600;color:#002868;">${officeName}</p>`,
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-save"></i> Yes, Save',
             cancelButtonText:  'Review Again',
@@ -214,18 +278,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ─── Field value getters ─────────────────────────────────────────────────
-    const getStr = id => {
-        const e = document.getElementById(id);
-        if (id === 'officeName') {
-            const base   = e?.value?.trim() || '';
-            const suffix = document.getElementById('officeNameSuffix')?.value || 'PO';
-            return base ? base + ' ' + suffix : null;
-        }
-        return e?.value?.trim() || null;
-    };
+    const getStr   = id => { const e = document.getElementById(id); if (!e) return null; return e.value?.trim() || null; };
     const getInt   = id => { const e = document.getElementById(id); return e?.value ? parseInt(e.value) : null; };
     const getFloat = id => { const e = document.getElementById(id); return e?.value ? parseFloat(e.value) : null; };
     const getBool  = id => { const e = document.getElementById(id); return e ? e.checked : false; };
+
+    // Speed: user enters number only, we store as "N Mbps" string
+    const getSpeed = () => {
+        const e = document.getElementById('speed');
+        if (!e || !e.value || e.value.trim() === '') return null;
+        const num = parseFloat(e.value.trim());
+        return isNaN(num) ? null : num + ' Mbps';
+    };
 
     // ─── Submit to API ───────────────────────────────────────────────────────
     function submitForm() {
@@ -234,47 +298,79 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        fetch('/api/postal-office/insert', {
+        fetch('/api/postal/postal-office/insert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                name:                      getStr('officeName'),
-                postmaster:                getStr('postmaster'),
-                address:                   getStr('address'),
-                zipCode:                   getStr('zipCode'),
-                areaId:                    getInt('areaId'),
-                regionId:                  getInt('regionId'),
-                provinceId:                getInt('provinceId'),
-                cityMunId:                 getInt('cityMunId'),
-                barangayId:                getInt('barangayId'),
-                latitude:                  getFloat('latitude'),
-                longitude:                 getFloat('longitude'),
-                connectionStatus:          getBool('connectionStatus'),
-                internetServiceProvider:   getStr('internetServiceProvider'),
-                typeOfConnection:          getStr('typeOfConnection'),
-                speed:                     getStr('speed'),
-                staticIpAddress:           getStr('staticIpAddress'),
-                dateConnected:             getStr('dateConnected'),
-                dateDisconnected:          getStr('dateDisconnected'),
-                postalOfficeContactPerson: getStr('postalOfficeContactPerson'),
-                postalOfficeContactNumber: getStr('postalOfficeContactNumber'),
-                ispContactPerson:          getStr('ispContactPerson'),
-                ispContactNumber:          getStr('ispContactNumber'),
-                noOfEmployees:             getInt('noOfEmployees'),
-                noOfPostalTellers:         getInt('noOfPostalTellers'),
-                noOfLetterCarriers:        getInt('noOfLetterCarriers'),
-                classification:            getStr('classification'),
-                serviceProvided:           getStr('serviceProvided')
+                // ── Basic Info ────────────────────────────────────────────
+                name:                           getStr('officeName'),
+                postmaster:                     getStr('postmaster'),
+                postmasterContactNumber:        getStr('postmasterContactNumber'),
+                zipCode:                        getStr('zipCode'),
+
+                // ── Location ──────────────────────────────────────────────
+                areaId:                         getInt('areaId'),
+                regionId:                       getInt('regionId'),
+                provinceId:                     getInt('provinceId'),
+                cityMunId:                      getInt('cityMunId'),
+                barangayId:                     getInt('barangayId'),
+                latitude:                       getFloat('latitude'),
+                longitude:                      getFloat('longitude'),
+
+                // ── Connectivity ──────────────────────────────────────────
+                connectionStatus:               getBool('connectionStatus'),
+                officeStatus:                   getStr('officeStatus'),
+                internetServiceProvider:        getStr('internetServiceProvider'),
+                classification:                 getStr('classification'),
+                ownedOrShared:                  getStr('ownedOrShared'),
+                typeOfConnection:               getStr('typeOfConnection'),
+                speed:                          getSpeed(),
+                staticIpAddress:                getStr('staticIpAddress'),
+                ispContactPerson:               getStr('ispContactPerson'),
+                ispContactNumber:               getStr('ispContactNumber'),
+                planName:                       getStr('planName'),
+                planPrice:                      getFloat('planPrice'),
+                accountNumber:                  getStr('accountNumber'),
+                dateConnected:                  getStr('dateConnected'),
+                dateDisconnected:               getStr('dateDisconnected'),
+
+                // ── Contact ───────────────────────────────────────────────
+                postalOfficeContactPerson:      getStr('postalOfficeContactPerson'),
+                postalOfficeContactNumber:      getStr('postalOfficeContactNumber'),
+
+                // ── Additional ────────────────────────────────────────────
+                noOfEmployees:                  getInt('noOfEmployees'),
+                noOfPostalTellers:              getInt('noOfPostalTellers'),
+                noOfLetterCarriers:             getInt('noOfLetterCarriers'),
+                serviceProvided:                getStr('serviceProvided'),
+                remarks:                        getStr('remarks')
             })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    icon: 'success', title: 'Saved!',
-                    text: 'Post Office added successfully.',
-                    timer: 2000, showConfirmButton: false
-                }).then(() => window.location.href = '/table');
+                var officeId = data.id;
+
+                // Check if any photos were selected
+                var hasPhotos = ['insertProfilePhoto','insertCover1','insertCover2','insertCover3']
+                    .some(id => { var el = document.getElementById(id); return el && el.files && el.files[0]; });
+
+                if (hasPhotos && officeId) {
+                    Swal.fire({ title: 'Uploading Photos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    uploadInsertPhotos(officeId).then(() => {
+                        Swal.fire({
+                            icon: 'success', title: 'Saved!',
+                            text: 'Post Office and photos added successfully.',
+                            timer: 2000, showConfirmButton: false
+                        }).then(() => window.location.href = '/table');
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success', title: 'Saved!',
+                        text: 'Post Office added successfully.',
+                        timer: 2000, showConfirmButton: false
+                    }).then(() => window.location.href = '/table');
+                }
             } else { throw new Error(data.message || 'Save failed'); }
         })
         .catch(err => {
@@ -306,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(baraSel, '-- Select Barangay --', true);
         if (!this.value) return;
         loadingSelect(provSel);
-        fetch('/api/provinces/by-region/' + this.value)
+        fetch('/api/postal/provinces/by-region/' + this.value)
             .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
             .then(list => {
                 resetSelect(provSel, '-- Select Province --', false);
@@ -322,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(baraSel, '-- Select Barangay --', true);
         if (!this.value) return;
         loadingSelect(citySel);
-        fetch('/api/cities/by-province/' + this.value)
+        fetch('/api/postal/cities/by-province/' + this.value)
             .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
             .then(list => {
                 resetSelect(citySel, '-- Select City/Municipality --', false);
@@ -336,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(baraSel, '-- Select Barangay --', true);
         if (!this.value) return;
         loadingSelect(baraSel);
-        fetch('/api/barangays/by-city/' + this.value)
+        fetch('/api/postal/barangays/by-city/' + this.value)
             .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
             .then(list => {
                 resetSelect(baraSel, '-- Select Barangay (Optional) --', false);
@@ -345,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(err => { resetSelect(baraSel, '-- Error --', true); Swal.fire('Error', 'Failed to load barangays: ' + err.message, 'error'); });
     });
 
-    // ─── Summary box ─────────────────────────────────────────────────────────
+    // ─── Summary box (updates when Step 5 becomes active) ────────────────────
     (function () {
         function getSelectedText(id) {
             const el = document.getElementById(id);
@@ -353,21 +449,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (el.tagName === 'SELECT') return el.options[el.selectedIndex]?.text || '—';
             return el.value?.trim() || '—';
         }
+
         function updateSummary() {
-            const map = { summaryName: 'officeName', summaryArea: 'areaId', summaryRegion: 'regionId', summaryProvince: 'provinceId', summaryCity: 'cityMunId' };
-            Object.entries(map).forEach(([sid, srcId]) => {
+            // Office name (plain text)
+            const nameEl = document.getElementById('summaryName');
+            if (nameEl) nameEl.textContent = document.getElementById('officeName')?.value?.trim() || '—';
+
+            // Select / input fields
+            const fieldMap = {
+                summaryArea:           'areaId',
+                summaryRegion:         'regionId',
+                summaryProvince:       'provinceId',
+                summaryCity:           'cityMunId',
+                summaryISP:            'internetServiceProvider',
+                summaryClassification: 'classification'
+            };
+            Object.entries(fieldMap).forEach(([sid, srcId]) => {
                 const el = document.getElementById(sid);
-                if (el) {
-                    // For officeName, append suffix
-                    if (srcId === 'officeName') {
-                        const base   = document.getElementById('officeName')?.value?.trim() || '—';
-                        const suffix = document.getElementById('officeNameSuffix')?.value || 'PO';
-                        el.textContent = base !== '—' ? base + ' ' + suffix : '—';
-                    } else {
-                        el.textContent = getSelectedText(srcId);
-                    }
-                }
+                if (el) el.textContent = getSelectedText(srcId);
             });
+
+            // Connectivity badge
             const statusEl  = document.getElementById('summaryStatus');
             const connCheck = document.getElementById('connectionStatus');
             if (statusEl) {
@@ -376,10 +478,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     : '<span class="badge badge-secondary">Inactive</span>';
             }
         }
+
         const observer = new MutationObserver(mutations =>
-            mutations.forEach(m => { if (m.target.id === 'step-5' && m.target.classList.contains('active')) updateSummary(); })
+            mutations.forEach(m => {
+                if (m.target.id === 'step-5' && m.target.classList.contains('active')) updateSummary();
+            })
         );
-        document.querySelectorAll('.wizard-step').forEach(s => observer.observe(s, { attributes: true, attributeFilter: ['class'] }));
+        document.querySelectorAll('.wizard-step').forEach(s =>
+            observer.observe(s, { attributes: true, attributeFilter: ['class'] })
+        );
     })();
 
     // ─── Init ────────────────────────────────────────────────────────────────

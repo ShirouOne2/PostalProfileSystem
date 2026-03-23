@@ -1,0 +1,41 @@
+/* Notification Badge Styles */
+#notifBadge {
+    transition: transform .15s ease, opacity .15s ease;
+    will-change: transform, opacity;
+}
+
+/* Notification Dropdown Container */
+.notification-dropdown {
+    max-height: 420px;
+}
+
+/* Notification Content Area */
+.notification-dropdown #notifContent {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.notification-dropdown #notifContent::-webkit-scrollbar {
+    width: 4px;
+}
+.notification-dropdown #notifContent::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+/* Notification Item Hover */
+.notif-item:hover {
+    background: #eef4ff !important;
+}
+
+/* Bell Shake Animation - Optimized */
+@keyframes bellShake {
+    0%,100% { transform: rotate(0); }
+    25%      { transform: rotate(-10deg); }
+    75%      { transform: rotate(10deg); }
+}
+.bell-shake .fa-bell {
+    animation: bellShake .3s ease;
+    will-change: transform;
+}

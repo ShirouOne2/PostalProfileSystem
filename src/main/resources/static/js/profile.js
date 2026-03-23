@@ -1,26 +1,33 @@
 /**
  * profile.js
- * Loaded by main-layout.html AFTER jQuery — activePage == 'profile'
+ * Loaded by main-layout.html AFTER jQuery — activePage == 'profile’
  */
 
 $(document).ready(function () {
 
     // ── Photo Upload Triggers ─────────────────────────────────
-    $('#coverUploadOverlay').on('click', function () {
-        $('#coverPhotoInput').trigger('click');
-    });
-
+    // Profile photo upload (unchanged)
     $('#profileUploadOverlay').on('click', function () {
         $('#profilePhotoInput').trigger('click');
-    });
-
-    $('#coverPhotoInput').on('change', function () {
-        uploadPhoto(this, 'cover');
     });
 
     $('#profilePhotoInput').on('change', function () {
         uploadPhoto(this, 'profile');
     });
+
+    // Cover photo uploads (carousel - multiple slots)
+    $('.cover-upload-overlay').on('click', function () {
+        var slot = $(this).data('slot');
+        $('#coverPhotoInput' + slot).trigger('click');
+    });
+
+    // Individual cover photo input handlers
+    for (let i = 1; i <= 3; i++) {
+        $('#coverPhotoInput' + i).on('change', function () {
+            var slot = $(this).data('slot');
+            uploadCarouselPhoto(this, slot);
+        });
+    }
 
     // ── Edit Profile ──────────────────────────────────────────
     var o = window.OFFICE_DATA;
@@ -100,7 +107,7 @@ $(document).ready(function () {
         }).then(function (result) {
             if (!result.isConfirmed) return;
 
-            fetch('/api/postal-office/' + o.id + '/archive', {
+            fetch('/api/archive/' + o.id, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ reason: result.value })
@@ -164,6 +171,54 @@ function uploadPhoto(input, type) {
                     $('#profilePicImg').attr('src', endpoint + cacheBust);
                 }
                 Swal.fire({ icon: 'success', title: 'Photo updated!', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire('Error', res.message || 'Upload failed.', 'error');
+            }
+        },
+        error: function (xhr) {
+            Swal.close();
+            Swal.fire('Error', (xhr.responseJSON || {}).message || ('HTTP ' + xhr.status), 'error');
+        },
+        complete: function () { input.value = ''; }
+    });
+}
+
+// ── Carousel Photo Upload (for individual slots) ─────────────
+function uploadCarouselPhoto(input, slot) {
+    var id = window.OFFICE_DATA && window.OFFICE_DATA.id;
+    if (!id) { Swal.fire('Error', 'Office ID not found.', 'error'); return; }
+    if (!input.files || !input.files[0]) return;
+
+    var file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        Swal.fire('Error', 'Image must be smaller than 5MB.', 'error');
+        input.value = '';
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('file', file);
+    var endpoint = '/api/postal-office/' + id + '/cover-photo/' + slot;
+
+    Swal.fire({ title: 'Uploading...', allowOutsideClick: false, didOpen: function () { Swal.showLoading(); } });
+
+    $.ajax({
+        url: endpoint,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (res) {
+            Swal.close();
+            if (res.success) {
+                var cacheBust = '?t=' + Date.now();
+                // Update the specific carousel slide
+                $('.carousel-item:nth-child(' + slot + ') .cover-photo').css({
+                    'background-image': 'url(' + endpoint + cacheBust + ')',
+                    'background-size': 'cover',
+                    'background-position': 'center'
+                });
+                Swal.fire({ icon: 'success', title: 'Cover photo ' + slot + ' updated!', timer: 1500, showConfirmButton: false });
             } else {
                 Swal.fire('Error', res.message || 'Upload failed.', 'error');
             }

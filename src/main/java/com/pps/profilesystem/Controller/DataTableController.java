@@ -45,36 +45,40 @@ public class DataTableController {
         String email = auth.getName();
         User currentUser = userRepository.findByEmail(email).orElse(null);
 
-        Integer roleId  = currentUser != null ? currentUser.getRole()  : null;
-        Integer areaId  = currentUser != null ? currentUser.getAreaId() : null;
+        Integer roleId = currentUser != null ? currentUser.getRole()   : null;
+        Integer areaId = currentUser != null ? currentUser.getAreaId() : null;
 
         // Fetch offices based on role
         List<PostalOffice> offices;
 
         if (roleId != null && roleId == 1) {
-            // System Admin → see ALL offices
             offices = postalOfficeRepository.findAllNonArchivedWithConnectivity();
         } else {
-            // Area Admin / User → see only their area's offices
             offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
                 .stream()
                 .filter(po -> {
-                    if (areaId == null) return false; // no area assigned, no access
+                    if (areaId == null) return false;
                     return po.getArea() != null && areaId.equals(po.getArea().getId());
                 })
                 .collect(Collectors.toList());
         }
 
-        // Stats — also filtered per role
-        long totalCount  = offices.size();
-        long activeCount = offices.stream()
+        // Stats — derived from the already-fetched list (no extra DB queries)
+        long totalCount    = offices.size();
+        long activeCount   = offices.stream()
             .filter(po -> Boolean.TRUE.equals(po.getConnectionStatus())).count();
         long inactiveCount = totalCount - activeCount;
+        long openCount     = offices.stream()
+            .filter(po -> "OPEN".equalsIgnoreCase(po.getOfficeStatus())).count();
+        long closedCount   = offices.stream()
+            .filter(po -> "CLOSED".equalsIgnoreCase(po.getOfficeStatus())).count();
 
         model.addAttribute("offices",       offices.stream().map(this::convertToMapDTO).collect(Collectors.toList()));
         model.addAttribute("totalCount",    totalCount);
         model.addAttribute("activeCount",   activeCount);
         model.addAttribute("inactiveCount", inactiveCount);
+        model.addAttribute("openCount",     openCount);
+        model.addAttribute("closedCount",   closedCount);
         model.addAttribute("areaCount",     postalOfficeRepository.countDistinctAreasNonArchived());
 
         // For modal dropdowns
@@ -97,12 +101,14 @@ public class DataTableController {
         dto.put("latitude",         office.getLatitude());
         dto.put("longitude",        office.getLongitude());
         dto.put("connectionStatus", office.getConnectionStatus());
+        dto.put("officeStatus",     office.getOfficeStatus());
         dto.put("speed",            office.getSpeed());
-        dto.put("area",             office.getArea()            != null ? office.getArea().getAreaName()              : null);
-        dto.put("region",           office.getRegion()          != null ? office.getRegion().getName()                : null);
-        dto.put("province",         office.getProvince()        != null ? office.getProvince().getName()              : null);
-        dto.put("cityMunicipality", office.getCityMunicipality()!= null ? office.getCityMunicipality().getName()      : null);
-        dto.put("barangay",         office.getBarangay()        != null ? office.getBarangay().getName()              : null);
+        dto.put("area",             office.getArea()            != null ? office.getArea().getAreaName()         : null);
+        dto.put("region",           office.getRegion()          != null ? office.getRegion().getName()           : null);
+        dto.put("province",         office.getProvince()        != null ? office.getProvince().getName()         : null);
+        dto.put("cityMunicipality", office.getCityMunicipality()!= null ? office.getCityMunicipality().getName() : null);
+        dto.put("barangay",         office.getBarangay()        != null ? office.getBarangay().getName()         : null);
+        dto.put("remarks",          office.getRemarks());
         return dto;
     }
 }

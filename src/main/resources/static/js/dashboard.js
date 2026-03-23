@@ -4,20 +4,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard initializing...');
 
+    // Early exit if Leaflet not available
     if (typeof L === 'undefined') {
         console.error('Leaflet is not loaded!');
-        Swal.fire({
-            icon: 'error',
-            title: 'Map Library Error',
-            text: 'Map library failed to load. Please refresh the page.',
-            confirmButtonText: 'Refresh Page',
-            confirmButtonColor: '#3085d6'
-        }).then(() => location.reload());
         return;
     }
 
     console.log('Leaflet loaded successfully, version:', L.version);
 
+    // Performance optimizations
     const areaColors = {
         1: '#FF6B6B', 2: '#4ECDC4', 3: '#45B7D1', 4: '#FFA07A',
         5: '#98D8C8', 6: '#F7DC6F', 7: '#BB8FCE', 8: '#F8B739',
@@ -28,56 +23,116 @@ document.addEventListener('DOMContentLoaded', function() {
         return areaColors[areaId] || areaColors.default;
     }
 
+    // Initialize map with performance optimizations
     const map = L.map('map', {
         center: [12.8797, 121.7740],
         zoom: 5,
         minZoom: 2,
         maxZoom: 18,
         maxBounds: [[4.0, 116.0], [21.5, 127.0]],
-        maxBoundsViscosity: 1.0
+        maxBoundsViscosity: 1.0,
+        preferCanvas: true, // Better performance for many markers
+        updateWhenIdle: true,
+        updateWhenZooming: false
     });
 
+    // Use lighter tile layer for better performance
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
+        maxZoom: 18,
+        updateWhenIdle: true
     }).addTo(map);
 
     const markers = [];
     const markerClusterGroup = L.layerGroup().addTo(map);
 
-    Swal.fire({
-        title: 'Loading Map Data...',
-        text: 'Please wait while we load post office locations',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => Swal.showLoading()
-    });
+    // Optimized status bar
+    let statusTimeout;
+    function setMapStatus(msg, type) {
+        if (statusTimeout) clearTimeout(statusTimeout);
+        
+        let el = document.getElementById('map-status-bar');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'map-status-bar';
+            el.style.cssText = 'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);' +
+                'z-index:1000;background:rgba(0,0,0,0.65);color:#fff;font-size:12px;' +
+                'padding:4px 12px;border-radius:20px;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;';
+            const mapEl = document.getElementById('map');
+            if (mapEl) mapEl.style.position = 'relative', mapEl.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.opacity = '1';
+        
+        if (type === 'done') {
+            statusTimeout = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+        }
+    }
 
-    fetch('/api/post-offices')
-        .then(response => {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Loaded', data.length, 'post offices from map API');
+    setMapStatus('Loading map data…');
 
-            markerClusterGroup.clearLayers();
-            markers.length = 0;
-            const bounds = [];
-            let skippedCount = 0;
+    // Add debouncing for better performance
+    let fetchTimeout;
+    function loadPostOffices() {
+        if (fetchTimeout) clearTimeout(fetchTimeout);
+        
+        fetchTimeout = setTimeout(() => {
+            fetch('/api/post-offices')
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Loaded', data.length, 'post offices from map API');
+                    processMapData(data);
+                })
+                .catch(error => {
+                    console.error('Error loading post offices:', error);
+                    setMapStatus('Failed to load data');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Load Map Data',
+                            html: `<p>${error.message}</p>`,
+                            confirmButtonText: 'Retry',
+                            showCancelButton: true,
+                            cancelButtonText: 'Close'
+                        }).then(result => { 
+                            if (result.isConfirmed) loadPostOffices(); 
+                        });
+                    }
+                });
+        }, 100); // Small delay to prevent rapid calls
+    }
 
-            data.forEach(office => {
+    function processMapData(data) {
+        // Clear existing data
+        markerClusterGroup.clearLayers();
+        markers.length = 0;
+        const bounds = [];
+        let skippedCount = 0;
+
+        // Process data in chunks for better performance
+        const chunkSize = 50;
+        let currentChunk = 0;
+        
+        function processChunk() {
+            const start = currentChunk * chunkSize;
+            const end = Math.min(start + chunkSize, data.length);
+            
+            for (let i = start; i < end; i++) {
+                const office = data[i];
                 const lat = parseFloat(office.lat ?? office.latitude);
                 const lng = parseFloat(office.lng ?? office.longitude);
 
                 if (isNaN(lat) || isNaN(lng)) {
                     skippedCount++;
-                    return;
+                    continue;
                 }
 
                 if (lat < 4.0 || lat > 21.5 || lng < 116.0 || lng > 127.0) {
                     skippedCount++;
-                    return;
+                    continue;
                 }
 
                 const marker = L.circleMarker([lat, lng], {
@@ -100,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const contactNumberRaw = office.postalOfficeContactNumber || 'Not available';
                 const officeId         = office.id || '';
 
-                // ✅ FIX: Use URL string, not raw bytes
                 const coverPhotoSrc = office.coverPhotoUrl || '/images/no-image.png';
 
                 const popupContent = `
@@ -140,47 +194,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 markerClusterGroup.addLayer(marker);
                 markers.push(marker);
                 bounds.push([lat, lng]);
-            });
-
-            if (bounds.length) map.fitBounds(bounds, { padding: [50, 50] });
-
-            const areas = [...new Set(data.map(o => o.areaId).filter(id => id != null))].length;
-            document.getElementById('coverageAreas') && (document.getElementById('coverageAreas').textContent = areas);
-
-            Swal.close();
-
-            Swal.mixin({
-                toast: true, position: 'top-end',
-                showConfirmButton: false, timer: 3000, timerProgressBar: true
-            }).fire({ icon: 'success', title: `Loaded ${data.length} post offices on map!` });
-
-            if (skippedCount > 0) {
-                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 })
-                    .fire({ icon: 'warning', title: `${skippedCount} offices skipped (no coordinates)` });
             }
-        })
-        .catch(error => {
-            console.error('Error loading post offices:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Failed to Load Data',
-                html: `<p>${error.message}</p>`,
-                confirmButtonText: 'Retry',
-                showCancelButton: true,
-                cancelButtonText: 'Close'
-            }).then(result => { if (result.isConfirmed) location.reload(); });
-        });
+            
+            currentChunk++;
+            
+            if (currentChunk * chunkSize < data.length) {
+                // Process next chunk with requestAnimationFrame for smooth UI
+                requestAnimationFrame(processChunk);
+            } else {
+                // Finished processing all data
+                if (bounds.length) map.fitBounds(bounds, { padding: [50, 50] });
+
+                const areas = [...new Set(data.map(o => o.areaId).filter(id => id != null))].length;
+                document.getElementById('coverageAreas') && (document.getElementById('coverageAreas').textContent = areas);
+
+                const skippedNote = skippedCount > 0 ? ` (${skippedCount} skipped)` : '';
+                setMapStatus(`${data.length} offices loaded${skippedNote}`, 'done');
+            }
+        }
+        
+        // Start processing
+        requestAnimationFrame(processChunk);
+    }
 
     function applyFilters() {
         const searchTerm  = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
         const areaFilter  = document.getElementById('areaFilter')?.value;
         const statusFilter = document.getElementById('statusFilter')?.value;
 
+        // Clear layers first for better performance
         markerClusterGroup.clearLayers();
         let visibleCount = 0;
 
-        markers.forEach(marker => {
+        // Use for loop instead of forEach for better performance
+        const markersLength = markers.length;
+        for (let i = 0; i < markersLength; i++) {
+            const marker = markers[i];
             const office = marker.officeData;
+            
+            // Optimized string comparison
             const matchesSearch = !searchTerm || (office.name && office.name.toLowerCase().includes(searchTerm));
             const matchesArea   = !areaFilter  || (office.areaId && office.areaId.toString() === areaFilter);
             const matchesStatus = !statusFilter || office.status.toString() === statusFilter;
@@ -189,10 +241,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 markerClusterGroup.addLayer(marker);
                 visibleCount++;
             }
-        });
+        }
 
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
-            .fire({ icon: 'info', title: `Showing ${visibleCount} of ${markers.length} offices` });
+        setMapStatus(`Showing ${visibleCount} of ${markersLength} offices`, 'done');
     }
 
     function clearFilters() {
@@ -203,8 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         markerClusterGroup.clearLayers();
         markers.forEach(marker => markerClusterGroup.addLayer(marker));
 
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true })
-            .fire({ icon: 'success', title: 'Filters cleared - showing all offices' });
+        setMapStatus(`Showing all ${markers.length} offices`, 'done');
     }
 
     function attachEventListeners() {
@@ -219,6 +269,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Event listeners attached successfully');
     }
 
+    // Start loading
+    loadPostOffices();
     attachEventListeners();
     console.log('Dashboard initialization complete');
+
+    // ── Cleanup on navigation ────────────────────────────────────────────────
+    // NOTE: We intentionally do NOT call map.remove() here.
+    // Calling map.remove() on beforeunload destroys the Leaflet instance so
+    // that when the browser navigates back (bfcache / history), the map div
+    // exists in the DOM but the JS instance is gone and nothing re-initializes.
+    // The browser already cleans up resources on full page unload; no manual
+    // teardown is needed for a standard server-rendered Spring MVC app.
 });

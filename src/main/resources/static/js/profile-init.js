@@ -1,0 +1,30 @@
+/**
+ * Profile Page Initialization Script
+ * Handles tab switching and carousel initialization
+ * Separated from profile.html for better code organization
+ */
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize carousel
+    var carousel = document.getElementById('coverPhotoCarousel');
+    if (carousel) {
+        new bootstrap.Carousel(carousel, {
+            interval: 5000,
+            ride: 'carousel'
+        });
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.profile-tabs .tab-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.profile-tabs .tab-item').forEach(function (b) { 
+                b.classList.remove('active'); 
+            });
+            document.querySelectorAll('.tab-panel').forEach(function (p) { 
+                p.classList.remove('active'); 
+            });
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+});

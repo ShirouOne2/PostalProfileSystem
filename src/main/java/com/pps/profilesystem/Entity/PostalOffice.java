@@ -11,6 +11,9 @@ import java.util.List;
  * Relationships with Connectivity:
  * 1. activeConnectivity - Points to the CURRENT active connectivity record (via connectivity_id)
  * 2. connectivityHistory - List of ALL connectivity records for this office (via OfficeID)
+ *
+ * Archive data is now stored in a separate ArchivedOffice entity / archived_offices table.
+ * To check if an office is archived, query ArchivedOfficeRepository.existsByPostalOfficeId(id).
  */
 @Entity
 @Table(name = "postal_offices")
@@ -60,6 +63,10 @@ public class PostalOffice {
     // --- Connection Status ---
     @Column(name = "connection_status")
     private Boolean connectionStatus = false;
+
+    // --- Office Open/Closed Status ---
+    @Column(name = "office_status", nullable = true)
+    private String officeStatus;  // "OPEN" or "CLOSED"
 
     // CURRENT/ACTIVE CONNECTIVITY RECORD
     @ManyToOne(fetch = FetchType.LAZY)
@@ -112,23 +119,15 @@ public class PostalOffice {
     private String ispContactNumber;
 
     // --- Photos (stored as file paths on disk) ---
-    // Maps to existing DB column: cover_photo varchar(255)
     @Column(name = "cover_photo")
     private String coverPhoto;
 
-    // Maps to existing DB column: profile_picture varchar(255)
     @Column(name = "profile_picture")
     private String profilePicture;
 
-    // --- Archive ---
-    @Column(name = "is_archived", nullable = false)
-    private Boolean isArchived = false;
-
-    @Column(name = "archived_at")
-    private java.time.LocalDateTime archivedAt;
-
-    @Column(name = "archive_reason", columnDefinition = "TEXT")
-    private String archiveReason;
+    // --- Remarks ---
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
 
     // --- Helper Methods ---
 
@@ -150,7 +149,16 @@ public class PostalOffice {
         return null;
     }
 
-    // Manual getter for isArchived (Lombok generates getIsArchived correctly but
-    // some Thymeleaf/Spring code may call getIsArchived explicitly)
-    public Boolean getIsArchived() { return isArchived; }
+    /**
+     * Stub for backward compatibility.
+     * is_archived column has been removed from postal_offices table.
+     * Archive status is now determined by presence in archived_offices table.
+     * All existing code that calls getIsArchived() will safely receive false —
+     * the real filtering is handled at the repository/query level.
+     *
+     * @deprecated Use ArchivedOfficeRepository.existsByPostalOfficeId(id) instead.
+     */
+    @Deprecated
+    @jakarta.persistence.Transient
+    public Boolean getIsArchived() { return false; }
 }

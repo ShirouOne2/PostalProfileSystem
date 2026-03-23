@@ -1,7 +1,9 @@
 package com.pps.profilesystem.Service;
 
+import com.pps.profilesystem.Entity.ArchivedOffice;
 import com.pps.profilesystem.Entity.Connectivity;
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class ArchiveService {
     @Autowired
     private ConnectivityRepository connectivityRepository;
 
+    @Autowired
+    private ArchivedOfficeRepository archivedOfficeRepository;
+
     // ── Archive ──────────────────────────────────────────────────────────────
 
     /**
@@ -39,7 +44,8 @@ public class ArchiveService {
         PostalOffice office = postalOfficeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Postal office not found with ID: " + id));
 
-        if (Boolean.TRUE.equals(office.getIsArchived())) {
+        // Check if already archived using ArchivedOffice entity
+        if (archivedOfficeRepository.existsByPostalOfficeId(id)) {
             throw new RuntimeException("Office is already archived.");
         }
 
@@ -52,9 +58,12 @@ public class ArchiveService {
             office.setConnectionStatus(false);
         }
 
-        office.setIsArchived(true);
-        office.setArchivedAt(LocalDateTime.now());
-        office.setArchiveReason(reason != null ? reason.trim() : "No reason provided");
+        // Create archived record
+        ArchivedOffice archivedOffice = new ArchivedOffice();
+        archivedOffice.setPostalOffice(office);
+        archivedOffice.setArchivedAt(LocalDateTime.now());
+        archivedOffice.setArchiveReason(reason != null ? reason.trim() : "No reason provided");
+        archivedOfficeRepository.save(archivedOffice);
 
         return postalOfficeRepository.save(office);
     }
@@ -84,13 +93,12 @@ public class ArchiveService {
         PostalOffice office = postalOfficeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Postal office not found with ID: " + id));
 
-        if (!Boolean.TRUE.equals(office.getIsArchived())) {
-            throw new RuntimeException("Office is not archived.");
-        }
+        // Find and delete the archived record
+        ArchivedOffice archivedOffice = archivedOfficeRepository.findByPostalOfficeId(id)
+            .orElseThrow(() -> new RuntimeException("Office is not archived."));
 
-        office.setIsArchived(false);
-        office.setArchivedAt(null);
-        office.setArchiveReason(null);
+        archivedOfficeRepository.delete(archivedOffice);
+
         // Note: office remains inactive (connectionStatus = false) after restore.
         // Staff can re-activate it manually if needed.
 
@@ -114,32 +122,46 @@ public class ArchiveService {
     // ── Queries ───────────────────────────────────────────────────────────────
 
     /**
-     * Get all archived offices.
+     * Get all archived offices — used by System Admin (sees everything).
      */
     public List<PostalOffice> getAllArchivedOffices() {
-        return postalOfficeRepository.findByIsArchivedTrue();
+        // Find all archived records and get their postal offices
+        return archivedOfficeRepository.findAll()
+            .stream()
+            .map(ArchivedOffice::getPostalOffice)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get archived offices filtered by area — used by Area Admin.
+     */
+    public List<PostalOffice> getArchivedOfficesByArea(Integer areaId) {
+        // Find archived records for this area and get their postal offices
+        return archivedOfficeRepository.findAllWithOfficeByArea(areaId)
+            .stream()
+            .map(ArchivedOffice::getPostalOffice)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get total count of archived offices — used by System Admin.
+     */
+    public long getArchivedCount() {
+        return archivedOfficeRepository.count();
     }
 
     /**
      * Get all archived offices as map DTOs for the view.
      */
     public List<Map<String, Object>> getArchivedOfficesForTable() {
-        return postalOfficeRepository.findByIsArchivedTrue()
+        return archivedOfficeRepository.findAll()
             .stream()
-            .map(this::toDTO)
+            .map(this::archivedOfficeToDTO)
             .collect(Collectors.toList());
     }
 
-    /**
-     * Count archived offices.
-     */
-    public long getArchivedCount() {
-        return postalOfficeRepository.countByIsArchivedTrue();
-    }
-
-    // ── DTO Helper ────────────────────────────────────────────────────────────
-
-    private Map<String, Object> toDTO(PostalOffice po) {
+    private Map<String, Object> archivedOfficeToDTO(ArchivedOffice archivedOffice) {
+        PostalOffice po = archivedOffice.getPostalOffice();
         Map<String, Object> map = new HashMap<>();
         map.put("id",            po.getId());
         map.put("name",          po.getName());
@@ -149,8 +171,8 @@ public class ArchiveService {
         map.put("cityName",      po.getCityMunicipality() != null ? po.getCityMunicipality().getName()         : "N/A");
         map.put("provinceName",  po.getProvince()         != null ? po.getProvince().getName()                 : "N/A");
         map.put("regionName",    po.getRegion()           != null ? po.getRegion().getName()             : "N/A");
-        map.put("archivedAt",    po.getArchivedAt()       != null ? po.getArchivedAt().toString()              : null);
-        map.put("archiveReason", po.getArchiveReason());
+        map.put("archivedAt",    archivedOffice.getArchivedAt()       != null ? archivedOffice.getArchivedAt().toString()              : null);
+        map.put("archiveReason", archivedOffice.getArchiveReason());
         return map;
     }
 }

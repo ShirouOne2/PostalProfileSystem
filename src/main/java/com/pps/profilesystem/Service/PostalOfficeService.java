@@ -220,15 +220,15 @@ public class PostalOfficeService {
      * Get counts
      */
     public long getTotalCount() {
-        return postalOfficeRepository.countByIsArchivedFalse();
+        return postalOfficeRepository.countNonArchived();
     }
 
     public long getActiveCount() {
-        return postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(true);
+        return postalOfficeRepository.countNonArchivedByConnectionStatus(true);
     }
 
     public long getInactiveCount() {
-        return postalOfficeRepository.countByConnectionStatusAndIsArchivedFalse(false);
+        return postalOfficeRepository.countNonArchivedByConnectionStatus(false);
     }
 
     public long getDistinctAreasCount() {

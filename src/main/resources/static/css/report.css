@@ -151,21 +151,177 @@
     color: #adb5bd;
 }
 
-/* ── PO Name list in Quarterly Breakdown table ── */
-.po-name-list {
-    border-top: 1px dashed #dee2e6;
-    padding-top: 4px;
+/* ── Quarterly Breakdown Card Layout ── */
+.qb-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.po-name-item {
+.qb-card {
+    border: 1px solid #e3e6f0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    transition: box-shadow 0.2s;
+}
+.qb-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+.qb-current {
+    border-left: 4px solid #17a2b8 !important;
+    background: #f8ffff;
+}
+.qb-future {
+    opacity: 0.55;
+    background: #f9f9f9;
+}
+
+.qb-header {
+    background: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.qb-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    letter-spacing: 0.3px;
+}
+
+.qb-future-msg {
+    padding: 18px 16px;
+    text-align: center;
+}
+
+.qb-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+}
+
+.qb-stat-box {
+    padding: 14px 16px;
+    border-right: 1px solid #f0f2f5;
+    min-width: 0;
+}
+.qb-stat-box:last-child { border-right: none; }
+
+.qb-connected    { border-top: 3px solid #28a745; }
+.qb-newly-connected { border-top: 3px solid #5cb85c; }
+.qb-disconnected { border-top: 3px solid #dc3545; }
+.qb-newly-disconnected { border-top: 3px solid #e74a3b; }
+
+.qb-stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.qb-stat-num {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: opacity 0.15s;
+}
+.qb-stat-num:hover { opacity: 0.75; }
+.qb-stat-num span { font-size: 1.6rem; }
+
+.qb-chevron {
     font-size: 0.75rem;
+    transition: transform 0.2s;
+    opacity: 0.6;
+}
+.qb-stat-num.open .qb-chevron { transform: rotate(180deg); }
+
+/* Scrollable office list */
+.qb-list {
+    display: none;
+    margin-top: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #fafbff;
+}
+.qb-list.open { display: block; }
+.qb-list::-webkit-scrollbar { width: 4px; }
+.qb-list::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+.qb-list-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #f0f2f5;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.qb-list-item:last-child { border-bottom: none; }
+
+.qb-area-tag {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #2c3e50;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+}
+
+.qb-office-name {
+    color: #2c3e50;
     font-weight: 500;
-    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .qb-stats { grid-template-columns: 1fr 1fr; }
+    .qb-stat-box { border-bottom: 1px solid #f0f2f5; }
+}
+@media (max-width: 480px) {
+    .qb-stats { grid-template-columns: 1fr; }
+}
+/* ── PO Name list in table cells ── */
+.qb-names-list {
+    display: none !important;
+    margin-top: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: #fafbff;
+    text-align: left;
+}
+.qb-names-list.open { display: block !important; }
+.qb-names-list::-webkit-scrollbar { width: 4px; }
+.qb-names-list::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+.qb-names-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #f0f2f5;
     white-space: nowrap;
 }
-
-.po-name-item i {
-    font-size: 0.45rem;
-    vertical-align: middle;
-    opacity: 0.7;
-}
+.qb-names-item:last-child { border-bottom: none; }
