@@ -240,8 +240,12 @@ public class PostalOfficeImportService {
 
     /**
      * - Every connected office gets a connectivity record, date or no date.
-     * - Same office + same date_connected already exists → skip (no duplicate).
-     * - Different date → create a new record (one-to-many per office).
+     * - Deduplication logic:
+     *     • If dateConnected is non-null  → deduplicate by matching dateConnected value.
+     *     • If dateConnected IS null      → deduplicate by any existing record that also
+     *                                       has null dateConnected (prevents duplicate
+     *                                       null-date rows on reimport).
+     * - dateConnected / dateDisconnected are stored as null when the Excel cell is empty.
      */
     private void handleConnectivity(
             PostalOffice savedOffice,
@@ -254,22 +258,26 @@ public class PostalOfficeImportService {
         LocalDateTime dateConn = dto.getDateConnected();
         LocalDateTime dateDisc = dto.getDateDisconnected();
 
+        // Skip entirely if not connected and no dates provided
         if (!isConnected && dateConn == null && dateDisc == null) return;
 
         List<Connectivity> existing = connectivityRepository.findByPostalOfficeId(savedOffice.getId());
 
-        // Deduplicate by date_connected
-        if (dateConn != null) {
-            boolean alreadyExists = existing.stream()
-                    .anyMatch(c -> dateConn.equals(c.getDateConnected()));
-            if (alreadyExists) return;
-        }
+        // Deduplicate:
+        //   - dateConn non-null → match by exact dateConn value
+        //   - dateConn null     → match any existing record that also has null dateConn
+        boolean alreadyExists = existing.stream().anyMatch(c ->
+                dateConn != null
+                    ? dateConn.equals(c.getDateConnected())
+                    : c.getDateConnected() == null
+        );
+        if (alreadyExists) return;
 
         Connectivity conn = new Connectivity();
         conn.setPostalOffice(savedOffice);
         conn.setProvider(defaultProvider);
-        conn.setDateConnected(dateConn);
-        conn.setDateDisconnected(dateDisc);
+        conn.setDateConnected(dateConn);     // stored as null when cell is empty
+        conn.setDateDisconnected(dateDisc);  // stored as null when cell is empty
 
         Connectivity saved = connectivityRepository.save(conn);
 
@@ -401,8 +409,8 @@ public class PostalOfficeImportService {
             dto.setPostalOfficeContactNumber(getString(row, 22));
             dto.setIspContactPerson(getString(row, 23));
             dto.setIspContactNumber(getString(row, 24));
-            dto.setDateConnected(parseFlexibleDate(row, 25));
-            dto.setDateDisconnected(parseFlexibleDate(row, 26));
+            dto.setDateConnected(parseFlexibleDate(row, 25));    // null when cell is empty
+            dto.setDateDisconnected(parseFlexibleDate(row, 26)); // null when cell is empty
 
             data.add(dto);
         }
@@ -413,9 +421,16 @@ public class PostalOfficeImportService {
 
     // ── Flexible date parser ──────────────────────────────────────────────────
 
+    /**
+     * Returns null when the cell is missing, blank, or contains an unrecognized value.
+     * All other cases are parsed into a LocalDateTime.
+     */
     private LocalDateTime parseFlexibleDate(Row row, int col) {
         Cell cell = row.getCell(col, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null) return null;
+
+        // Blank cell type — treat as no date
+        if (cell.getCellType() == CellType.BLANK) return null;
 
         if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
             try {
@@ -433,6 +448,8 @@ public class PostalOfficeImportService {
         String raw = cell.getCellType() == CellType.STRING
                 ? cell.getStringCellValue().trim()
                 : String.valueOf(cell.getNumericCellValue()).trim();
+
+        // Empty string — treat as no date
         if (raw.isEmpty()) return null;
 
         if (raw.matches("\\d{4}")) {
@@ -549,7 +566,7 @@ public class PostalOfficeImportService {
             return isValidCoordinateValue(value) ? value : null;
         }
         if (cell.getCellType() == CellType.STRING) {
-            try { 
+            try {
                 double value = Double.parseDouble(cell.getStringCellValue().trim());
                 return isValidCoordinateValue(value) ? value : null;
             } catch (NumberFormatException ignored) {}
@@ -558,13 +575,13 @@ public class PostalOfficeImportService {
     }
 
     private boolean isValidCoordinateValue(double value) {
-        // Reject obviously invalid values like extremely large numbers
         return Math.abs(value) <= 1000.0;
     }
 
     private Integer getInteger(Row row, int col) {
         Double d = getDouble(row, col); return d == null ? null : d.intValue();
     }
+
     // ── Misc helpers ──────────────────────────────────────────────────────────
 
     private boolean parseConnectionStatus(String raw) {
