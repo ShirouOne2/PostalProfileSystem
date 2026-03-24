@@ -74,7 +74,7 @@ public class ReportController {
         boolean       currentYearMatch = (today.getYear() == year);
 
         // Baseline: active/inactive count at Dec 31 of previous year
-        LocalDateTime baseline = LocalDateTime.of(year, 1, 1, 0, 0, 0).minusSeconds(1);
+        LocalDateTime baseline = LocalDateTime.of(year - 1, 12, 31, 23, 59, 59);
         long runningConnected    = countActiveAt(baseline, areaId);
         long runningDisconnected = countInactiveAt(baseline, areaId);
 
@@ -124,9 +124,16 @@ public class ReportController {
             long prevConnected    = runningConnected;
             long prevDisconnected = runningDisconnected;
 
-            // Cumulative running totals
-            runningConnected    = runningConnected + newlyConnected - newlyDisconnected;
-            if (runningConnected < 0) runningConnected = 0;
+            // For Q1, set the baseline to actual active offices at the end of Q1
+            if ("Q1".equals(q)) {
+                runningConnected = getConnectedNames(snapshotEnd, areaId).size();
+            }
+            
+            // Update running totals
+            if (!"Q1".equals(q)) {
+                runningConnected = runningConnected + newlyConnected - newlyDisconnected;
+                if (runningConnected < 0) runningConnected = 0;
+            }
             runningDisconnected = runningDisconnected + newlyDisconnected;
 
             // Skip adding to list if quarter filter doesn't match,
@@ -148,29 +155,33 @@ public class ReportController {
             row.put("connectedNames",         connectedNames);
             row.put("disconnectedNames",      disconnectedNames);
 
+            // For quarterly view, show the actual state at the end of the quarter
+            long actualConnected = getConnectedNames(snapshotEnd, areaId).size();
+            long actualDisconnected = getDisconnectedNames(snapshotEnd, areaId).size();
+
             if ("active".equals(statusFilter)) {
-                row.put("connected",         runningConnected);
+                row.put("connected",         actualConnected);
                 row.put("disconnected",      0L);
                 row.put("newlyConnected",    newlyConnected);
                 row.put("newlyDisconnected", 0L);
             } else if ("inactive".equals(statusFilter)) {
                 row.put("connected",         0L);
-                row.put("disconnected",      runningDisconnected);
+                row.put("disconnected",      actualDisconnected);
                 row.put("newlyConnected",    0L);
                 row.put("newlyDisconnected", newlyDisconnected);
             } else if ("newly_connected".equals(statusFilter)) {
-                row.put("connected",         runningConnected);
+                row.put("connected",         actualConnected);
                 row.put("disconnected",      0L);
                 row.put("newlyConnected",    newlyConnected);
                 row.put("newlyDisconnected", 0L);
             } else if ("newly_disconnected".equals(statusFilter)) {
                 row.put("connected",         0L);
-                row.put("disconnected",      runningDisconnected);
+                row.put("disconnected",      actualDisconnected);
                 row.put("newlyConnected",    0L);
                 row.put("newlyDisconnected", newlyDisconnected);
             } else {
-                row.put("connected",         runningConnected);
-                row.put("disconnected",      runningDisconnected);
+                row.put("connected",         actualConnected);
+                row.put("disconnected",      actualDisconnected);
                 row.put("newlyConnected",    newlyConnected);
                 row.put("newlyDisconnected", newlyDisconnected);
             }
