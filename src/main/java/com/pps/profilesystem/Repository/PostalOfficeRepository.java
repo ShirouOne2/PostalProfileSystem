@@ -61,9 +61,9 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "LEFT JOIN FETCH po.activeConnectivity " +
            "LEFT JOIN FETCH po.area " +
            "LEFT JOIN FETCH po.region " +
+           "LEFT JOIN FETCH po.province " +
            "LEFT JOIN FETCH po.cityMunicipality " +
-           "LEFT JOIN FETCH po.cityMunicipality.province " +
-           "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
+           "LEFT JOIN FETCH po.barangay " +
            "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<PostalOffice> findAllNonArchivedWithConnectivity();
 
@@ -71,9 +71,9 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "LEFT JOIN FETCH po.activeConnectivity " +
            "LEFT JOIN FETCH po.area " +
            "LEFT JOIN FETCH po.region " +
+           "LEFT JOIN FETCH po.province " +
            "LEFT JOIN FETCH po.cityMunicipality " +
-           "LEFT JOIN FETCH po.cityMunicipality.province " +
-           "LEFT JOIN FETCH po.cityMunicipality.province.regions " +
+           "LEFT JOIN FETCH po.barangay " +
            "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po) " +
            "AND po.area.id = :areaId")
     List<PostalOffice> findAllNonArchivedByArea(@Param("areaId") Integer areaId);

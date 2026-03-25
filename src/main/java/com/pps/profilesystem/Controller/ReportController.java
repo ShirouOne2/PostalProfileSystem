@@ -323,6 +323,19 @@ public class ReportController {
         catch (Exception e) { return new ArrayList<>(); }
     }
 
+    // ── Helper: build "ID::Area | Name" entry from a Connectivity record ────────
+    // Format: "{officeId}::{areaName} | {officeName}"
+    // The ID prefix lets Thymeleaf/JS extract the profile link without a
+    // second round-trip.  Sorting is done on the "Area | Name" suffix so the
+    // list is still alphabetical by area then office name.
+    private String toNameEntry(com.pps.profilesystem.Entity.Connectivity c) {
+        String area = c.getPostalOffice().getArea() != null
+            ? c.getPostalOffice().getArea().getAreaName() : "N/A";
+        String name = c.getPostalOffice().getName() != null
+            ? c.getPostalOffice().getName() : "";
+        return c.getPostalOffice().getId() + "::" + area + " | " + name;
+    }
+
     private List<String> getNewlyConnectedNames(LocalDateTime start, LocalDateTime end, Integer areaId) {
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
@@ -332,18 +345,12 @@ public class ReportController {
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> {
-                    String area = c.getPostalOffice().getArea() != null
-                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
-                    String name = c.getPostalOffice().getName() != null
-                        ? c.getPostalOffice().getName() : "";
-                    return area + " | " + name;
-                },
+                this::toNameEntry,
                 (a, b) -> a
             ))
             .values().stream()
             .filter(entry -> !entry.isEmpty())
-            .sorted()
+            .sorted(java.util.Comparator.comparing(e -> e.contains("::") ? e.substring(e.indexOf("::") + 2) : e))
             .collect(java.util.stream.Collectors.toList());
     }
 
@@ -356,18 +363,12 @@ public class ReportController {
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> {
-                    String area = c.getPostalOffice().getArea() != null
-                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
-                    String name = c.getPostalOffice().getName() != null
-                        ? c.getPostalOffice().getName() : "";
-                    return area + " | " + name;
-                },
+                this::toNameEntry,
                 (a, b) -> a
             ))
             .values().stream()
             .filter(entry -> !entry.isEmpty())
-            .sorted()
+            .sorted(java.util.Comparator.comparing(e -> e.contains("::") ? e.substring(e.indexOf("::") + 2) : e))
             .collect(java.util.stream.Collectors.toList());
     }
 
@@ -381,18 +382,12 @@ public class ReportController {
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> {
-                    String area = c.getPostalOffice().getArea() != null
-                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
-                    String name = c.getPostalOffice().getName() != null
-                        ? c.getPostalOffice().getName() : "";
-                    return area + " | " + name;
-                },
+                this::toNameEntry,
                 (a, b) -> a
             ))
             .values().stream()
             .filter(entry -> !entry.isEmpty())
-            .sorted()
+            .sorted(java.util.Comparator.comparing(e -> e.contains("::") ? e.substring(e.indexOf("::") + 2) : e))
             .collect(java.util.stream.Collectors.toList());
     }
 
@@ -406,18 +401,12 @@ public class ReportController {
                     && areaId.equals(c.getPostalOffice().getArea().getId())))
             .collect(java.util.stream.Collectors.toMap(
                 c -> c.getPostalOffice().getId(),
-                c -> {
-                    String area = c.getPostalOffice().getArea() != null
-                        ? c.getPostalOffice().getArea().getAreaName() : "N/A";
-                    String name = c.getPostalOffice().getName() != null
-                        ? c.getPostalOffice().getName() : "";
-                    return area + " | " + name;
-                },
+                this::toNameEntry,
                 (a, b) -> a
             ))
             .values().stream()
             .filter(entry -> !entry.isEmpty())
-            .sorted()
+            .sorted(java.util.Comparator.comparing(e -> e.contains("::") ? e.substring(e.indexOf("::") + 2) : e))
             .collect(java.util.stream.Collectors.toList());
     }
 }

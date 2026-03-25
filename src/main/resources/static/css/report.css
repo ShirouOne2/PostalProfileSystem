@@ -323,5 +323,22 @@
     font-size: 0.78rem;
     border-bottom: 1px solid #f0f2f5;
     white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, padding-left 0.15s ease;
 }
 .qb-names-item:last-child { border-bottom: none; }
+.qb-names-item:hover {
+    background: #eef4ff !important;
+    padding-left: 14px !important;
+}
+.qb-names-item:hover .qb-link-icon {
+    opacity: 1;
+}
+.qb-link-icon {
+    font-size: 9px;
+    color: #4e73df;
+    opacity: 0;
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
