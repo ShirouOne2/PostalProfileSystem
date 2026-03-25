@@ -212,9 +212,13 @@
                                                 </button>
                                                 <div class="qb-names-list">
                                                     <div th:each="entry : ${quarter.connectedNames}"
-                                                         class="qb-names-item">
-                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
-                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                         class="qb-names-item"
+                                                         th:data-office-id="${#strings.substringBefore(entry, '::')}"
+                                                         onclick="goToProfile(this)">
+                                                        <span class="qb-area-tag"
+                                                              th:text="${#strings.substringBefore(#strings.substringAfter(entry, '::'), ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(#strings.substringAfter(entry, '::'), ' | ')}">Office</span>
+                                                        <i class="fas fa-external-link-alt qb-link-icon"></i>
                                                     </div>
                                                 </div>
                                             </div>
@@ -239,9 +243,13 @@
                                                 </button>
                                                 <div class="qb-names-list">
                                                     <div th:each="entry : ${quarter.newlyConnectedNames}"
-                                                         class="qb-names-item">
-                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
-                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                         class="qb-names-item"
+                                                         th:data-office-id="${#strings.substringBefore(entry, '::')}"
+                                                         onclick="goToProfile(this)">
+                                                        <span class="qb-area-tag"
+                                                              th:text="${#strings.substringBefore(#strings.substringAfter(entry, '::'), ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(#strings.substringAfter(entry, '::'), ' | ')}">Office</span>
+                                                        <i class="fas fa-external-link-alt qb-link-icon"></i>
                                                     </div>
                                                 </div>
                                             </div>
@@ -262,9 +270,13 @@
                                                 </button>
                                                 <div class="qb-names-list">
                                                     <div th:each="entry : ${quarter.disconnectedNames}"
-                                                         class="qb-names-item">
-                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
-                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                         class="qb-names-item"
+                                                         th:data-office-id="${#strings.substringBefore(entry, '::')}"
+                                                         onclick="goToProfile(this)">
+                                                        <span class="qb-area-tag"
+                                                              th:text="${#strings.substringBefore(#strings.substringAfter(entry, '::'), ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(#strings.substringAfter(entry, '::'), ' | ')}">Office</span>
+                                                        <i class="fas fa-external-link-alt qb-link-icon"></i>
                                                     </div>
                                                 </div>
                                             </div>
@@ -289,9 +301,13 @@
                                                 </button>
                                                 <div class="qb-names-list">
                                                     <div th:each="entry : ${quarter.newlyDisconnectedNames}"
-                                                         class="qb-names-item">
-                                                        <span class="qb-area-tag" th:text="${#strings.substringBefore(entry, ' | ')}">Area</span>
-                                                        <span th:text="${#strings.substringAfter(entry, ' | ')}">Office</span>
+                                                         class="qb-names-item"
+                                                         th:data-office-id="${#strings.substringBefore(entry, '::')}"
+                                                         onclick="goToProfile(this)">
+                                                        <span class="qb-area-tag"
+                                                              th:text="${#strings.substringBefore(#strings.substringAfter(entry, '::'), ' | ')}">Area</span>
+                                                        <span th:text="${#strings.substringAfter(#strings.substringAfter(entry, '::'), ' | ')}">Office</span>
+                                                        <i class="fas fa-external-link-alt qb-link-icon"></i>
                                                     </div>
                                                 </div>
                                             </div>
@@ -328,16 +344,11 @@
 
     </div><!-- end container-fluid -->
 
-    <script>
-    function toggleNames(btn) {
-        var list = btn.parentElement.querySelector('.qb-names-list');
-        if (!list) return;
-        var isOpen = list.classList.toggle('open');
-        btn.innerHTML = isOpen
-            ? '<i class="fas fa-chevron-up mr-1"></i>hide offices'
-            : '<i class="fas fa-chevron-down mr-1"></i>show offices';
-    }
-    </script>
+    <!-- ── External Styles ───────────────────────────────────────────────────────────────────── -->
+    <link rel="stylesheet" th:href="@{/css/report.css}" />
+
+    <!-- ── External Scripts ───────────────────────────────────────────────────────────────────── -->
+    <script th:src="@{/js/report.js}"></script>
 
 </div><!-- end th:fragment="content" -->
 

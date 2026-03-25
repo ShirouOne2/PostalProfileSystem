@@ -111,18 +111,13 @@ function populateAreaDropdown() {
     const select = document.getElementById('filterArea');
     if (!select) return;
 
-    const areaSet = new Set();
-    document.querySelectorAll('#myTable tbody tr td:nth-child(3)').forEach(cell => {
-        const val = cell.textContent.trim();
-        if (val && val !== 'N/A') areaSet.add(val);
-    });
-
-    [...areaSet].sort().forEach(area => {
-        const opt       = document.createElement('option');
-        opt.value       = area;
-        opt.textContent = area;
+    // Add options 1 to 9 with "Area X" format
+    for (let i = 1; i <= 9; i++) {
+        const opt = document.createElement('option');
+        opt.value = 'Area ' + i;
+        opt.textContent = 'Area ' + i;
         select.appendChild(opt);
-    });
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════

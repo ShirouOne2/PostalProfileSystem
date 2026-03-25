@@ -17,6 +17,29 @@ function toggleQbList(btn) {
     btn.classList.toggle('open', isOpen);
 }
 
+/* ── Toggle names in table cells ── */
+function toggleNames(btn) {
+    var list = btn.parentElement.querySelector('.qb-names-list');
+    if (!list) return;
+    var isOpen = list.classList.toggle('open');
+    btn.innerHTML = isOpen
+        ? '<i class="fas fa-chevron-up mr-1"></i>hide offices'
+        : '<i class="fas fa-chevron-down mr-1"></i>show offices';
+}
+
+/**
+ * Navigate to postal office profile page.
+ * data-office-id is set by Thymeleaf from the "ID::" prefix in the entry string.
+ * source=report tells the Back button on the profile page to return here.
+ */
+function goToProfile(el) {
+    var id = el.getAttribute('data-office-id');
+    if (!id || id.trim() === '') return;
+    // Save current URL (with filters) so the Back button on profile works
+    sessionStorage.setItem('reportReturnUrl', window.location.href);
+    window.location.href = '/profile/' + id.trim() + '?source=report';
+}
+
 /* =====================================================
    FILTER PANEL
 ===================================================== */
