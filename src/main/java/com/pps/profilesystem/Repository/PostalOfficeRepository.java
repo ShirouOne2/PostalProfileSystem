@@ -92,9 +92,10 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            nativeQuery = true)
     long countDistinctAreasNonArchived();
 
-    @Query(value = "SELECT * FROM postal_offices WHERE latitude IS NOT NULL AND longitude IS NOT NULL " +
-                   "AND id NOT IN (SELECT postal_office_id FROM archived_offices)",
-           nativeQuery = true)
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.area " +
+           "WHERE po.latitude IS NOT NULL AND po.longitude IS NOT NULL " +
+           "AND NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<PostalOffice> findAllWithAreaForMapNonArchived();
 
     @Query("SELECT po FROM PostalOffice po WHERE po.longitude = :longitude AND po.latitude = :latitude")

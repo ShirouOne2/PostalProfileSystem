@@ -1,10 +1,14 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
+import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +33,9 @@ public class ReportController {
     @Autowired
     private ArchivedOfficeRepository archivedOfficeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
     public String showReportPage(
             @RequestParam(required = false) Integer year,
@@ -37,12 +44,39 @@ public class ReportController {
             @RequestParam(required = false) String statusFilter,
             Model model) {
 
+        // Get the logged-in user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User currentUser = userRepository.findByEmail(email).orElse(null);
+
+        Integer roleId = currentUser != null ? currentUser.getRole()   : null;
+        Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+
         int currentYear = (year != null) ? year : LocalDate.now().getYear();
 
+        // Parse areaId from filter string
         Integer areaId = null;
         if (areaFilter != null && !areaFilter.trim().isEmpty()) {
             try { areaId = Integer.parseInt(areaFilter.trim()); } catch (NumberFormatException ignored) {}
         }
+
+        // Apply user area restrictions: non-system-admin users can only see their assigned area
+        if (roleId != null && roleId != 1) {
+            // User is not a system admin, restrict to their assigned area
+            if (userAreaId != null) {
+                // If no area filter is set, default to user's area
+                if (areaId == null) {
+                    areaId = userAreaId;
+                } else if (!areaId.equals(userAreaId)) {
+                    // User is trying to access an area they're not assigned to - redirect to their area
+                    areaId = userAreaId;
+                }
+            } else {
+                // User has no area assigned, show no data
+                areaId = -1; // Invalid area ID that will return no results
+            }
+        }
+        // If roleId is null or roleId == 1 (system admin), allow all areas
 
         model.addAttribute("currentYear",       currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
@@ -53,10 +87,17 @@ public class ReportController {
             buildQuartersData(currentYear, quarterFilter, areaId, statusFilter));
 
         model.addAttribute("selectedYearFilter",    year != null ? String.valueOf(year) : null);
-        model.addAttribute("selectedAreaFilter",    areaFilter);
+        model.addAttribute("selectedAreaFilter",    areaId != null && areaId != -1 ? areaId.toString() : "");
         model.addAttribute("selectedQuarterFilter", quarterFilter);
         model.addAttribute("selectedStatusFilter",  statusFilter);
         model.addAttribute("activePage", "report");
+
+        Map<String, Boolean> userAccess = new HashMap<>();
+        userAccess.put("can_access_all_areas", roleId != null && roleId == 1);
+        model.addAttribute("userAccess", userAccess);
+        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
+        model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
 
         return "report";
     }
@@ -253,6 +294,10 @@ public class ReportController {
     }
 
     private long countActiveAt(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findActiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -267,6 +312,10 @@ public class ReportController {
     // Count offices that were DISCONNECTED at the given snapshot date.
     // Uses distinct postalOffice IDs from inactive records at that date.
     private long countInactiveAt(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findInactiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -279,6 +328,10 @@ public class ReportController {
     }
 
     private long countNewlyConnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -291,6 +344,10 @@ public class ReportController {
     }
 
     private long countNewlyDisconnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -337,6 +394,10 @@ public class ReportController {
     }
 
     private List<String> getNewlyConnectedNames(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return empty list (no access)
+        if (areaId != null && areaId == -1) {
+            return new ArrayList<>();
+        }
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -355,6 +416,10 @@ public class ReportController {
     }
 
     private List<String> getNewlyDisconnectedNames(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return empty list (no access)
+        if (areaId != null && areaId == -1) {
+            return new ArrayList<>();
+        }
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -374,6 +439,10 @@ public class ReportController {
 
     // ── All active offices at a snapshot date ─────────────────────────────────
     private List<String> getConnectedNames(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return empty list (no access)
+        if (areaId != null && areaId == -1) {
+            return new ArrayList<>();
+        }
         return connectivityRepository.findActiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
@@ -393,6 +462,10 @@ public class ReportController {
 
     // ── All inactive offices at a snapshot date ───────────────────────────────
     private List<String> getDisconnectedNames(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return empty list (no access)
+        if (areaId != null && areaId == -1) {
+            return new ArrayList<>();
+        }
         return connectivityRepository.findInactiveAtDate(snap).stream()
             .filter(c -> c.getPostalOffice() != null
                 && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))

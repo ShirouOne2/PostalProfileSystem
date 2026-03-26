@@ -1,315 +1,564 @@
 <!DOCTYPE html>
+
 <html xmlns:th="http://www.thymeleaf.org"
+
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
+
+
 <head>
+
     <title>Quarters Management</title>
 </head>
 
-<body>
-
-<div th:fragment="content"> 
-    <!-- Link to external CSS -->
-    <link rel="stylesheet" th:href="@{/css/quarters.css}">
-       
-    <div class="container-fluid">
-
-        <!-- Header Card -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center flex-wrap bg-white p-3 rounded shadow-sm border-left-primary">
-                    <div>
-                        <h4 class="mb-1 font-weight-bold text-dark">
-                            <i class="fas fa-calendar-alt text-primary mr-2"></i> 
-                            Quarters Management - <span th:text="${currentYear}">2026</span>
-                        </h4>
-                        <div class="mt-2">
-                            <span class="badge badge-info py-2 px-3">
-                                <i class="fas fa-clock mr-1"></i> Current Quarter: 
-                                <span th:text="${currentQuarterInfo.quarter}">Q1</span> 
-                                (<span th:text="${currentQuarterInfo.monthName}">FEBRUARY</span>)
-                            </span>
+<body th:data-is-system-admin="${isSystemAdmin}" 
+      th:data-is-area-admin="${isAreaAdmin}" 
+      th:data-is-any-admin="${isAnyAdmin}">
+    <div th:fragment="content"> 
+        <!-- Link to external CSS -->
+        <link rel="stylesheet" th:href="@{/css/quarters.css}">
+        <div class="container-fluid">
+            <!-- Header Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap bg-white p-3 rounded shadow-sm border-left-primary">
+                        <div>
+                            <h4 class="mb-1 font-weight-bold text-dark">
+                                <i class="fas fa-calendar-alt text-primary mr-2"></i> 
+                                Quarters Management
+                            </h4>
                         </div>
-                    </div>
-                    
-                    <div class="mt-3 mt-md-0">
-                        <button type="button" class="btn btn-info btn-sm shadow-sm" data-toggle="modal" data-target="#mapmodal">
-                            <i class="fas fa-map"></i> View Map
-                        </button>
-                        <button type="button" class="btn btn-success btn-sm shadow-sm" id="printReportBtn">
-                            <i class="fas fa-print"></i> Print
-                        </button>
+                        <div class="mt-3 mt-md-0">
+                            <a th:href="@{/archive}" class="btn btn-outline-warning btn-sm" th:if="${isAnyAdmin}">
+                                <i class="fas fa-archive mr-1"></i> View Archive
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ===== FILTER PANEL ===== -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="filter-panel bg-white rounded shadow-sm p-3">
-                    <div class="filter-panel-header mb-3">
-                        <i class="fas fa-filter text-primary mr-2"></i>
-                        <span class="font-weight-bold text-dark">Filter Options</span>
+
+
+            <!-- ===== FILTER PANEL ===== -->
+
+            <div class="row mb-4">
+
+                <div class="col-12">
+
+                    <div class="filter-panel bg-white rounded shadow-sm p-3">
+
+                        <div class="filter-panel-header mb-3">
+
+                            <i class="fas fa-filter text-primary mr-2"></i>
+
+                            <span class="font-weight-bold text-dark">Filter Options</span>
+
                         <button class="btn btn-link btn-sm float-right p-0 text-muted" id="toggleFiltersBtn">
+
                             <i class="fas fa-chevron-up" id="filterChevron"></i>
+
                         </button>
+
                     </div>
+
+
 
                     <div id="filterBody">
+
                         <!-- First Row: Basic Filters -->
+
                         <div class="row align-items-end mb-3">
 
+
+
                             <!-- Year Filter -->
+
                             <div class="col-md-3 col-sm-6 mb-2">
+
                                 <label class="filter-label">
+
                                     <i class="fas fa-calendar text-primary mr-1"></i> Year
+
                                 </label>
+
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
+
                                     <option value="">Select Years</option>
+
                                     <!-- Thymeleaf: generate year options dynamically -->
+
                                     <option th:each="y : ${#numbers.sequence(1993, 2027)}"
+
                                             th:value="${y}"
+
                                             th:text="${y}"
+
                                             th:selected="${y == currentYear}">2026</option>
+
                                 </select>
+
                             </div>
+
+
 
                             <!-- Quarter Filter -->
+
                             <div class="col-md-3 col-sm-6 mb-2">
+
                                 <label class="filter-label">
+
                                     <i class="fas fa-layer-group text-warning mr-1"></i> Quarter
+
                                 </label>
+
                                 <select id="quarterFilter" class="form-control form-control-sm filter-select">
+
                                     <option value="">Choose Quarters</option>
+
                                     <option value="Q1"
-                                            th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan Mar)</option>
+
+                                            th:selected="${selectedQuarterFilter == 'Q1'}">Q1 (Jan-Mar)</option>
+
                                     <option value="Q2"
-                                            th:selected="${selectedQuarterFilter == 'Q2'}">Q2 (Apr Jun)</option>
+
+                                            th:selected="${selectedQuarterFilter == 'Q2'}">Q2 (Apr-Jun)</option>
+
                                     <option value="Q3"
-                                            th:selected="${selectedQuarterFilter == 'Q3'}">Q3 (Jul Sep)</option>
+
+                                            th:selected="${selectedQuarterFilter == 'Q3'}">Q3 (Jul-Sep)</option>
+
                                     <option value="Q4"
-                                            th:selected="${selectedQuarterFilter == 'Q4'}">Q4 (Oct Dec)</option>
+
+                                            th:selected="${selectedQuarterFilter == 'Q4'}">Q4 (Oct-Dec)</option>
+
                                 </select>
+
                             </div>
 
-                            <!-- Area Filter -->
-                            <div class="col-md-3 col-sm-6 mb-2">
+
+
+                            <!-- Area Filter - System Admin only -->
+
+                            <div class="col-md-3 col-sm-6 mb-2" th:if="${isAnyAdmin and isSystemAdmin}">
+
                                 <label class="filter-label">
+
                                     <i class="fas fa-map-marker-alt text-danger mr-1"></i> Area
+
                                 </label>
+
                                 <select id="areaFilter" class="form-control form-control-sm filter-select">
+
                                     <option value="">Select Areas</option>
+
                                     <option th:each="area : ${areas}"
+
                                             th:value="${area.id}"
+
                                             th:text="${area.areaName}"
+
                                             th:selected="${selectedAreaFilter != null and selectedAreaFilter == area.id.toString()}">
+
                                         Area 1
+
                                     </option>
+
                                 </select>
+
                             </div>
+
+
 
                             <!-- Status Filter -->
+
                             <div class="col-md-3 col-sm-6 mb-2">
+
                                 <label class="filter-label">
+
                                     <i class="fas fa-wifi text-success mr-1"></i> Status
+
                                 </label>
+
                                 <select id="statusFilter" class="form-control form-control-sm filter-select">
+
                                     <option value="">Select Status</option>
+
                                     <option value="active"
+
                                             th:selected="${selectedStatusFilter == 'active'}">
+
                                         <i class="fas fa-check-circle"></i> Active
+
                                     </option>
+
                                     <option value="inactive"
+
                                             th:selected="${selectedStatusFilter == 'inactive'}">
+
                                         <i class="fas fa-times-circle"></i> Inactive
+
                                     </option>
+
                                     <option value="newly_connected"
+
                                             th:selected="${selectedStatusFilter == 'newly_connected'}">
+
                                         <i class="fas fa-plus-circle text-success"></i> Newly Connected
+
                                     </option>
+
                                     <option value="newly_disconnected"
+
                                             th:selected="${selectedStatusFilter == 'newly_disconnected'}">
+
                                         <i class="fas fa-minus-circle text-danger"></i> Newly Disconnected
+
                                     </option>
+
                                 </select>
+
                             </div>
 
+
+
                         </div>
+
+
 
                         <!-- Filter Action Buttons -->
+
                         <div class="row mt-2">
+
                             <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
 
+
+
                                 <!-- Active Filter Tags (shown when filters are applied) -->
+
                                 <div id="activeFilterTags" class="d-flex flex-wrap align-items-center" style="gap: 6px;">
+
                                     <!-- Tags injected by JS -->
+
                                 </div>
+
+
 
                                 <div class="ml-auto d-flex" style="gap: 8px;">
+
                                     <button id="applyFiltersBtn" class="btn btn-primary btn-sm px-4">
+
                                         <i class="fas fa-search mr-1"></i> Apply Filters
+
                                     </button>
+
                                     <button id="clearFiltersBtn" class="btn btn-outline-secondary btn-sm px-3">
+
                                         <i class="fas fa-times mr-1"></i> Clear All
+
                                     </button>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
         <!-- ===== END FILTER PANEL ===== -->
 
+
+
         <!-- Connectivity Cards - Latest Quarter Only -->
+
         <div class="row mb-4">
+
             
+
             <!-- WITH CONNECTIVITY (Left Column - Green) -->
-            <div class="col-lg-6">
+
+            <div class="col-lg-3">
+
                 <div class="card bg-success text-white">
+
                     <div class="card-header">
+
                         <i class="fas fa-wifi mr-2"></i> With Connectivity
+
                     </div>
+
                     <div class="card-body">
+
                         <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+
                         <p>
+
                             Total Connected:
+
                             <strong th:text="${latestQuarter.connected}">15</strong>
+
                         </p>
+
                         <p>
-                            New This Quarter:
+
+                            New This Connected:
+
                             <strong th:text="${latestQuarter.newlyConnected}">0</strong>
+
                         </p>
+
                     </div>
+
                 </div>
+
             </div>
+
             
-            <!-- WITHOUT CONNECTIVITY (Right Column - Red) -->
-            <div class="col-lg-6">
+
+            <!-- WITHOUT CONNECTIVITY (Middle Column - Red) -->
+
+            <div class="col-lg-3">
+
                 <div class="card bg-danger text-white">
+
                     <div class="card-header">
+
                         <i class="fas fa-wifi-slash mr-2"></i> Without Connectivity
+
                     </div>
+
                     <div class="card-body">
+
                         <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+
                         <p>
+
                             Total Disconnected:
+
                             <strong th:text="${latestQuarter.disconnected}">15</strong>
+
                         </p>
+
                         <p>
-                            New This Quarter:
+
+                            New This Disconnected:
+
                             <strong th:text="${latestQuarter.newlyDisconnected}">1</strong>
+
                         </p>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
+            <!-- TOTAL (Right Column - Blue) -->
+
+            <div class="col-lg-3">
+
+                <div class="card bg-primary text-white">
+
+                    <div class="card-header">
+
+                        <i class="fas fa-building mr-2"></i> Total Offices
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
+
+                        <p>
+
+                            Total Offices:
+
+                            <strong th:text="${latestQuarter.connected + latestQuarter.disconnected}">30</strong>
+
+                        </p>
+
+                        <p>
+
+                            New This Quarter:
+
+                            <strong th:text="${latestQuarter.newlyConnected + latestQuarter.newlyDisconnected}">1</strong>
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
         </div>
 
-        <!-- Overall Statistics -->
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-success">
-                    <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
-                            <i class="fas fa-wifi text-success mr-2"></i> Active
-                        </h6>
-                        <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalConnected}">628</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-danger">
-                    <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
-                            <i class="fas fa-wifi-slash text-danger mr-2"></i> Inactive
-                        </h6>
-                        <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalDisconnected}">629</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm h-100 text-center py-4 border-bottom-primary">
-                    <div class="card-body">
-                        <h6 class="text-muted text-uppercase font-weight-bold mb-3">
-                            <i class="fas fa-building text-primary mr-2"></i> Total
-                        </h6>
-                        <h2 class="display-4 font-weight-bold mb-0 text-dark" th:text="${connectivityStats.totalOffices}">1257</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- TABLE -->
+
         <div id="dataTableSection" class="mt-4">
+
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0"><i class="fas fa-table mr-2"></i> All Post Offices</h4>
-                <span id="tableFilterSummary" class="text-muted small"></span>
+
+                <h4 class="mb-0"><i class="fas fa-table mr-2"></i>Connectivity Summary</h4>
+
+                <div class="d-flex" style="gap: 8px;">
+
+                    <button type="button" class="btn btn-info btn-sm shadow-sm" data-toggle="modal" data-target="#mapmodal">
+
+                        <i class="fas fa-map"></i> View Map
+
+                    </button>
+
+                    <button type="button" class="btn btn-success btn-sm shadow-sm" id="printReportBtn">
+
+                        <i class="fas fa-print"></i> Print
+
+                    </button>
+
+                </div>
+
             </div>
+
             <div class="table-responsive">
+
                 <table id="postOfficeTable" class="table table-striped table-bordered" style="width:100%">
+
                     <thead class="thead-dark">
+
                         <tr>
+
                             <th>#</th>
+
                             <th>AREA</th>
+
                             <th>POSTAL OFFICE</th>
+
                             <th>ADDRESS</th>
+
                             <th>ZIP CODE</th>
+
                             <th>SPEED</th>
+
                             <th>CONNECTION STATUS</th>
+
                             <th>POSTMASTER</th>
+
                             <th>REMARKS</th>
+
                             <th>ACTION</th>
+
                         </tr>
+
                     </thead>
+
                     <tbody></tbody>
+
                 </table>
+
             </div>
+
         </div>
 
+
+
     </div>
+
+
 
     <!-- Archive Modal for Quarters Page -->
+
     <div class="modal fade" id="quartersArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
+
         <div class="modal-dialog modal-dialog-centered" role="document">
+
             <div class="modal-content">
+
                 <div class="modal-header bg-warning text-white">
+
                     <h5 class="modal-title font-weight-bold">
+
                         <i class="fas fa-archive mr-2"></i>Archive Post Office
+
                     </h5>
+
                     <button type="button" class="close text-white" data-dismiss="modal">
+
                         <span>&times;</span>
+
                     </button>
+
                 </div>
+
                 <div class="modal-body">
+
                     <p class="text-muted mb-3">
+
                         You are about to archive <strong id="quartersArchiveOfficeName"></strong>.
+
                         This office will be hidden from all views but can be restored later.
+
                     </p>
+
                     <div class="form-group">
+
                         <label for="quartersArchiveReasonInput">
+
                             Reason for archiving <small class="text-muted">(optional)</small>
+
                         </label>
+
                         <textarea id="quartersArchiveReasonInput" class="form-control" rows="3"
+
                                   placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+
                     </div>
+
                 </div>
+
                 <div class="modal-footer">
+
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
+
                         <i class="fas fa-times mr-1"></i>Cancel
+
                     </button>
+
                     <button type="button" class="btn btn-warning" id="quartersConfirmArchiveBtn">
+
                         <i class="fas fa-archive mr-1"></i>Archive
+
                     </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <!-- Map modal will be created dynamically by quarters.js -->
 
+
+
 </div>
 
+
+
 </body>
+
 </html>

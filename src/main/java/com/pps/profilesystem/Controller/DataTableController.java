@@ -85,7 +85,9 @@ public class DataTableController {
         model.addAttribute("areas",   locationService.getAllAreas());
         model.addAttribute("regions", locationService.getAllRegions());
 
-        model.addAttribute("activePage", "table");
+        model.addAttribute("activePage",    "table");
+        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
 
         return "table";
     }

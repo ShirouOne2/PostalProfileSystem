@@ -7,6 +7,7 @@ $(document).ready(function () {
     initializeFilterPanel();
     initializePrint();
     initializeExportExcel();
+    initializeReportTable();
 });
 
 /* ── Toggle expandable office list in QB cards ── */
@@ -154,34 +155,32 @@ function initializePrint() {
         var total        = $('.border-bottom-primary h2').first().text().trim();
 
         // Build table rows
+        // Column order: Year(0) | Quarter(1) | Connected(2) | Newly Connected(3) | Disconnected(4) | Newly Disconnected(5) | Total(6) | Status(7)
         var tableRows = '';
         $('#quarterlyBreakdownTable tbody tr').each(function () {
             var cells = $(this).find('td');
-            if (cells.length < 6) return;
-            var isCurrent = $(this).hasClass('table-active') || $(this).hasClass('font-weight-bold');
+            if (cells.length < 7) return;
+            var isCurrent = $(this).hasClass('table-info') || $(this).hasClass('font-weight-bold');
             var rowStyle  = isCurrent ? 'background:#eef2ff;font-weight:bold;' : '';
 
-            // Extract newly connected names with area badges
-            var newlyConnHtml = cells.eq(3).find('.po-name-item').map(function() {
-                var area = $(this).find('.badge').text().trim();
-                var name = $(this).find('span:last').text().trim();
-                return (area ? '<span style="background:#e2e8f0;border-radius:3px;padding:0 4px;font-size:10px;font-weight:700;">' + area + '</span> ' : '') + name;
-            }).get().join('<br>') || cells.eq(3).find('.badge-secondary').length ? '—' : cells.eq(3).find('.badge-success').text().trim();
-
-            var newlyDiscHtml = cells.eq(5).find('.po-name-item').map(function() {
-                var area = $(this).find('.badge').text().trim();
-                var name = $(this).find('span:last').text().trim();
-                return (area ? '<span style="background:#e2e8f0;border-radius:3px;padding:0 4px;font-size:10px;font-weight:700;">' + area + '</span> ' : '') + name;
-            }).get().join('<br>') || cells.eq(5).find('.badge-secondary').length ? '—' : cells.eq(5).find('.badge-danger').text().trim();
+            var year     = cells.eq(0).text().trim();
+            var quarter  = cells.eq(1).text().trim();
+            var conn     = cells.eq(2).find('.font-weight-bold').text().trim() || cells.eq(2).text().trim() || '—';
+            var newlyConn= cells.eq(3).find('.badge-success').text().trim() || '—';
+            var disconn  = cells.eq(4).find('.font-weight-bold').text().trim() || cells.eq(4).text().trim() || '—';
+            var newlyDisc= cells.eq(5).find('.badge-danger').text().trim() || '—';
+            var total    = cells.eq(6).text().trim() || '—';
+            var status   = cells.eq(7).text().trim() || '—';
 
             tableRows += '<tr style="' + rowStyle + '">';
-            tableRows += '<td>' + (cells.eq(0).text().trim() || '') + '</td>';
-            tableRows += '<td>' + (cells.eq(1).text().trim() || '') + '</td>';
-            tableRows += '<td>' + (cells.eq(2).text().trim() || '') + '</td>';
-            tableRows += '<td>' + (cells.eq(3).find('.badge-success').text().trim() || '—') + (newlyConnHtml ? '<div style="margin-top:3px;font-size:10px;line-height:1.6;">' + newlyConnHtml + '</div>' : '') + '</td>';
-            tableRows += '<td>' + (cells.eq(4).text().trim() || '') + '</td>';
-            tableRows += '<td>' + (cells.eq(5).find('.badge-danger').text().trim() || '—') + (newlyDiscHtml ? '<div style="margin-top:3px;font-size:10px;line-height:1.6;">' + newlyDiscHtml + '</div>' : '') + '</td>';
-            tableRows += '<td>' + (cells.eq(6).text().trim() || '') + '</td>';
+            tableRows += '<td>' + year     + '</td>';
+            tableRows += '<td>' + quarter  + '</td>';
+            tableRows += '<td style="text-align:center;color:#1a9e72;font-weight:600;">' + conn      + '</td>';
+            tableRows += '<td style="text-align:center;">'                               + newlyConn + '</td>';
+            tableRows += '<td style="text-align:center;color:#c0392b;font-weight:600;">' + disconn   + '</td>';
+            tableRows += '<td style="text-align:center;">'                               + newlyDisc + '</td>';
+            tableRows += '<td style="text-align:center;color:#2e59d9;font-weight:600;">' + total     + '</td>';
+            tableRows += '<td style="text-align:center;">'                               + status    + '</td>';
             tableRows += '</tr>';
         });
 
@@ -248,7 +247,7 @@ function initializePrint() {
 
             '<h3>Quarterly Breakdown</h3>' +
             '<table>' +
-            '<thead><tr><th>Quarter</th><th>Year</th><th>Connected</th><th>Newly Connected</th><th>Disconnected</th><th>Newly Disconnected</th><th>Status</th></tr></thead>' +
+            '<thead><tr><th>Year</th><th>Quarter</th><th>Connected</th><th>Newly Connected</th><th>Disconnected</th><th>Newly Disconnected</th><th>Total</th><th>Status</th></tr></thead>' +
             '<tbody>' + tableRows + '</tbody>' +
             '</table>' +
 
@@ -296,12 +295,12 @@ function initializeExportExcel() {
         }
 
         var data = [];
-        data.push(['Quarter', 'Year', 'Connected', 'Newly Connected', 'Disconnected', 'Newly Disconnected', 'Status']);
+        data.push(['Year', 'Quarter', 'Connected', 'Newly Connected', 'Disconnected', 'Newly Disconnected', 'Total', 'Status']);
 
         var hasData = false;
         $('#quarterlyBreakdownTable tbody tr').each(function () {
             var cells = $(this).find('td');
-            if (cells.length < 6) return;
+            if (cells.length < 7) return;
             hasData = true;
 
             function parseNum(str) {
@@ -309,19 +308,24 @@ function initializeExportExcel() {
                 return isNaN(n) ? 0 : n;
             }
 
-            var connectedTxt    = cells.eq(2).text().trim();
-            var newConnTxt      = cells.eq(3).text().trim();
-            var disconnTxt      = cells.eq(4).text().trim();
-            var newDisconnTxt   = cells.eq(5).text().trim();
+            var yearTxt       = cells.eq(0).text().trim();
+            var quarterTxt    = cells.eq(1).text().trim();
+            var connectedTxt  = cells.eq(2).find('.font-weight-bold').text().trim() || cells.eq(2).text().trim();
+            var newConnTxt    = cells.eq(3).find('.badge-success').text().trim()    || cells.eq(3).text().trim();
+            var disconnTxt    = cells.eq(4).find('.font-weight-bold').text().trim() || cells.eq(4).text().trim();
+            var newDisconnTxt = cells.eq(5).find('.badge-danger').text().trim()     || cells.eq(5).text().trim();
+            var totalTxt      = cells.eq(6).text().trim();
+            var statusTxt     = cells.eq(7).text().trim();
 
             data.push([
-                cells.eq(0).text().trim(),
-                cells.eq(1).text().trim(),
-                connectedTxt  === '—' ? '' : parseNum(connectedTxt),
-                newConnTxt    === '—' ? '' : parseNum(newConnTxt),
-                disconnTxt    === '—' ? '' : parseNum(disconnTxt),
-                newDisconnTxt === '—' ? '' : parseNum(newDisconnTxt),
-                cells.eq(6).text().trim()
+                yearTxt,
+                quarterTxt,
+                connectedTxt  === '—' || connectedTxt  === '' ? '' : parseNum(connectedTxt),
+                newConnTxt    === '—' || newConnTxt    === '' ? '' : parseNum(newConnTxt),
+                disconnTxt    === '—' || disconnTxt    === '' ? '' : parseNum(disconnTxt),
+                newDisconnTxt === '—' || newDisconnTxt === '' ? '' : parseNum(newDisconnTxt),
+                totalTxt      === '—' || totalTxt      === '' ? '' : parseNum(totalTxt),
+                statusTxt
             ]);
         });
 
@@ -352,8 +356,8 @@ function initializeExportExcel() {
         // Sheet 1 — Quarterly Breakdown
         var ws = XLSX.utils.aoa_to_sheet(data);
         ws['!cols'] = [
-            { wch: 10 }, { wch: 8 }, { wch: 14 },
-            { wch: 18 }, { wch: 16 }, { wch: 20 }, { wch: 14 }
+            { wch: 8 }, { wch: 10 }, { wch: 14 },
+            { wch: 18 }, { wch: 16 }, { wch: 20 }, { wch: 10 }, { wch: 14 }
         ];
         XLSX.utils.book_append_sheet(wb, ws, 'Quarterly Breakdown');
 
@@ -383,5 +387,219 @@ function initializeExportExcel() {
         setTimeout(function () {
             $btn.prop('disabled', false).html('<i class="fas fa-file-excel mr-1"></i> Export Excel');
         }, 800);
+    });
+}
+
+/* =====================================================
+   REPORT TABLE WITH ARCHIVE FUNCTIONALITY
+===================================================== */
+function initializeReportTable() {
+    if (!$('#postOfficeTable').length) return;
+
+    if ($.fn.DataTable.isDataTable('#postOfficeTable')) {
+        $('#postOfficeTable').DataTable().destroy();
+        $('#postOfficeTable').empty();
+    }
+
+    // Read filter values
+    const yearFilter    = $('#yearSelector').val()   || '';
+    const quarterFilter = $('#quarterFilter').val()  || '';
+    const areaFilter    = $('#areaFilter').val()     || '';
+    const statusFilter  = $('#statusFilter').val()   || '';
+
+    // Build AJAX URL with filter parameters
+    let ajaxUrl = '/api/quarters/post-offices';
+    const params = [];
+    
+    if (yearFilter)    params.push('year=' + encodeURIComponent(yearFilter));
+    if (quarterFilter) params.push('quarter=' + encodeURIComponent(quarterFilter));
+    if (areaFilter)    params.push('area=' + encodeURIComponent(areaFilter));
+    if (statusFilter)  params.push('status=' + encodeURIComponent(statusFilter));
+    
+    if (params.length > 0) {
+        ajaxUrl += '?' + params.join('&');
+    }
+
+    const table = $('#postOfficeTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: ajaxUrl,
+            dataSrc: '',
+            error: function(xhr, error, code) {
+                console.error('DataTable AJAX Error:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    response: xhr.responseText,
+                    error: error,
+                    code: code
+                });
+                
+                let errorMessage = 'Failed to load post office data.';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = 'Server error: ' + xhr.responseJSON.message;
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Network error. Please check your connection.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Data Loading Error',
+                        text: errorMessage,
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    alert(errorMessage);
+                }
+            }
+        },
+        columns: [
+            { data: null,      render: (data, type, row, meta) => meta.row + 1 },
+            { data: 'areaId',  render: d => d ? 'Area ' + d : 'N/A' },
+            { data: 'name',    defaultContent: 'N/A' },
+            { data: 'address', defaultContent: 'N/A' },
+            { data: 'zipCode', defaultContent: 'N/A' },
+            { 
+                data: 'speed',
+                defaultContent: 'N/A',
+                render: d => d || 'N/A'
+            },
+            {
+                data: 'status',
+                render: function(data, type, row) {
+                    let statusBadge = data
+                        ? '<span class="badge badge-success">Active</span>'
+                        : '<span class="badge badge-danger">Inactive</span>';
+                    
+                    if (row.newThisQuarter) {
+                        statusBadge += ' <span class="badge badge-info ml-1">New This Quarter</span>';
+                    }
+                    
+                    return statusBadge;
+                }
+            },
+            { data: 'postmaster', defaultContent: 'N/A' },
+            {
+                data: 'remarks',
+                defaultContent: '—',
+                render: d => d ? `<span style="font-size:12px;color:#555;">${d}</span>` : '—'
+            },
+            {
+                data: null,
+                render: (d, t, row) => {
+                    // Check user roles from body data attributes
+                    const isSystemAdmin = $('body').data('is-system-admin') === true;
+                    const isAreaAdmin = $('body').data('is-area-admin') === true;
+                    const isAnyAdmin = $('body').data('is-any-admin') === true;
+
+                    let buttons = `
+                    <button class="btn btn-sm btn-info view-btn" data-id="${row.id}" data-name="${row.name || 'Office'}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    `;
+
+                    // Only show Archive button for System Admin and Area Admin
+                    if (isSystemAdmin || isAreaAdmin) {
+                        buttons += `
+                        <button class="btn btn-sm btn-archive-report" style="background:#fd7e14;color:white;"
+                                data-id="${row.id}" data-name="${row.name || 'Office'}" title="Archive Office">
+                            <i class="fas fa-archive"></i>
+                        </button>
+                        `;
+                    }
+
+                    return buttons;
+                }
+            }
+        ],
+        pageLength: 10,
+        responsive: true,
+        searching: false,
+        order: [[1, 'asc']],
+        initComplete: function () {
+            // Table initialization complete
+        }
+    });
+
+    // Delegated button events
+    $('#postOfficeTable').on('click', '.view-btn', function () { 
+        viewOfficeFromReport($(this).data('id'), $(this).data('name'));
+    });
+
+    $('#postOfficeTable').on('click', '.edit-btn', function () { 
+        editOfficeFromReport($(this).data('id'));
+    });
+
+    $('#postOfficeTable').on('click', '.btn-archive-report', function () {
+        archiveOfficeFromReport($(this).data('id'), $(this).data('name'));
+    });
+
+    // Archive modal confirm button
+    $('#reportConfirmArchiveBtn').on('click', function () {
+        const id     = $('#reportArchiveModal').data('office-id');
+        const name   = $('#reportArchiveOfficeName').text();
+        const reason = $('#reportArchiveReasonInput').val().trim();
+        
+        $('#reportArchiveModal').modal('hide');
+        performReportArchive(id, name, reason);
+    });
+}
+
+function viewOfficeFromReport(id, name) {
+    sessionStorage.setItem('reportReturnUrl', window.location.href);
+    window.location.href = '/profile/' + id + '?source=report';
+}
+
+function editOfficeFromReport(id) {
+    // Edit functionality - redirect to edit page or open edit modal
+    window.location.href = '/edit/' + id;
+}
+
+function archiveOfficeFromReport(id, name) {
+    $('#reportArchiveOfficeName').text(name);
+    $('#reportArchiveReasonInput').val('');
+    $('#reportArchiveModal').data('office-id', id);
+    $('#reportArchiveModal').modal('show');
+}
+
+function performReportArchive(id, name, reason) {
+    $.ajax({
+        url: '/api/post-offices/' + id + '/archive',
+        method: 'POST',
+        data: JSON.stringify({ reason: reason }),
+        contentType: 'application/json',
+        success: function(response) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Archived Successfully',
+                    text: name + ' has been archived.',
+                    confirmButtonColor: '#002868'
+                });
+            } else {
+                alert(name + ' has been archived.');
+            }
+            // Reload the table
+            $('#postOfficeTable').DataTable().ajax.reload();
+        },
+        error: function(xhr) {
+            const errorMsg = xhr.responseJSON?.message || 'Failed to archive office. Please try again.';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Archive Failed',
+                    text: errorMsg,
+                    confirmButtonColor: '#002868'
+                });
+            } else {
+                alert('Error: ' + errorMsg);
+            }
+        }
     });
 }

@@ -20,6 +20,13 @@
  * the <script th:inline="javascript"> block in edit-modal.html via GlobalModelAdvice.
  */
 
+// Wait for jQuery to be available before initializing
+function initEditModalPhotos() {
+    if (typeof $ === 'undefined') {
+        setTimeout(initEditModalPhotos, 50);
+        return;
+    }
+
 $(function () {
 
     /* ─── Preload areas + regions once, cache the jQuery Deferred ─────────── */
@@ -423,4 +430,9 @@ $(function () {
         });
     });
 
-});
+}); // Close jQuery ready function
+
+} // Close initEditModalPhotos function
+
+// Initialize the script
+initEditModalPhotos();

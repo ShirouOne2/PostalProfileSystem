@@ -7,102 +7,13 @@
     <title>Post Office Inventory - PHLPost</title>
 </head>
 
-<body>
+<body th:data-is-area-admin="${isAreaAdmin}">
 
 <div th:fragment="content">
 
-    <style>
-        /* ── Filter Panel ─────────────────────────────────── */
-        .table-filter-panel {
-            background:#ffffff;
-            border:1px solid #e3e6f0;
-            border-radius:10px;
-            padding:14px 18px 12px;
-            box-shadow:0 1px 4px rgba(0,0,0,0.06);
-        }
-        .filter-panel-title { font-size:13px; font-weight:700; color:#2c3e50; }
-        .filter-label {
-            font-size:0.72rem; font-weight:700; color:#6c757d;
-            text-transform:uppercase; letter-spacing:0.5px;
-            margin-bottom:5px; display:block;
-        }
-        .filter-input, .filter-select {
-            height:36px !important; font-size:13px !important;
-            border:1px solid #d1d3e2 !important;
-            border-radius:6px !important;
-            background:#fafbff; color:#3d3d3d;
-            transition:border-color 0.15s, box-shadow 0.15s;
-            width:100%;
-        }
-        .filter-input:focus, .filter-select:focus {
-            border-color:#4e73df !important;
-            box-shadow:0 0 0 0.15rem rgba(78,115,223,0.2) !important;
-            background:#fff; outline:none;
-        }
-        .filter-input.has-value, .filter-select.has-value {
-            border-color:#4e73df !important;
-            background:#f0f4ff; font-weight:600; color:#2e59d9;
-        }
-        .filter-tag-pill {
-            display:inline-flex; align-items:center; gap:4px;
-            padding:3px 10px; border-radius:20px;
-            font-size:11px; font-weight:600;
-            border:1px solid transparent;
-            animation:tagFadeIn 0.15s ease;
-        }
-        @keyframes tagFadeIn {
-            from{opacity:0;transform:scale(0.9);}
-            to{opacity:1;transform:scale(1);}
-        }
-        .tag-search   { background:#e8f0fe; color:#2e59d9; border-color:#c5d3f8; }
-        .tag-area     { background:#f0ebff; color:#5b21b6; border-color:#d8b4fe; }
-        .tag-active   { background:#d4edda; color:#155724; border-color:#b3dfc1; }
-        .tag-inactive { background:#fde9ec; color:#a51d2d; border-color:#f5b8c0; }
-        .tag-open     { background:#d1ecf1; color:#0c5460; border-color:#bee5eb; }
-        .tag-closed   { background:#fff3cd; color:#856404; border-color:#ffeeba; }
-        .tag-remove-btn {
-            background:none; border:none; cursor:pointer;
-            font-size:13px; line-height:1; padding:0 0 0 3px;
-            opacity:0.55; color:inherit; transition:opacity 0.15s;
-        }
-        .tag-remove-btn:hover { opacity:1; }
-        .filter-clear-x {
-            height:36px; padding:0 10px;
-            border-radius:0 6px 6px 0 !important;
-            border:1px solid #d1d3e2 !important;
-            border-left:none !important;
-            background:#f8f9fa; color:#aaa; cursor:pointer;
-            transition:color 0.15s;
-        }
-        .filter-clear-x:hover { color:#dc3545; }
-        #tableSummaryText { font-size:12px; color:#6c757d; }
-
-        /* ── Status badges ────────────────────────────────── */
-        .badge-open    { background:#17a2b8 !important; color:#fff !important; }
-        .badge-closed  { background:#ffc107 !important; color:#212529 !important; }
-        .badge-unknown { background:#adb5bd !important; color:#fff !important; }
-
-        /* ── Column header sub-label ─────────────────────── */
-        .th-sub {
-            display:block; font-size:9px; font-weight:400;
-            opacity:0.7; letter-spacing:0.3px; margin-top:2px;
-        }
-    </style>
-
     <div class="container-fluid py-4">
 
-        <!-- ── Page Header ───────────────────────────────── -->
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="mb-1 font-weight-bold text-dark">
-                    <i class="fas fa-building text-primary mr-2"></i>Post Office Inventory
-                </h3>
-                <p class="text-muted mb-0">Manage and view all post office records</p>
-            </div>
-            <a sec:authorize="hasRole('ADMIN')" href="/archive" class="btn btn-outline-warning btn-sm">
-                <i class="fas fa-archive mr-1"></i> View Archive
-            </a>
-        </div>
+       
 
         <!-- ── Stats Cards ────────────────────────────────── -->
         <div class="row mb-4" style="align-items:stretch;">
@@ -114,14 +25,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-4 mb-3 d-flex">
-                <div class="card shadow-sm border-left-info w-100">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-2">Areas</div>
-                        <h4 class="mb-0 font-weight-bold" th:text="${areaCount}">0</h4>
-                    </div>
-                </div>
-            </div>
+           
             <div class="col-md-2 col-sm-4 mb-3 d-flex">
                 <div class="card shadow-sm border-left-success w-100">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
@@ -133,7 +37,7 @@
             <div class="col-md-2 col-sm-4 mb-3 d-flex">
                 <div class="card shadow-sm border-left-danger w-100">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-2">Not Connected</div>
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-2">Disconnected</div>
                         <h4 class="mb-0 font-weight-bold text-danger" th:text="${inactiveCount}">0</h4>
                     </div>
                 </div>
@@ -160,10 +64,157 @@
         <div class="card shadow-sm">
             <div class="card-body">
 
+                <!-- ── Geographic Distribution ─────────────────────────── -->
+                <div class="row mb-4">
+
+                    <!-- Branch Locator Card -->
+                    <div class="col-md-8 mb-3 mb-md-0">
+                        <div class="card shadow-sm h-100" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
+                            <!-- Card Header -->
+                            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
+                                 style="background:linear-gradient(135deg,#002868 0%,#1a3a7a 100%);border-bottom:none;">
+                                <span class="font-weight-bold text-white" style="font-size:14px;">
+                                    <i class="fas fa-map-marked-alt mr-2"></i>Branch Locator
+                                </span>
+                               
+                            </div>
+                            <!-- Card Body -->
+                            <div class="card-body p-3">
+                                <div id="map" style="height:400px;border-radius:8px;overflow:hidden;"></div>
+
+                                <!-- Legend -->
+                                <div class="mt-3 p-2 rounded" id="mapLegend"
+                                     style="background:#f8f9fc;border:1px solid #e3e6f0;">
+                                    <small class="d-block mb-2 font-weight-bold text-muted text-uppercase"
+                                           style="font-size:10px;letter-spacing:.5px;">
+                                        <i class="fas fa-layer-group mr-1"></i>Area Legend
+                                    </small>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <!-- System Admin sees all areas -->
+                                            <div th:if="${isSystemAdmin}">
+                                                <div class="row" style="row-gap:4px;">
+                                                    <div class="col-6">
+                                                        <div class="d-flex flex-column" style="gap:5px;">
+                                                            <span data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
+                                                            <span data-area="2" style="font-size:12px;"><span style="background:#4ECDC4;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 2</span>
+                                                            <span data-area="3" style="font-size:12px;"><span style="background:#45B7D1;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 3</span>
+                                                            <span data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
+                                                            <span data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex flex-column" style="gap:5px;">
+                                                            <span data-area="6" style="font-size:12px;"><span style="background:#F7DC6F;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 6</span>
+                                                            <span data-area="7" style="font-size:12px;"><span style="background:#BB8FCE;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 7</span>
+                                                            <span data-area="8" style="font-size:12px;"><span style="background:#F8B739;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 8</span>
+                                                            <span data-area="9" style="font-size:12px;"><span style="background:#85C1E2;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 9</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Area Admin sees only assigned area -->
+                                            <div th:if="${isAreaAdmin}">
+                                                <span data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filters Column -->
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column" style="gap:12px;">
+                            <!-- Search Card -->
+                            <div class="card shadow-sm" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
+                                <!-- Card Header -->
+                                <div class="card-header d-flex align-items-center py-2 px-3"
+                                     style="background:linear-gradient(135deg,#4e73df 0%,#224abe 100%);border-bottom:none;">
+                                    <span class="font-weight-bold text-white" style="font-size:14px;">
+                                        <i class="fas fa-search mr-2"></i>Search Location
+                                    </span>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body p-3">
+                                    <div style="position:relative;">
+                                        <input type="text" id="searchInput" class="form-control"
+                                               placeholder="Enter post office name..."
+                                               style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;padding-left:36px;">
+                                        <i class="fas fa-map-marker-alt"
+                                           style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#b0b7c3;font-size:13px;pointer-events:none;"></i>
+                                    </div>
+                                    
+                                    <!-- Suggestions Box - positioned below -->
+                                    <div id="mapSearchSuggestions" class="mt-2"
+                                         style="display:none;background:#fff;border:1px solid #d1d3e2;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-height:240px;overflow-y:auto;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Map Filters Card -->
+                            <div class="card shadow-sm" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
+                                <!-- Card Header -->
+                                <div class="card-header d-flex align-items-center py-2 px-3"
+                                     style="background:linear-gradient(135deg,#4e73df 0%,#224abe 100%);border-bottom:none;">
+                                    <span class="font-weight-bold text-white" style="font-size:14px;">
+                                        <i class="fas fa-filter mr-2"></i>Map Filters
+                                    </span>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body p-3">
+                                    <div class="mb-3">
+                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                                               style="font-size:10px;letter-spacing:.5px;">
+                                            <i class="fas fa-map mr-1"></i>Area
+                                        </label>
+                                        <select th:if="${isSystemAdmin}" id="areaFilter" class="form-control"
+                                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                                            <option value="">All Areas</option>
+                                        </select>
+                                        <select th:unless="${isSystemAdmin}" id="areaFilter" class="form-control"
+                                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                                            <option value="1">Area 1</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                                               style="font-size:10px;letter-spacing:.5px;">
+                                            <i class="fas fa-wifi mr-1"></i>Connectivity Status
+                                        </label>
+                                        <select id="statusFilter" class="form-control"
+                                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                                            <option value="">All Status</option>
+                                            <option value="true">&#9679; Connected</option>
+                                            <option value="false">&#9679; Disconnected</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                                               style="font-size:10px;letter-spacing:.5px;">
+                                            <i class="fas fa-sliders-h mr-1"></i>Actions
+                                        </label>
+                                        <div class="d-flex" style="gap:8px;">
+                                            <button id="applyFilters" class="btn btn-primary font-weight-bold flex-fill"
+                                                    style="border-radius:8px;font-size:13px;">
+                                                <i class="fas fa-search mr-1"></i>Apply Filters
+                                            </button>
+                                            <button id="clearFilters" class="btn btn-outline-secondary"
+                                                    style="border-radius:8px;font-size:13px;">
+                                                <i class="fas fa-times mr-1"></i>Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 <!-- ── Filter Panel ────────────────────────── -->
                 <div class="table-filter-panel mb-3">
-
-                    <!-- Header -->
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div class="d-flex align-items-center" style="gap:8px;">
                             <i class="fas fa-filter text-primary" style="font-size:13px;"></i>
@@ -180,17 +231,16 @@
                         </div>
                     </div>
 
-                    <!-- Inputs -->
                     <div id="filterBody">
                         <div class="row align-items-end mb-2" style="margin:0 -5px;">
 
-                            <!-- Search -->
+                            <!-- Search — shown for all roles -->
                             <div class="col-md-4 col-sm-12 mb-2" style="padding:0 5px;">
                                 <label class="filter-label"><i class="fas fa-search mr-1"></i>Search</label>
                                 <div class="input-group" style="flex-wrap:nowrap;">
                                     <input type="text" id="tableSearchInput"
                                            class="form-control filter-input"
-                                           placeholder="Office name, city, postmaster..."
+                                           placeholder="Office name..."
                                            style="border-radius:6px 0 0 6px !important;">
                                     <div class="input-group-append">
                                         <button class="filter-clear-x" id="clearSearchBtn" title="Clear">
@@ -200,32 +250,47 @@
                                 </div>
                             </div>
 
-                            <!-- Area -->
-                            <div class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                            <!-- Area filter — System Admin only -->
+                            <div th:if="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
                                 <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
                                 <select id="filterArea" class="form-control filter-select">
-                                    <option value="">Choose Areas</option>
+                                    <option value="">All Areas</option>
+                                    <option th:each="area : ${areas}"
+                                            th:value="${area.areaName}"
+                                            th:text="${area.areaName}"
+                                            th:selected="${area.areaName == 'Area 1'}">Area</option>
+                                </select>
+                            </div>
+                            <!-- Area filter for Area Admins and regular users - shows only their assigned area -->
+                            <div th:unless="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                                <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
+                                <select id="filterArea" class="form-control filter-select">
+                                    <option value="1">Area 1</option>
                                 </select>
                             </div>
 
-                            <!-- Connection Status -->
+                            <!-- Connection Status — all roles -->
                             <div class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
                                 <label class="filter-label"><i class="fas fa-wifi mr-1"></i>Connection</label>
                                 <select id="filterConnStatus" class="form-control filter-select">
-                                    <option value="">Select</option>
+                                    <option value="">All</option>
                                     <option value="Active">Active</option>
                                     <option value="Inactive">Inactive</option>
                                 </select>
                             </div>
 
-                            <!-- Office Status -->
-                            <div class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                            <!-- Office Status — System Admin only -->
+                            <div th:if="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
                                 <label class="filter-label"><i class="fas fa-door-open mr-1"></i>Office</label>
                                 <select id="filterOfficeStatus" class="form-control filter-select">
-                                    <option value="">Select</option>
+                                    <option value="">All</option>
                                     <option value="Open">Open</option>
                                     <option value="Closed">Closed</option>
                                 </select>
+                            </div>
+                            <!-- Hidden office status for non-admins -->
+                            <div th:unless="${isSystemAdmin}" style="display:none;">
+                                <select id="filterOfficeStatus"><option value=""></option></select>
                             </div>
 
                             <!-- Buttons -->
@@ -242,15 +307,20 @@
                             </div>
                         </div>
 
-                        <!-- Active tags -->
                         <div id="activeFilterTags" class="d-flex flex-wrap" style="gap:6px;min-height:4px;"></div>
                     </div>
                 </div>
                 <!-- ── /Filter Panel ───────────────────────── -->
 
-                <!-- ── Table ──────────────────────────────────────────────── -->
+                <!-- ══════════════════════════════════════════════════════════
+                     TABLE — System Admin sees full columns
+                           — Area/User sees simplified columns
+                     ══════════════════════════════════════════════════════ -->
                 <div class="table-responsive">
-                    <table id="myTable" class="table table-hover table-striped mb-0" style="width:100%">
+
+                    <!-- ── SYSTEM ADMIN TABLE (all columns) ─────────────────── -->
+                    <table th:if="${isSystemAdmin}"
+                           id="myTable" class="table table-hover table-striped mb-0" style="width:100%">
                         <thead class="thead-dark">
                             <tr>
                                 <th class="text-center" style="width:45px;">#</th>
@@ -272,26 +342,11 @@
                         </thead>
                         <tbody>
                             <tr th:each="office, iter : ${offices}">
-
-                                <!-- # -->
-                                <td class="text-center text-muted" style="font-size:12px;"
-                                    th:text="${iter.count}"></td>
-
-                                <!-- Post Office Name -->
-                                <td>
-                                    <span style="font-weight:600;" th:text="${office.name}"></span>
-                                </td>
-
-                                <!-- Area -->
-                                <td th:text="${office.area != null ? office.area : 'N/A'}"></td>
-
-                                <!-- Region -->
-                                <td th:text="${office.region != null ? office.region : 'N/A'}"></td>
-
-                                <!-- City/Municipality -->
-                                <td th:text="${office.cityMunicipality != null ? office.cityMunicipality : 'N/A'}"></td>
-
-                                <!-- Connection Status (internet: Active/Inactive) -->
+                                <td class="text-center text-muted" style="font-size:12px;"></td>
+                                <td><span style="font-weight:600;" th:text="${office.name}"></span></td>
+                                <td th:text="${office.area != null and !office.area.empty ? office.area : 'N/A'}"></td>
+                                <td th:text="${office.region != null and !office.region.empty ? office.region : 'N/A'}"></td>
+                                <td th:text="${office.cityMunicipality != null and !office.cityMunicipality.empty ? office.cityMunicipality : 'N/A'}"></td>
                                 <td class="text-center">
                                     <span th:if="${office.connectionStatus}" class="badge badge-success">
                                         <i class="fas fa-check-circle mr-1"></i>Active
@@ -300,33 +355,22 @@
                                         <i class="fas fa-times-circle mr-1"></i>Inactive
                                     </span>
                                 </td>
-
-                                <!-- Office Status (physical: Open/Closed) -->
                                 <td class="text-center">
-                                    <span th:if="${office.officeStatus != null and office.officeStatus == 'OPEN'}"
-                                          class="badge badge-open">
+                                    <span th:if="${office.officeStatus == 'OPEN'}" class="badge badge-open">
                                         <i class="fas fa-door-open mr-1"></i>Open
                                     </span>
-                                    <span th:if="${office.officeStatus != null and office.officeStatus == 'CLOSED'}"
-                                          class="badge badge-closed">
+                                    <span th:if="${office.officeStatus == 'CLOSED'}" class="badge badge-closed">
                                         <i class="fas fa-door-closed mr-1"></i>Closed
                                     </span>
                                     <span th:if="${office.officeStatus == null or office.officeStatus == ''}"
-                                          class="badge badge-unknown">
-                                        —
-                                    </span>
+                                          class="badge badge-unknown">—</span>
                                 </td>
-
-                                <!-- Remarks -->
                                 <td>
                                     <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
-                                          th:text="${office.remarks}"
-                                          style="font-size:12px;color:#555;"></span>
+                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
                                     <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
                                           class="text-muted">—</span>
                                 </td>
-
-                                <!-- Actions -->
                                 <td class="text-center action-buttons">
                                     <button type="button" class="btn btn-sm btn-info"
                                             th:onclick="|saveTableStateAndView(${office.id})|"
@@ -351,11 +395,118 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- ── AREA ADMIN / USER TABLE (simplified columns) ──────── -->
+                    <table th:unless="${isSystemAdmin}"
+                           id="myTable" class="table table-hover table-striped mb-0" style="width:100%">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center" style="width:45px;">#</th>
+                                <th>Postal Office</th>
+                                <th class="text-center" style="width:140px;">
+                                    Connection Status
+                                </th>
+                                <th style="width:130px;">Speed</th>
+                                <th>Remarks</th>
+                                <th class="text-center" style="width:110px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="office, iter : ${offices}">
+                                <!-- # -->
+                                <td class="text-center text-muted" style="font-size:12px;"></td>
+
+                                <!-- Postal Office -->
+                                <td><span style="font-weight:600;" th:text="${office.name}"></span></td>
+
+                                <!-- Connection Status -->
+                                <td class="text-center">
+                                    <span th:if="${office.connectionStatus}" class="badge badge-success">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                    <span th:unless="${office.connectionStatus}" class="badge badge-danger">
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    </span>
+                                </td>
+
+                                <!-- Speed -->
+                                <td>
+                                    <span th:if="${office.speed != null and !#strings.isEmpty(office.speed)}"
+                                          th:text="${office.speed}" style="font-size:13px;"></span>
+                                    <span th:unless="${office.speed != null and !#strings.isEmpty(office.speed)}"
+                                          class="text-muted">—</span>
+                                </td>
+
+                                <!-- Remarks -->
+                                <td>
+                                    <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
+                                    <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          class="text-muted">—</span>
+                                </td>
+
+                                <!-- Actions: View + Edit + Archive for Area Admin -->
+                                <td class="text-center action-buttons">
+                                    <button type="button" class="btn btn-sm btn-info"
+                                            th:onclick="|saveTableStateAndView(${office.id})|"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-warning btn-edit"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            title="Edit Office">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-archive"
+                                            style="background:#fd7e14;color:white;"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            th:if="${isAreaAdmin}"
+                                            title="Archive Office">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
 
             </div>
         </div>
 
+    </div>
+
+    <!-- ── Post Office Profile Modal ──────────────────────────────────────────── -->
+    <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Post Office Profile
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="profileModalBody">
+                    <!-- Profile content will be loaded here -->
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                        <p class="text-muted mt-2">Loading profile...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="viewFullProfileBtn">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ── Archive Reason Modal ──────────────────────────────────────────── -->
