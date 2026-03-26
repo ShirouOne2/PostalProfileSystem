@@ -180,26 +180,55 @@ $(function () {
         var cityMunId  = d.cityMunId  || null;
         var barangayId = d.barangayId || null;
 
+        // Reset all dependent dropdowns first
         resetSelect('#editProvinceId', '-- Select Province --',          true);
         resetSelect('#editCityMunId',  '-- Select City/Municipality --',  true);
         resetSelect('#editBarangayId', '-- Select Barangay --',           true);
 
+        // Set region value first
         $('#editRegionId').val(regionId || '');
-        if (!regionId) return;
+        
+        if (!regionId) {
+            console.log('[edit-modal] No regionId provided, skipping province/city/barangay loading');
+            return;
+        }
 
+        console.log('[edit-modal] Loading provinces for region:', regionId);
+        
+        // Load provinces and then set province value
         loadOptions('/api/postal/provinces/by-region/' + regionId, '#editProvinceId', '-- Select Province --')
             .then(function () {
                 $('#editProvinceId').val(provinceId || '');
-                if (!provinceId) return;
+                console.log('[edit-modal] Province set to:', provinceId);
+                
+                if (!provinceId) {
+                    console.log('[edit-modal] No provinceId provided, skipping city/barangay loading');
+                    return;
+                }
+
+                // Load cities and then set city value
                 return loadOptions('/api/postal/cities/by-province/' + provinceId, '#editCityMunId', '-- Select City/Municipality --')
                     .then(function () {
                         $('#editCityMunId').val(cityMunId || '');
-                        if (!cityMunId) return;
+                        console.log('[edit-modal] City set to:', cityMunId);
+                        
+                        if (!cityMunId) {
+                            console.log('[edit-modal] No cityMunId provided, skipping barangay loading');
+                            return;
+                        }
+
+                        // Load barangays and then set barangay value
                         return loadOptions('/api/postal/barangays/by-city/' + cityMunId, '#editBarangayId', '-- Select Barangay --')
-                            .then(function () { $('#editBarangayId').val(barangayId || ''); });
+                            .then(function () {
+                                $('#editBarangayId').val(barangayId || '');
+                                console.log('[edit-modal] Barangay set to:', barangayId);
+                            });
                     });
             })
-            .catch(function (err) { console.error('[edit-modal] Location hierarchy error:', err); });
+            .catch(function (err) { 
+                console.error('[edit-modal] Location hierarchy error:', err);
+                Swal.fire('Warning', 'Failed to load location data. Please check your internet connection.', 'warning');
+            });
     }
 
     /* ─── Cascading change handlers ──────────────────────────────────────────── */
@@ -274,27 +303,27 @@ function saveOfficeChanges() {
      */
     var payload = {
         name:                      name,
-        postmaster:                $('#editPostmaster').val().trim(),
+        postmaster:                ($('#editPostmaster').val() || '').trim(),
         classification:            $('#editClassification').val(),
         serviceProvided:           $('#editServiceProvided').val(),
-        address:                   $('#editAddress').val().trim(),
-        zipCode:                   $('#editZipCode').val().trim(),
+        address:                   ($('#editAddress').val() || '').trim(),
+        zipCode:                   ($('#editZipCode').val() || '').trim(),
         latitude:                  parseFloat($('#editLatitude').val())  || null,
         longitude:                 parseFloat($('#editLongitude').val()) || null,
         connectionStatus:          $('#editStatus').val() === 'true',
         officeStatus:              $('#editOfficeStatus').val() || null,
-        internetServiceProvider:   $('#editISP').val().trim(),
-        typeOfConnection:          $('#editTypeOfConnection').val().trim(),
-        speed:                     $('#editSpeed').val().trim(),
-        staticIpAddress:           $('#editStaticIP').val().trim(),
+        internetServiceProvider:   ($('#editISP').val() || '').trim(),
+        typeOfConnection:          ($('#editTypeOfConnection').val() || '').trim(),
+        speed:                     ($('#editSpeed').val() || '').trim(),
+        staticIpAddress:           ($('#editStaticIP').val() || '').trim(),
         noOfEmployees:             parseInt($('#editNoOfEmployees').val()) || 0,
         noOfPostalTellers:         parseInt($('#editNoOfTellers').val())   || 0,
         noOfLetterCarriers:        parseInt($('#editNoOfCarriers').val())  || 0,
-        postalOfficeContactPerson: $('#editContactPerson').val().trim(),
-        postalOfficeContactNumber: $('#editContactNumber').val().trim(),
-        ispContactPerson:          $('#editISPContactPerson').val().trim(),
-        ispContactNumber:          $('#editISPContactNumber').val().trim(),
-        remarks:                   $('#editRemarks').val().trim() || null,
+        postalOfficeContactPerson: ($('#editContactPerson').val() || '').trim(),
+        postalOfficeContactNumber: ($('#editContactNumber').val() || '').trim(),
+        ispContactPerson:          ($('#editISPContactPerson').val() || '').trim(),
+        ispContactNumber:          ($('#editISPContactNumber').val() || '').trim(),
+        remarks:                   ($('#editRemarks').val() || '').trim() || null,
         areaId:                    parseInt($('#editAreaIdHidden').val())  || null,  // ← hidden input
         regionId:                  parseInt($('#editRegionId').val())      || null,
         provinceId:                parseInt($('#editProvinceId').val())    || null,

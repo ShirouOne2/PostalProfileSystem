@@ -31,46 +31,154 @@ public class PostalOfficeImportService {
     @Autowired private ZipCodeRepository           zipCodeRepository;
 
     // ── Region alias map ──────────────────────────────────────────────────────
+    // Keys   = normalized (lowercase, trimmed) values that may appear in Excel
+    // Values = EXACT name stored in the `regions` DB table
     private static final Map<String, String> REGION_ALIASES = new HashMap<>();
     static {
-        REGION_ALIASES.put("1",    "Region I");
-        REGION_ALIASES.put("2",    "Region II");
-        REGION_ALIASES.put("3",    "Region III");
-        REGION_ALIASES.put("4",    "Region IV");
-        REGION_ALIASES.put("5",    "Region V");
-        REGION_ALIASES.put("6",    "Region VI");
-        REGION_ALIASES.put("7",    "Region VII");
-        REGION_ALIASES.put("8",    "Region VIII");
-        REGION_ALIASES.put("9",    "Region IX");
-        REGION_ALIASES.put("10",   "Region X");
-        REGION_ALIASES.put("11",   "Region XI");
-        REGION_ALIASES.put("12",   "Region XII");
-        REGION_ALIASES.put("13",   "Region XIII");
-        REGION_ALIASES.put("i",    "Region I");
-        REGION_ALIASES.put("ii",   "Region II");
-        REGION_ALIASES.put("iii",  "Region III");
-        REGION_ALIASES.put("iv",   "Region IV");
-        REGION_ALIASES.put("v",    "Region V");
-        REGION_ALIASES.put("vi",   "Region VI");
-        REGION_ALIASES.put("vii",  "Region VII");
-        REGION_ALIASES.put("viii", "Region VIII");
-        REGION_ALIASES.put("ix",   "Region IX");
-        REGION_ALIASES.put("x",    "Region X");
-        REGION_ALIASES.put("xi",   "Region XI");
-        REGION_ALIASES.put("xii",  "Region XII");
-        REGION_ALIASES.put("xiii", "Region XIII");
-        REGION_ALIASES.put("car",      "CAR");
-        REGION_ALIASES.put("cara",     "CAR");
-        REGION_ALIASES.put("nir",      "NIR");
-        REGION_ALIASES.put("barmm",    "BARMM");
-        REGION_ALIASES.put("mimaropa", "MIMAROPA");
-        REGION_ALIASES.put("ncr",      "NCR");
-        REGION_ALIASES.put("iv-a",     "Region IV-A");
-        REGION_ALIASES.put("iv-b",     "Region IV-B");
-        REGION_ALIASES.put("region ix",   "Region IX");
-        REGION_ALIASES.put("region vi",   "Region VI");
-        REGION_ALIASES.put("region x",    "Region X");
-        REGION_ALIASES.put("region xiii", "Region XIII");
+        // ── Region I ─────────────────────────────────────────────────────────
+        String R1 = "Region I (Ilocos Region)";
+        REGION_ALIASES.put("1",                    R1);
+        REGION_ALIASES.put("i",                    R1);
+        REGION_ALIASES.put("region i",             R1);
+        REGION_ALIASES.put("region 1",             R1);
+        REGION_ALIASES.put("ilocos region",        R1);
+        REGION_ALIASES.put("ilocos",               R1);
+
+        // ── Region II ────────────────────────────────────────────────────────
+        String R2 = "Region II (Cagayan Valley)";
+        REGION_ALIASES.put("2",                    R2);
+        REGION_ALIASES.put("ii",                   R2);
+        REGION_ALIASES.put("region ii",            R2);
+        REGION_ALIASES.put("region 2",             R2);
+        REGION_ALIASES.put("cagayan valley",       R2);
+
+        // ── Region III ───────────────────────────────────────────────────────
+        String R3 = "Region III (Central Luzon)";
+        REGION_ALIASES.put("3",                    R3);
+        REGION_ALIASES.put("iii",                  R3);
+        REGION_ALIASES.put("region iii",           R3);
+        REGION_ALIASES.put("region 3",             R3);
+        REGION_ALIASES.put("central luzon",        R3);
+
+        // ── Region IV-A ──────────────────────────────────────────────────────
+        String R4A = "Region IV-A (CALABARZON)";
+        REGION_ALIASES.put("4",                    R4A);
+        REGION_ALIASES.put("iv",                   R4A);
+        REGION_ALIASES.put("iv-a",                 R4A);
+        REGION_ALIASES.put("region iv",            R4A);
+        REGION_ALIASES.put("region iv-a",          R4A);
+        REGION_ALIASES.put("region 4",             R4A);
+        REGION_ALIASES.put("region 4a",            R4A);
+        REGION_ALIASES.put("calabarzon",           R4A);
+
+        // ── Region V ─────────────────────────────────────────────────────────
+        String R5 = "Region V (Bicol Region)";
+        REGION_ALIASES.put("5",                    R5);
+        REGION_ALIASES.put("v",                    R5);
+        REGION_ALIASES.put("region v",             R5);
+        REGION_ALIASES.put("region 5",             R5);
+        REGION_ALIASES.put("bicol region",         R5);
+        REGION_ALIASES.put("bicol",                R5);
+
+        // ── Region VI ────────────────────────────────────────────────────────
+        String R6 = "Region VI (Western Visayas)";
+        REGION_ALIASES.put("6",                    R6);
+        REGION_ALIASES.put("vi",                   R6);
+        REGION_ALIASES.put("region vi",            R6);
+        REGION_ALIASES.put("region 6",             R6);
+        REGION_ALIASES.put("western visayas",      R6);
+
+        // ── Region VII ───────────────────────────────────────────────────────
+        String R7 = "Region VII (Central Visayas)";
+        REGION_ALIASES.put("7",                    R7);
+        REGION_ALIASES.put("vii",                  R7);
+        REGION_ALIASES.put("region vii",           R7);
+        REGION_ALIASES.put("region 7",             R7);
+        REGION_ALIASES.put("central visayas",      R7);
+
+        // ── Region VIII ──────────────────────────────────────────────────────
+        String R8 = "Region VIII (Eastern Visayas)";
+        REGION_ALIASES.put("8",                    R8);
+        REGION_ALIASES.put("viii",                 R8);
+        REGION_ALIASES.put("region viii",          R8);
+        REGION_ALIASES.put("region 8",             R8);
+        REGION_ALIASES.put("eastern visayas",      R8);
+
+        // ── Region IX ────────────────────────────────────────────────────────
+        String R9 = "Region IX (Zamboanga Peninsula)";
+        REGION_ALIASES.put("9",                    R9);
+        REGION_ALIASES.put("ix",                   R9);
+        REGION_ALIASES.put("region ix",            R9);
+        REGION_ALIASES.put("region 9",             R9);
+        REGION_ALIASES.put("zamboanga peninsula",  R9);
+        REGION_ALIASES.put("zamboanga",            R9);
+
+        // ── Region X ─────────────────────────────────────────────────────────
+        String R10 = "Region X (Northern Mindanao)";
+        REGION_ALIASES.put("10",                   R10);
+        REGION_ALIASES.put("x",                    R10);
+        REGION_ALIASES.put("region x",             R10);
+        REGION_ALIASES.put("region 10",            R10);
+        REGION_ALIASES.put("northern mindanao",    R10);
+
+        // ── Region XI ────────────────────────────────────────────────────────
+        String R11 = "Region XI (Davao Region)";
+        REGION_ALIASES.put("11",                   R11);
+        REGION_ALIASES.put("xi",                   R11);
+        REGION_ALIASES.put("region xi",            R11);
+        REGION_ALIASES.put("region 11",            R11);
+        REGION_ALIASES.put("davao region",         R11);
+        REGION_ALIASES.put("davao",                R11);
+
+        // ── Region XII ───────────────────────────────────────────────────────
+        String R12 = "Region XII (SOCCSKSARGEN)";
+        REGION_ALIASES.put("12",                   R12);
+        REGION_ALIASES.put("xii",                  R12);
+        REGION_ALIASES.put("region xii",           R12);
+        REGION_ALIASES.put("region 12",            R12);
+        REGION_ALIASES.put("soccsksargen",         R12);
+        REGION_ALIASES.put("socsksargen",          R12);
+
+        // ── NCR ──────────────────────────────────────────────────────────────
+        String NCR = "National Capital Region (NCR)";
+        REGION_ALIASES.put("ncr",                  NCR);
+        REGION_ALIASES.put("13",                   NCR);
+        REGION_ALIASES.put("national capital region", NCR);
+        REGION_ALIASES.put("metro manila",         NCR);
+        REGION_ALIASES.put("region 13",            NCR);
+
+        // ── CAR ──────────────────────────────────────────────────────────────
+        String CAR = "Cordillera Administrative Region (CAR)";
+        REGION_ALIASES.put("car",                  CAR);
+        REGION_ALIASES.put("cara",                 CAR);
+        REGION_ALIASES.put("cordillera",           CAR);
+        REGION_ALIASES.put("cordillera administrative region", CAR);
+
+        // ── BARMM ────────────────────────────────────────────────────────────
+        String BARMM = "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)";
+        REGION_ALIASES.put("barmm",                BARMM);
+        REGION_ALIASES.put("armm",                 BARMM);
+        REGION_ALIASES.put("bangsamoro",           BARMM);
+        REGION_ALIASES.put("bangsamoro autonomous region in muslim mindanao", BARMM);
+
+        // ── Region XIII (Caraga) ─────────────────────────────────────────────
+        String R13 = "Region XIII (Caraga)";
+        REGION_ALIASES.put("xiii",                 R13);
+        REGION_ALIASES.put("region xiii",          R13);
+        REGION_ALIASES.put("caraga",               R13);
+
+        // ── MIMAROPA ─────────────────────────────────────────────────────────
+        String MIMA = "MIMAROPA Region";
+        REGION_ALIASES.put("mimaropa",             MIMA);
+        REGION_ALIASES.put("mimaropa region",      MIMA);
+        REGION_ALIASES.put("iv-b",                 MIMA);
+        REGION_ALIASES.put("region iv-b",          MIMA);
+
+        // ── NIR ──────────────────────────────────────────────────────────────
+        String NIR = "Negros Island Region (NIR)";
+        REGION_ALIASES.put("nir",                  NIR);
+        REGION_ALIASES.put("negros island region", NIR);
+        REGION_ALIASES.put("negros island",        NIR);
     }
 
     // ── Province alias map ────────────────────────────────────────────────────
@@ -339,11 +447,34 @@ public class PostalOfficeImportService {
     private Regions lookupRegion(String raw, Map<String, Regions> regionMap) {
         if (blank(raw)) return null;
         String key = normalize(raw);
+
+        // 1. Exact match
         Regions found = regionMap.get(key);
         if (found != null) return found;
+
+        // 2. Alias → exact match on resolved full name
         String alias = REGION_ALIASES.get(key);
-        if (alias != null) { found = regionMap.get(normalize(alias)); if (found != null) return found; }
-        return regionMap.get("region " + key);
+        if (alias != null) {
+            found = regionMap.get(normalize(alias));
+            if (found != null) return found;
+        }
+
+        // 3. Legacy "region X" prefix attempt
+        found = regionMap.get("region " + key);
+        if (found != null) return found;
+
+        // 4. Partial / contains match — handles Excel values that are substrings
+        //    of the full DB name, e.g. "Ilocos Region" inside
+        //    "Region I (Ilocos Region)", or "CALABARZON" inside
+        //    "Region IV-A (CALABARZON)"
+        for (Map.Entry<String, Regions> entry : regionMap.entrySet()) {
+            String dbKey = entry.getKey(); // already normalized
+            if (dbKey.contains(key) || key.contains(dbKey)) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
     }
 
     private Province lookupProvince(String raw, Map<String, Province> provinceMap) {

@@ -3,6 +3,7 @@ package com.pps.profilesystem.Controller;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.Month;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +32,7 @@ public class MapController {
     // ── /api/post-offices  (dashboard map) ───────────────────────────────────
 
     @GetMapping("/post-offices")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> getPostOffices() {
         try {
             List<Map<String, Object>> result =
@@ -62,6 +65,27 @@ public class MapController {
             System.err.println("[MapController] /api/post-offices/all ERROR: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.ok(Collections.emptyList());
+        }
+    }
+
+    // ── /api/postal-office/{id}/profile  (profile modal) ───────────────────────
+
+    @GetMapping("/postal-office/{id}/profile")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Map<String, Object>> getPostalOfficeProfile(@PathVariable Integer id) {
+        try {
+            Optional<com.pps.profilesystem.Entity.PostalOffice> officeOpt = postalOfficeRepository.findById(id);
+            if (officeOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            com.pps.profilesystem.Entity.PostalOffice office = officeOpt.get();
+            Map<String, Object> profile = convertToProfileDTO(office);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            System.err.println("[MapController] /api/postal-office/" + id + "/profile ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -148,15 +172,57 @@ public class MapController {
         dto.put("latitude",                    office.getLatitude());
         dto.put("longitude",                   office.getLongitude());
         dto.put("connectionStatus",            office.getConnectionStatus());
+        dto.put("status",                      office.getConnectionStatus());
         dto.put("speed",                       office.getSpeed());
-        dto.put("area",    office.getArea()            != null ? office.getArea().getAreaName()         : null);
-        dto.put("areaId",  office.getArea()            != null ? office.getArea().getId()               : null);
-        dto.put("region",  office.getRegion()          != null ? office.getRegion().getName()           : null);
-        dto.put("province",office.getProvince()        != null ? office.getProvince().getName()         : null);
-        dto.put("cityMunicipality",
-                           office.getCityMunicipality()!= null ? office.getCityMunicipality().getName(): null);
-        dto.put("barangay",office.getBarangay()        != null ? office.getBarangay().getName()         : null);
-        dto.put("status",  office.getConnectionStatus());
+
+        // area is eagerly fetched via JOIN FETCH — safe to access
+        dto.put("area",   office.getArea() != null ? office.getArea().getAreaName() : null);
+        dto.put("areaId", office.getArea() != null ? office.getArea().getId()       : null);
+
+        // lazy fields — skip to avoid LazyInitializationException on map endpoint
+        dto.put("region",           null);
+        dto.put("province",         null);
+        dto.put("cityMunicipality", null);
+        dto.put("barangay",         null);
+
+        dto.put("profilePhotoUrl",
+            office.getProfilePicture() != null && !office.getProfilePicture().isBlank()
+                ? "/api/postal-office/" + office.getId() + "/profile-photo" : null);
+
+        dto.put("coverPhotoUrl",
+            office.getCoverPhoto() != null && !office.getCoverPhoto().isBlank()
+                ? "/api/postal-office/" + office.getId() + "/cover-photo" : null);
+
+        return dto;
+    }
+
+    private Map<String, Object> convertToProfileDTO(com.pps.profilesystem.Entity.PostalOffice office) {
+        Map<String, Object> dto = new java.util.HashMap<>();
+        dto.put("id",                          office.getId());
+        dto.put("name",                        office.getName());
+        dto.put("address",                     office.getAddress());
+        dto.put("zipCode",                     office.getZipCode());
+        dto.put("postmaster",                  office.getPostmaster());
+        dto.put("noOfEmployees",               office.getNoOfEmployees());
+        dto.put("postalOfficeContactPerson",   office.getPostalOfficeContactPerson());
+        dto.put("postalOfficeContactNumber",   office.getPostalOfficeContactNumber());
+        dto.put("latitude",                    office.getLatitude());
+        dto.put("longitude",                   office.getLongitude());
+        dto.put("connectionStatus",            office.getConnectionStatus());
+        dto.put("status",                      office.getConnectionStatus());
+        dto.put("speed",                       office.getSpeed());
+        dto.put("officeStatus",                office.getOfficeStatus());
+        dto.put("remarks",                     office.getRemarks());
+
+        // area is eagerly fetched via JOIN FETCH — safe to access
+        dto.put("area",   office.getArea() != null ? office.getArea().getAreaName() : null);
+        dto.put("areaId", office.getArea() != null ? office.getArea().getId()       : null);
+
+        // For profile modal, we can include more details since it's a single record
+        dto.put("region",           office.getRegion());
+        dto.put("province",         office.getProvince());
+        dto.put("cityMunicipality", office.getCityMunicipality());
+        dto.put("barangay",         office.getBarangay());
 
         dto.put("profilePhotoUrl",
             office.getProfilePicture() != null && !office.getProfilePicture().isBlank()

@@ -1,11 +1,15 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Area;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.AreaRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +36,9 @@ public class QuartersController {
     @Autowired
     private ArchivedOfficeRepository archivedOfficeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping
     public String showQuartersPage(
             @RequestParam(required = false) Integer year,
@@ -40,13 +47,42 @@ public class QuartersController {
             @RequestParam(required = false) String statusFilter,
             Model model) {
 
+        // Get the logged-in user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User currentUser = userRepository.findByEmail(email).orElse(null);
+
+        Integer roleId = currentUser != null ? currentUser.getRole() : null;
+        Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+
         int currentYear = (year != null) ? year : LocalDate.now().getYear();
 
         // Parse areaId from filter string
         Integer areaId = null;
         if (areaFilter != null && !areaFilter.trim().isEmpty()) {
-            try { areaId = Integer.parseInt(areaFilter.trim()); } catch (NumberFormatException ignored) {}
+            try {
+                areaId = Integer.parseInt(areaFilter.trim());
+            } catch (NumberFormatException ignored) {
+            }
         }
+
+        // Apply user area restrictions: non-system-admin users can only see their assigned area
+        if (roleId != null && roleId != 1) {
+            // User is not a system admin, restrict to their assigned area
+            if (userAreaId != null) {
+                // If no area filter is set, default to user's area
+                if (areaId == null) {
+                    areaId = userAreaId;
+                } else if (!areaId.equals(userAreaId)) {
+                    // User is trying to access an area they're not assigned to - redirect to their area
+                    areaId = userAreaId;
+                }
+            } else {
+                // User has no area assigned, show no data
+                areaId = -1; // Invalid area ID that will return no results
+            }
+        }
+        // If roleId is null or roleId == 1 (system admin), allow all areas
 
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
@@ -54,18 +90,21 @@ public class QuartersController {
 
         // Pass filter-aware stats and latest quarter data
         model.addAttribute("connectivityStats",
-            getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
+                getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
         model.addAttribute("latestQuarter",
-            getLatestQuarterData(currentYear, quarterFilter, areaId, statusFilter));
-        
-        model.addAttribute("selectedAreaFilter", areaFilter);
+                getLatestQuarterData(currentYear, quarterFilter, areaId, statusFilter));
+
+        model.addAttribute("selectedAreaFilter", areaId != null && areaId != -1 ? areaId.toString() : "");
         model.addAttribute("selectedQuarterFilter", quarterFilter);
         model.addAttribute("selectedStatusFilter", statusFilter);
         model.addAttribute("activePage", "quarters");
 
         Map<String, Boolean> userAccess = new HashMap<>();
-        userAccess.put("can_access_all_areas", true);
+        userAccess.put("can_access_all_areas", roleId != null && roleId == 1);
         model.addAttribute("userAccess", userAccess);
+        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
+        model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
 
         return "quarters";
     }
@@ -81,41 +120,41 @@ public class QuartersController {
             LocalDateTime snapshotDate = resolveSnapshotDate(year, quarterFilter);
 
             // Count active offices at snapshot date (filter-aware)
-            long active   = countActiveAt(snapshotDate, areaId);
+            long active = countActiveAt(snapshotDate, areaId);
             long inactive = countInactiveAt(snapshotDate, areaId);
-            long total    = countTotal(areaId);
+            long total = countTotal(areaId);
 
             // Apply status filter to what we show
             if ("active".equals(statusFilter)) {
-                stats.put("totalConnected",    active);
+                stats.put("totalConnected", active);
                 stats.put("totalDisconnected", 0L);
-                stats.put("totalOffices",      active);
+                stats.put("totalOffices", active);
             } else if ("inactive".equals(statusFilter)) {
-                stats.put("totalConnected",    0L);
+                stats.put("totalConnected", 0L);
                 stats.put("totalDisconnected", inactive);
-                stats.put("totalOffices",      inactive);
+                stats.put("totalOffices", inactive);
             } else if ("newly_connected".equals(statusFilter)) {
                 LocalDateTime[] qRange = resolveQuarterRange(year, quarterFilter);
                 long newlyConnected = countNewlyConnected(qRange[0], qRange[1], areaId);
-                stats.put("totalConnected",    newlyConnected);
+                stats.put("totalConnected", newlyConnected);
                 stats.put("totalDisconnected", 0L);
-                stats.put("totalOffices",      newlyConnected);
+                stats.put("totalOffices", newlyConnected);
             } else if ("newly_disconnected".equals(statusFilter)) {
                 LocalDateTime[] qRange = resolveQuarterRange(year, quarterFilter);
                 long newlyDisconnected = countNewlyDisconnected(qRange[0], qRange[1], areaId);
-                stats.put("totalConnected",    0L);
+                stats.put("totalConnected", 0L);
                 stats.put("totalDisconnected", newlyDisconnected);
-                stats.put("totalOffices",      newlyDisconnected);
+                stats.put("totalOffices", newlyDisconnected);
             } else {
                 // All Status: show active + inactive, total = all non-archived offices
-                stats.put("totalConnected",    active);
+                stats.put("totalConnected", active);
                 stats.put("totalDisconnected", inactive);
-                stats.put("totalOffices",      total);
+                stats.put("totalOffices", total);
             }
         } catch (Exception e) {
-            stats.put("totalConnected",    0L);
+            stats.put("totalConnected", 0L);
             stats.put("totalDisconnected", 0L);
-            stats.put("totalOffices",      0L);
+            stats.put("totalOffices", 0L);
         }
         return stats;
     }
@@ -139,21 +178,21 @@ public class QuartersController {
 
             // Get quarter date range
             int quarterIndex = Integer.parseInt(targetQuarter.substring(1)) - 1;
-            int[][] qMonths = {{1,3},{4,6},{7,9},{10,12}};
+            int[][] qMonths = {{1, 3}, {4, 6}, {7, 9}, {10, 12}};
             int startMonth = qMonths[quarterIndex][0];
             int endMonth = qMonths[quarterIndex][1];
 
             LocalDateTime qStart = LocalDateTime.of(year, startMonth, 1, 0, 0, 0);
             LocalDateTime qEnd = LocalDateTime.of(year, endMonth,
-                java.time.YearMonth.of(year, endMonth).lengthOfMonth(), 23, 59, 59);
+                    java.time.YearMonth.of(year, endMonth).lengthOfMonth(), 23, 59, 59);
 
             // Use the same snapshot date as getConnectivityStats for consistency
             LocalDateTime snapshotDate = resolveSnapshotDate(year, targetQuarter);
 
             // Calculate stats for this quarter
-            long newlyConnected    = countNewlyConnected(qStart, qEnd, areaId);
+            long newlyConnected = countNewlyConnected(qStart, qEnd, areaId);
             long newlyDisconnected = countNewlyDisconnected(qStart, qEnd, areaId);
-            long totalConnected    = countActiveAt(snapshotDate, areaId);
+            long totalConnected = countActiveAt(snapshotDate, areaId);
             long totalDisconnected = countInactiveAt(snapshotDate, areaId);
 
             Map<String, Object> latestData = new HashMap<>();
@@ -196,18 +235,22 @@ public class QuartersController {
     private LocalDateTime[] resolveQuarterRange(int year, String quarterFilter) {
         String q = (quarterFilter == null || quarterFilter.isEmpty()) ? "Q1" : quarterFilter.toUpperCase();
         switch (q) {
-            case "Q1": return new LocalDateTime[]{
-                LocalDateTime.of(year, 1,  1,  0, 0, 0),
-                LocalDateTime.of(year, 3, 31, 23, 59, 59)};
-            case "Q2": return new LocalDateTime[]{
-                LocalDateTime.of(year, 4,  1,  0, 0, 0),
-                LocalDateTime.of(year, 6, 30, 23, 59, 59)};
-            case "Q3": return new LocalDateTime[]{
-                LocalDateTime.of(year, 7,  1,  0, 0, 0),
-                LocalDateTime.of(year, 9, 30, 23, 59, 59)};
-            default:   return new LocalDateTime[]{
-                LocalDateTime.of(year, 10,  1,  0, 0, 0),
-                LocalDateTime.of(year, 12, 31, 23, 59, 59)};
+            case "Q1":
+                return new LocalDateTime[]{
+                        LocalDateTime.of(year, 1, 1, 0, 0, 0),
+                        LocalDateTime.of(year, 3, 31, 23, 59, 59)};
+            case "Q2":
+                return new LocalDateTime[]{
+                        LocalDateTime.of(year, 4, 1, 0, 0, 0),
+                        LocalDateTime.of(year, 6, 30, 23, 59, 59)};
+            case "Q3":
+                return new LocalDateTime[]{
+                        LocalDateTime.of(year, 7, 1, 0, 0, 0),
+                        LocalDateTime.of(year, 9, 30, 23, 59, 59)};
+            default:
+                return new LocalDateTime[]{
+                        LocalDateTime.of(year, 10, 1, 0, 0, 0),
+                        LocalDateTime.of(year, 12, 31, 23, 59, 59)};
         }
     }
 
@@ -218,22 +261,31 @@ public class QuartersController {
             return LocalDateTime.of(year, 12, 31, 23, 59, 59);
         }
         switch (quarterFilter.toUpperCase()) {
-            case "Q1": return LocalDateTime.of(year, 3, 31, 23, 59, 59);
-            case "Q2": return LocalDateTime.of(year, 6, 30, 23, 59, 59);
-            case "Q3": return LocalDateTime.of(year, 9, 30, 23, 59, 59);
-            case "Q4": return LocalDateTime.of(year, 12, 31, 23, 59, 59);
-            default:   return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+            case "Q1":
+                return LocalDateTime.of(year, 3, 31, 23, 59, 59);
+            case "Q2":
+                return LocalDateTime.of(year, 6, 30, 23, 59, 59);
+            case "Q3":
+                return LocalDateTime.of(year, 9, 30, 23, 59, 59);
+            case "Q4":
+                return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+            default:
+                return LocalDateTime.of(year, 12, 31, 23, 59, 59);
         }
     }
 
     // ── Helper: count active offices = offices with connectionStatus=true ────────
 
     private long countActiveAt(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return postalOfficeRepository.findByIsArchivedFalse().stream()
-            .filter(po -> areaId == null
-                || (po.getArea() != null && areaId.equals(po.getArea().getId())))
-            .filter(po -> Boolean.TRUE.equals(po.getConnectionStatus()))
-            .count();
+                .filter(po -> areaId == null
+                        || (po.getArea() != null && areaId.equals(po.getArea().getId())))
+                .filter(po -> Boolean.TRUE.equals(po.getConnectionStatus()))
+                .count();
     }
 
     // ── Helper: count inactive offices = offices with connectionStatus=false ────
@@ -242,50 +294,66 @@ public class QuartersController {
     // not just that it lacks a Connectivity record.
 
     private long countInactiveAt(LocalDateTime snap, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return postalOfficeRepository.findByIsArchivedFalse().stream()
-            .filter(po -> areaId == null
-                || (po.getArea() != null && areaId.equals(po.getArea().getId())))
-            .filter(po -> !Boolean.TRUE.equals(po.getConnectionStatus()))
-            .count();
+                .filter(po -> areaId == null
+                        || (po.getArea() != null && areaId.equals(po.getArea().getId())))
+                .filter(po -> !Boolean.TRUE.equals(po.getConnectionStatus()))
+                .count();
     }
 
     // ── Helper: count total non-archived offices, optionally by area ──────────
 
     private long countTotal(Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         if (areaId == null) {
             return postalOfficeRepository.countNonArchived();
         }
         return postalOfficeRepository.findByIsArchivedFalse().stream()
-            .filter(po -> po.getArea() != null && areaId.equals(po.getArea().getId()))
-            .count();
+                .filter(po -> po.getArea() != null && areaId.equals(po.getArea().getId()))
+                .count();
     }
 
     // ── Helper: count newly connected in date range, optionally by area ───────
 
     private long countNewlyConnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findByDateConnectedBetween(start, end).stream()
-            .filter(c -> c.getPostalOffice() != null
-                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
-            .filter(c -> areaId == null
-                || (c.getPostalOffice().getArea() != null
-                    && areaId.equals(c.getPostalOffice().getArea().getId())))
-            .map(c -> c.getPostalOffice().getId())
-            .distinct()
-            .count();
+                .filter(c -> c.getPostalOffice() != null
+                        && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
+                .filter(c -> areaId == null
+                        || (c.getPostalOffice().getArea() != null
+                        && areaId.equals(c.getPostalOffice().getArea().getId())))
+                .map(c -> c.getPostalOffice().getId())
+                .distinct()
+                .count();
     }
 
     // ── Helper: count newly disconnected in date range, optionally by area ────
 
     private long countNewlyDisconnected(LocalDateTime start, LocalDateTime end, Integer areaId) {
+        // If areaId is -1, return 0 (no access)
+        if (areaId != null && areaId == -1) {
+            return 0;
+        }
         return connectivityRepository.findByDateDisconnectedBetween(start, end).stream()
-            .filter(c -> c.getPostalOffice() != null
-                && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
-            .filter(c -> areaId == null
-                || (c.getPostalOffice().getArea() != null
-                    && areaId.equals(c.getPostalOffice().getArea().getId())))
-            .map(c -> c.getPostalOffice().getId())
-            .distinct()
-            .count();
+                .filter(c -> c.getPostalOffice() != null
+                        && !archivedOfficeRepository.existsByPostalOfficeId(c.getPostalOffice().getId()))
+                .filter(c -> areaId == null
+                        || (c.getPostalOffice().getArea() != null
+                        && areaId.equals(c.getPostalOffice().getArea().getId())))
+                .map(c -> c.getPostalOffice().getId())
+                .distinct()
+                .count();
     }
 
     // ── Other helpers ─────────────────────────────────────────────────────────

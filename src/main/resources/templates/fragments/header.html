@@ -7,7 +7,7 @@
         <div class="container-fluid">
 
             <!-- Logo -->
-            <a class="navbar-brand d-flex align-items-center" th:href="@{/dashboard}">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/table}">
                 <img th:src="@{/assets/images/phlpostlogo.png}"
                      alt="PHLPost Logo"
                      style="height: 45px;">
@@ -44,19 +44,11 @@
                         </span>
                     </a>
 
-                    <!--
-                        Bootstrap dropdown WRAPPER — Bootstrap owns this div.
-                        We NEVER touch this element's attributes or replace it.
-
-                        #notifContent is the SSE target — only its innerHTML is
-                        swapped by JS, leaving Bootstrap's .dropdown-menu alone.
-                    -->
                     <div class="dropdown-menu dropdown-menu-right shadow notification-dropdown"
                          aria-labelledby="alertsDropdown"
                          style="min-width:360px;padding:0;border:none;
                                 border-radius:10px;overflow:hidden;">
 
-                        <!-- ↓ SSE updates ONLY this inner div — never the parent -->
                         <div id="notifContent">
                             <div class="px-3 py-3 text-center text-muted" style="font-size:13px;">
                                 <i class="fas fa-circle-notch fa-spin mr-1"></i>
@@ -88,11 +80,8 @@
                     </a>
 
                     <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown">
-                        <a class="dropdown-item" th:href="@{/profile}">
+                        <a class="dropdown-item" th:href="@{/my-profile}">
                             <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
-                        </a>
-                        <a class="dropdown-item" th:href="@{/settings}">
-                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i> Settings
                         </a>
                         <div sec:authorize="hasRole('ADMIN')">
                             <div class="dropdown-divider"></div>
@@ -141,11 +130,10 @@
     <script>
     (function () {
 
-        var bellLi      = document.getElementById('notifBellLi');
-        var badge       = document.getElementById('notifBadge');
+        var bellLi       = document.getElementById('notifBellLi');
+        var badge        = document.getElementById('notifBadge');
         var notifContent = document.getElementById('notifContent');
 
-        // Only admins have #notifBellLi — bail out for everyone else
         if (!bellLi || !notifContent) return;
 
         var es;
@@ -154,34 +142,24 @@
         function connect() {
             es = new EventSource('/api/notifications/stream');
 
-            // ── Badge event ──────────────────────────────────────────────────
             es.addEventListener('badge', function (e) {
                 var count = (e.data || '').trim();
                 if (count !== '' && count !== '0') {
-                    badge.textContent  = count;
+                    badge.textContent   = count;
                     badge.style.display = 'inline-block';
                 } else {
-                    badge.textContent  = '';
+                    badge.textContent   = '';
                     badge.style.display = 'none';
                 }
             });
 
-            // ── Notification HTML event ──────────────────────────────────────
             es.addEventListener('notification', function (e) {
                 var html = (e.data || '').trim();
                 if (!html) return;
 
-                /*
-                 * KEY FIX: Update ONLY #notifContent innerHTML.
-                 * The parent .dropdown-menu is NEVER touched — Bootstrap keeps
-                 * full control of its show/hide state.
-                 */
                 notifContent.innerHTML = html;
-
-                // Re-bind click handlers in the new content
                 bindMarkRead();
 
-                // Shake the bell
                 bellLi.classList.remove('bell-shake');
                 void bellLi.offsetWidth;
                 bellLi.classList.add('bell-shake');
@@ -198,12 +176,8 @@
             };
         }
 
-        // ── Mark-read click delegation ───────────────────────────────────────
         function bindMarkRead() {
-
-            // Individual notification click → mark-read
             notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
-                // Remove old listener first to avoid duplicates
                 el.replaceWith(el.cloneNode(true));
             });
             notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
@@ -213,7 +187,6 @@
                 });
             });
 
-            // Mark-all-read button
             var markAllBtn = notifContent.querySelector('[data-mark-all-read]');
             if (markAllBtn) {
                 markAllBtn.addEventListener('click', function (ev) {
@@ -226,7 +199,6 @@
 
         connect();
 
-        // Expose close function for logout link
         window._sseClose = function () {
             if (es) { es.close(); es = null; }
         };

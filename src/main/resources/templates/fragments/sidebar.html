@@ -22,18 +22,11 @@
             General
         </div>
 
-        <a th:href="@{/dashboard}" class="sidebar-link" 
-           th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
-           data-page="dashboard">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
-
         <a th:href="@{/table}" class="sidebar-link" 
            th:classappend="${activePage == 'table'} ? 'active' : ''"
            data-page="table">
             <i class="fas fa-table"></i>
-            <span>POST OFFICE</span>
+            <span>Post Office</span>
         </a>
 
         <!-- CONNECTIVITY with REPORT submenu -->
@@ -43,7 +36,7 @@
             <a href="#" class="sidebar-link sidebar-dropdown-toggle"
                th:classappend="${activePage == 'quarters' or activePage == 'report'} ? 'active' : ''">
                 <i class="fas fa-wifi"></i>
-                <span>CONNECTIVITY</span>
+                <span>Connectivity</span>
                 <i class="fas fa-chevron-right dropdown-arrow ms-auto"></i>
             </a>
 
@@ -56,7 +49,8 @@
                 </a>
                 <a th:href="@{/report}" class="sidebar-sublink"
                    th:classappend="${activePage == 'report'} ? 'active' : ''"
-                   data-page="report">
+                   data-page="report"
+                   sec:authorize="hasRole('ADMIN') or hasRole('ROLE_AREA_ADMIN')">
                     <i class="fas fa-file-alt"></i>
                     <span>Report</span>
                 </a>
@@ -85,13 +79,14 @@
         </a>
 
         <!-- ADMIN-only links -->
-        <div sec:authorize="hasRole('ADMIN')">
+        <div sec:authorize="hasRole('ROLE_ADMIN') or hasRole('ROLE_AREA_ADMIN')">
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Admin</div>
 
             <a th:href="@{/users}" class="sidebar-link"
                th:classappend="${activePage == 'users'} ? 'active' : ''"
-               data-page="users">
+               data-page="users"
+               sec:authorize="hasRole('ROLE_ADMIN')">
                 <i class="fas fa-users-cog"></i>
                 <span>User Management</span>
             </a>
