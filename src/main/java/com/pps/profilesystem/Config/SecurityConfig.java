@@ -30,9 +30,11 @@ public class SecurityConfig {
                     "/images/**",
                     "/assets/**",
                     "/postal-offices/**",
-                    "/api/keep-alive"          // public ping for session check
+                    "/api/keep-alive",          // public ping for session check
+                    "/api/postal-offices/**",   // map data API
+                    "/api/postal-office/**"     // office profile API
                 ).permitAll()
-                // ✅ FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
+                // FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
                 // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
                 // 403 Forbidden on /api/notifications/stream, causing silent SSE failure.
                 .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN")
@@ -48,6 +50,7 @@ public class SecurityConfig {
                 .usernameParameter("email")
                 .passwordParameter("password")
                 .defaultSuccessUrl("/dashboard", true)
+                
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
