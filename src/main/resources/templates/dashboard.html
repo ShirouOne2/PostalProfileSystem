@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+
+<head>
+    <title>Dashboard - PHLPost</title>
+</head>
+
+<body th:data-is-area-admin="${isAreaAdmin}">
+
+<div th:fragment="content">
+
+    <div class="container-fluid py-4">
+
+        <!-- ── Page Header ─────────────────────────────────────────── -->
+        <div class="dash-header">
+            <div>
+                <h3><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</h3>
+                <p>Overview of all post office connectivity across areas.</p>
+            </div>
+            <div class="d-flex" style="gap:8px; flex-wrap:wrap;">
+                <a th:if="${isSystemAdmin or isAreaAdmin}" th:href="@{/archive}"
+                   class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-archive mr-1"></i>Archive
+                </a>
+                <button id="dashPrintBtn" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-print mr-1"></i>Print
+                </button>
+                <button id="dashExportBtn" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-csv mr-1"></i>Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Stats Cards ─────────────────────────────────────────── -->
+        <div class="stat-cards-row">
+            <div class="stat-card s-total">
+                <span class="lbl">Total Offices</span>
+                <span class="val" th:text="${totalCount}">0</span>
+                <i class="fas fa-building ico"></i>
+            </div>
+            <div class="stat-card s-active">
+                <span class="lbl">Connected</span>
+                <span class="val" th:text="${activeCount}">0</span>
+                <i class="fas fa-wifi ico"></i>
+            </div>
+            <div class="stat-card s-inactive">
+                <span class="lbl">Disconnected</span>
+                <span class="val" th:text="${inactiveCount}">0</span>
+                <i class="fas fa-times-circle ico"></i>
+            </div>
+            <div class="stat-card s-open">
+                <span class="lbl">Office Open</span>
+                <span class="val" th:text="${openCount}">0</span>
+                <i class="fas fa-door-open ico"></i>
+            </div>
+            <div class="stat-card s-closed">
+                <span class="lbl">Office Closed</span>
+                <span class="val" th:text="${closedCount}">0</span>
+                <i class="fas fa-door-closed ico"></i>
+            </div>
+        </div>
+
+        <!-- ── Filter Panel ───────────────────────────────────── -->
+        <div class="dash-filter-panel">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center" style="gap:8px;">
+                    <i class="fas fa-filter text-primary" style="font-size:13px;"></i>
+                    <span class="filter-panel-title">Filters</span>
+                    <span id="dashActiveFilterCount" class="badge badge-primary"
+                          style="display:none;font-size:10px;padding:3px 7px;border-radius:10px;"></span>
+                </div>
+                <div class="d-flex align-items-center" style="gap:8px;">
+                    <span id="dashSummaryText"></span>
+                    <button id="dashToggleFilterBody" class="btn btn-sm btn-light border"
+                            style="height:28px;padding:0 10px;font-size:12px;" title="Toggle">
+                        <i class="fas fa-chevron-up" id="dashFilterChevron"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="dashFilterBody">
+                <div class="row align-items-end mb-2" style="margin:0 -5px;">
+
+                    <!-- Search -->
+                    <div class="col-md-4 col-sm-12 mb-2" style="padding:0 5px;">
+                        <label class="filter-label"><i class="fas fa-search mr-1"></i>Search</label>
+                        <div class="input-group" style="flex-wrap:nowrap;">
+                            <input type="text" id="dashSearchInput"
+                                   class="form-control filter-input"
+                                   placeholder="Office name..."
+                                   style="border-radius:7px 0 0 7px !important;">
+                            <div class="input-group-append">
+                                <button class="filter-clear-x" id="dashClearSearchBtn" title="Clear">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Area — System Admin only -->
+                    <div th:if="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                        <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
+                        <select id="dashFilterArea" class="form-control filter-select">
+                            <option value="">All Areas</option>
+                            <option th:each="area : ${areas}"
+                                    th:value="${area.areaName}"
+                                    th:text="${area.areaName}">Area</option>
+                        </select>
+                    </div>
+                    <!-- Area — non-admin (hidden but present) -->
+                    <div th:unless="${isSystemAdmin}" style="display:none;">
+                        <select id="dashFilterArea"><option value="1">Area 1</option></select>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                        <label class="filter-label"><i class="fas fa-wifi mr-1"></i>Connection</label>
+                        <select id="dashFilterConnStatus" class="form-control filter-select">
+                            <option value="">All</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <!-- Office Status — System Admin only -->
+                    <div th:if="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                        <label class="filter-label"><i class="fas fa-door-open mr-1"></i>Office</label>
+                        <select id="dashFilterOfficeStatus" class="form-control filter-select">
+                            <option value="">All</option>
+                            <option value="Open">Open</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div th:unless="${isSystemAdmin}" style="display:none;">
+                        <select id="dashFilterOfficeStatus"><option value=""></option></select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-2 col-sm-6 mb-2 d-flex align-items-end"
+                         style="padding:0 5px;gap:6px;">
+                        <button id="dashApplyFilters" class="btn btn-primary btn-sm"
+                                style="height:36px;padding:0 16px;font-size:13px;font-weight:600;white-space:nowrap;">
+                            <i class="fas fa-check mr-1"></i>Apply
+                        </button>
+                        <button id="dashClearFilters" class="btn btn-outline-secondary btn-sm"
+                                style="height:36px;padding:0 12px;font-size:13px;white-space:nowrap;">
+                            <i class="fas fa-undo mr-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div id="dashActiveFilterTags" class="d-flex flex-wrap" style="gap:6px;min-height:4px;"></div>
+            </div>
+        </div>
+        <!-- ── /Filter Panel ───────────────────────── -->
+
+        <!-- ══════════════════════════════════════════════════
+                     TABLE — System Admin sees full columns
+                           — Area/User sees simplified columns
+                     ══════════════════════════════════════════════ -->
+        <div class="dash-table-card">
+            <div class="card-header-bar">
+                <h5><i class="fas fa-list mr-2"></i>Post Office Inventory</h5>
+                <span class="text-white-50" style="font-size:12px;">
+                    <i class="fas fa-circle text-success mr-1" style="font-size:8px;"></i>Live Data
+                </span>
+            </div>
+            <div class="card-body-inner">
+
+                <!-- ── SYSTEM ADMIN TABLE (all columns) ─────────────────── -->
+                <div class="table-responsive" th:if="${isSystemAdmin}">
+                    <table id="dashTable" class="table table-hover table-striped mb-0" style="width:100%">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center" style="width:45px;">#</th>
+                                <th>Post Office Name</th>
+                                <th style="width:110px;">Area</th>
+                                <th style="width:130px;">Region</th>
+                                <th style="width:160px;">City/Municipality</th>
+                                <th class="text-center" style="width:120px;">
+                                    Connection
+                                    <span class="th-sub">Internet Status</span>
+                                </th>
+                                <th class="text-center" style="width:105px;">
+                                    Office
+                                    <span class="th-sub">Open / Closed</span>
+                                </th>
+                                <th style="width:160px;">Remarks</th>
+                                <th class="text-center" style="width:120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="office, iter : ${offices}">
+                                <td class="text-center text-muted" style="font-size:12px;"></td>
+                                <td><span style="font-weight:600;" th:text="${office.name}"></span></td>
+                                <td th:text="${office.area != null and !office.area.empty ? office.area : 'N/A'}"></td>
+                                <td th:text="${office.region != null and !office.region.empty ? office.region : 'N/A'}"></td>
+                                <td th:text="${office.cityMunicipality != null and !office.cityMunicipality.empty ? office.cityMunicipality : 'N/A'}"></td>
+                                <td class="text-center">
+                                    <span th:if="${office.connectionStatus}" class="badge badge-success">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                    <span th:unless="${office.connectionStatus}" class="badge badge-danger">
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${office.officeStatus == 'OPEN'}" class="badge badge-open">
+                                        <i class="fas fa-door-open mr-1"></i>Open
+                                    </span>
+                                    <span th:if="${office.officeStatus == 'CLOSED'}" class="badge badge-closed">
+                                        <i class="fas fa-door-closed mr-1"></i>Closed
+                                    </span>
+                                    <span th:if="${office.officeStatus == null or office.officeStatus == ''}"
+                                          class="badge badge-unknown">—</span>
+                                </td>
+                                <td>
+                                    <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
+                                    <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          class="text-muted">—</span>
+                                </td>
+                                <td class="text-center action-buttons">
+                                    <button type="button" class="btn btn-sm btn-info"
+                                            th:onclick="|dashViewOffice(${office.id})|"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-warning btn-edit"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            title="Edit Office">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-archive"
+                                            style="background:#fd7e14;color:white;"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            sec:authorize="hasRole('ADMIN')"
+                                            title="Archive Office">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ── AREA ADMIN / USER TABLE (simplified columns) ──────── -->
+                <div class="table-responsive" th:unless="${isSystemAdmin}">
+                    <table id="dashTable" class="table table-hover table-striped mb-0" style="width:100%">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center" style="width:45px;">#</th>
+                                <th>Postal Office</th>
+                                <th class="text-center" style="width:140px;">Connection Status</th>
+                                <th style="width:130px;">Speed</th>
+                                <th>Remarks</th>
+                                <th class="text-center" style="width:110px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="office, iter : ${offices}">
+                                <!-- # -->
+                                <td class="text-center text-muted" style="font-size:12px;"></td>
+
+                                <!-- Postal Office -->
+                                <td><span style="font-weight:600;" th:text="${office.name}"></span></td>
+
+                                <!-- Connection Status -->
+                                <td class="text-center">
+                                    <span th:if="${office.connectionStatus}" class="badge badge-success">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                    <span th:unless="${office.connectionStatus}" class="badge badge-danger">
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    </span>
+                                </td>
+
+                                <!-- Speed -->
+                                <td>
+                                    <span th:if="${office.speed != null and !#strings.isEmpty(office.speed)}"
+                                          th:text="${office.speed}" style="font-size:13px;"></span>
+                                    <span th:unless="${office.speed != null and !#strings.isEmpty(office.speed)}"
+                                          class="text-muted">—</span>
+                                </td>
+
+                                <!-- Remarks -->
+                                <td>
+                                    <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
+                                    <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
+                                          class="text-muted">—</span>
+                                </td>
+
+                                <!-- Actions: View + Edit + Archive for Area Admin -->
+                                <td class="text-center action-buttons">
+                                    <button type="button" class="btn btn-sm btn-info"
+                                            th:onclick="|dashViewOffice(${office.id})|"
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-warning btn-edit"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            title="Edit Office">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button th:if="${isAreaAdmin}"
+                                            class="btn btn-sm btn-archive"
+                                            style="background:#fd7e14;color:white;"
+                                            th:data-office-id="${office.id}"
+                                            th:data-office-name="${office.name}"
+                                            title="Archive Office">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div><!-- /card-body-inner -->
+        </div><!-- /dash-table-card -->
+
+    </div><!-- /container-fluid -->
+
+    <!-- ── Archive Reason Modal ──────────────────────────────────────────── -->
+    <div class="modal fade" id="dashArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-archive mr-2"></i>Archive Post Office
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        You are about to archive <strong id="dashArchiveOfficeName"></strong>.
+                        This office will be hidden from all views but can be restored later.
+                    </p>
+                    <div class="form-group">
+                        <label for="dashArchiveReasonInput">
+                            Reason <small class="text-muted">(optional)</small>
+                        </label>
+                        <textarea id="dashArchiveReasonInput" class="form-control" rows="3"
+                                  placeholder="e.g. Office closed, Duplicate record…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="dashConfirmArchiveBtn">
+                        <i class="fas fa-archive mr-1"></i>Archive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

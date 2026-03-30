@@ -78,6 +78,128 @@ body {
 }
 
 /* ============================================
+   SIDEBAR DASHBOARD WIDGET
+   ============================================ */
+.sidebar-dashboard-widget {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: 0 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.stat-item:hover {
+    background: #f0f4fb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+    color: white;
+}
+
+.stat-icon.total {
+    background: linear-gradient(135deg, #4e73df, #2e59d9);
+}
+
+.stat-icon.active {
+    background: linear-gradient(135deg, #1cc88a, #13855c);
+}
+
+.stat-icon.inactive {
+    background: linear-gradient(135deg, #e74a3b, #c0392b);
+}
+
+.stat-icon.open {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sidebar-text);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    color: var(--sidebar-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+.quick-actions {
+    padding: 0 1.5rem;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, var(--phlpost-blue), #1e4a8c);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+    background: linear-gradient(135deg, #1e4a8c, var(--phlpost-blue));
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+.quick-action-btn i {
+    margin-right: 0.4rem;
+    font-size: 0.75rem;
+}
+
+/* ============================================
    MENU
    ============================================ */
 .sidebar-menu {
@@ -186,5 +308,63 @@ body {
 
     .main-content {
         margin-left: 0;
+    }
+
+    /* Adjust dashboard widget for mobile */
+    .dashboard-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+
+    .stat-item {
+        padding: 0.5rem;
+    }
+
+    .stat-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+    }
+
+    .stat-label {
+        font-size: 0.6rem;
+    }
+
+    .quick-action-btn {
+        padding: 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    .sidebar-dashboard-widget {
+        padding: 0.75rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further adjustments for very small screens */
+    .sidebar-dashboard-widget {
+        padding: 0.5rem 0;
+    }
+
+    .dashboard-stats-grid {
+        padding: 0 0.75rem;
+        gap: 0.4rem;
+    }
+
+    .stat-item {
+        padding: 0.4rem;
+    }
+
+    .stat-value {
+        font-size: 0.85rem;
+    }
+
+    .quick-actions {
+        padding: 0 0.75rem;
     }
 }
