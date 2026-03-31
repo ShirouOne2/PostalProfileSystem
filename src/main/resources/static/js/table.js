@@ -33,9 +33,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Column definitions differ by role ────────────────────────────────
     const adminColumnDefs = [
         { targets: 0, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
-            return meta.row + meta.settings._iDisplayStart + 1;
+            return meta.settings._iDisplayStart + meta.row + 1;
         }},
-        { targets: 1, orderable: true },
+        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+            if (!data) return 'N/A';
+            // Get office ID from the <tr> data-office-id attribute
+            var trNode = meta.settings.aoData[meta.row].nTr;
+            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+            var safeName = data.replace(/'/g, "\'");
+            return '<a href="#" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\'); return false;">' + data + '</a>';
+        }},
         { targets: 2, orderable: true },   // Area
         { targets: 3, orderable: true },   // Region
         { targets: 4, orderable: true },   // City
@@ -47,9 +54,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const userColumnDefs = [
         { targets: 0, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
-            return meta.row + meta.settings._iDisplayStart + 1;
+            return meta.row + 1;
         }},
-        { targets: 1, orderable: true },   // Postal Office
+        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+            if (!data) return 'N/A';
+            var trNode = meta.settings.aoData[meta.row].nTr;
+            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+            var safeName = data.replace(/'/g, "\'");
+            return '<a href="#" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\'); return false;">' + data + '</a>';
+        }},   // Postal Office
         { targets: 2, width: '140px', orderable: true, className: 'dt-center' }, // Connection
         { targets: 3, width: '120px', orderable: true },  // Speed
         { targets: 4, orderable: false }, // Remarks
@@ -258,53 +271,17 @@ function initializeMap() {
         for (let i = 0; i < data.length; i++) {
             const office = data[i];
             
-            // Skip markers for non-privileged users if not Area 1
-            if (!IS_PRIVILEGED_USER && office.areaId != 1) {
-                continue;
-            }
-            
-            // DEBUG: Log first few offices to see available fields
-            if (i < 3) {
-                console.log(`Office ${i} data:`, office);
-                console.log(`Office ${i} fields:`, Object.keys(office));
-            }
+            // All offices are shown on the map — filtering is done via the area/status filter controls
             
             const lat = parseFloat(office.lat ?? office.latitude);
             const lng = parseFloat(office.lng ?? office.longitude);
 
-            // DEBUG: Log coordinate extraction
-            if (i < 5) {
-                console.log(`Office ${i} coordinate extraction:`, {
-                    'office.lat': office.lat,
-                    'office.latitude': office.latitude,
-                    'office.lng': office.lng,
-                    'office.longitude': office.longitude,
-                    'parsed lat': lat,
-                    'parsed lng': lng,
-                    'lat isNaN': isNaN(lat),
-                    'lng isNaN': isNaN(lng)
-                });
-            }
-
             if (isNaN(lat) || isNaN(lng)) {
-                console.log(`Skipping office ${i} due to invalid coordinates:`, {
-                    lat: office.lat,
-                    latitude: office.latitude,
-                    lng: office.lng,
-                    longitude: office.longitude,
-                    parsedLat: lat,
-                    parsedLng: lng
-                });
                 skippedCount++;
                 continue;
             }
 
             if (lat < 4.0 || lat > 21.5 || lng < 116.0 || lng > 127.0) {
-                console.log(`Skipping office ${i} due to out-of-bounds coordinates:`, {
-                    lat: lat,
-                    lng: lng,
-                    name: office.name
-                });
                 skippedCount++;
                 continue;
             }
@@ -370,7 +347,7 @@ function initializeMap() {
                 id:       officeId,
                 name:     nameRaw.toLowerCase(),
                 nameRaw:  nameRaw,
-                areaId:   String(office.areaId ?? ''),
+                areaId:   office.areaId != null ? String(office.areaId) : '',
                 areaRaw:  areaRaw,
                 address:  addressRaw,
                 status:   office.connectionStatus ? 'true' : 'false',
@@ -491,8 +468,40 @@ function initMapFilters() {
 
             item.addEventListener('click', function() {
                 hideSuggestions();
-                // Show profile in modal instead of navigating
-                showProfileModal(d.id, d.nameRaw);
+                
+                // Find the marker for this office and locate it on the map
+                const targetMarker = markers.find(m => m._officeData && m._officeData.id === d.id);
+                if (targetMarker) {
+                    // Center map on the selected marker with appropriate zoom
+                    map.setView(targetMarker.getLatLng(), 15, {
+                        animate: true,
+                        duration: 1
+                    });
+                    
+                    // Open the marker popup to highlight the location
+                    targetMarker.openPopup();
+                    
+                    // Briefly highlight the marker with a different style
+                    const originalStyle = targetMarker.options;
+                    targetMarker.setStyle({
+                        radius: 12,
+                        fillColor: '#FFD700',
+                        color: '#FF6347',
+                        weight: 3,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    });
+                    
+                    // Restore original style after 2 seconds
+                    setTimeout(() => {
+                        targetMarker.setStyle(originalStyle);
+                    }, 2000);
+                }
+                
+                // Show profile in modal after a short delay to allow map animation
+                setTimeout(() => {
+                    showProfileModal(d.id, d.nameRaw);
+                }, 500);
             });
 
             suggestBox.appendChild(item);
@@ -547,10 +556,10 @@ function initMapFilters() {
         // filterMapMarkers already called in autocomplete handler above
     });
 
-    // Area filter
-    document.getElementById('areaFilter')?.addEventListener('change', function() {
-        filterMapMarkers();
-    });
+    // Area filter — listen to both IDs since IS_ADMIN may not be resolved
+    // at the time initMapFilters() runs (it depends on a DOM query).
+    document.getElementById('areaFilterAdmin')?.addEventListener('change', filterMapMarkers);
+    document.getElementById('areaFilter')?.addEventListener('change', filterMapMarkers);
 
     // Status filter
     document.getElementById('statusFilter')?.addEventListener('change', function() {
@@ -568,7 +577,8 @@ function initMapFilters() {
         const sg = document.getElementById('mapSearchSuggestions');
         if (si) si.value = '';
         if (sg) sg.style.display = 'none';
-        document.getElementById('areaFilter').value = '';
+        const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
+        if (areaFilterElement) areaFilterElement.value = '';
         document.getElementById('statusFilter').value = '';
 
         // Restore all markers
@@ -588,7 +598,10 @@ function filterMapMarkers() {
     if (!map || !markers.length) return;
 
     const searchTerm   = (document.getElementById('searchInput')?.value  || '').toLowerCase().trim();
-    const areaFilter   = (document.getElementById('areaFilter')?.value   || '').trim();   // e.g. "1"
+    // Read from whichever area dropdown is present in the DOM (admin or non-admin)
+    const areaAdminEl  = document.getElementById('areaFilterAdmin');
+    const areaEl       = document.getElementById('areaFilter');
+    const areaFilter   = ((areaAdminEl?.value || areaEl?.value) || '').trim();
     const statusFilter = (document.getElementById('statusFilter')?.value || '').trim();
 
     console.log('=== MAP FILTER DEBUG ===');
@@ -598,15 +611,10 @@ function filterMapMarkers() {
     const areasWithMatches = new Set();
     const visibleBounds    = [];
     let matchCount = 0;
-    let noDataCount = 0;
 
     markers.forEach(function(marker, index) {
         const d = marker._officeData;
-        if (!d) {
-            noDataCount++;
-            console.log(`Marker ${index}: NO DATA`);
-            return;
-        }
+        if (!d) return;
 
         const matchesSearch = !searchTerm   || d.name.includes(searchTerm);
         const matchesArea   = !areaFilter   || d.areaId === areaFilter;
@@ -614,21 +622,7 @@ function filterMapMarkers() {
 
         const isMatch = matchesSearch && matchesArea && matchesStatus;
 
-        if (isMatch) matchCount++;
-
-        console.log(`Marker ${index}:`, {
-            name: d.name,
-            areaId: d.areaId,
-            areaIdType: typeof d.areaId,
-            status: d.status,
-            matches: { matchesSearch, matchesArea, matchesStatus },
-            isMatch,
-            filterArea: areaFilter,
-            filterAreaType: typeof areaFilter
-        });
-
         if (isMatch) {
-            // Add to markerClusterGroup if not already there
             if (!markerClusterGroup.hasLayer(marker)) {
                 markerClusterGroup.addLayer(marker);
             }
@@ -636,29 +630,16 @@ function filterMapMarkers() {
             areasWithMatches.add(d.areaId);
             visibleBounds.push(marker.getLatLng());
         } else {
-            // Remove from markerClusterGroup
             if (markerClusterGroup.hasLayer(marker)) {
                 markerClusterGroup.removeLayer(marker);
             }
         }
     });
 
-    // BONUS: Add selected area to matches for legend highlighting
-    if (areaFilter) {
-        areasWithMatches.add(areaFilter);
-    }
-
     // Pan/zoom map to fit visible markers
     if (visibleBounds.length > 0) {
         map.fitBounds(visibleBounds, { padding: [30, 30], maxZoom: 13 });
     }
-
-    console.log('=== FILTER SUMMARY ===');
-    console.log('Total markers processed:', markers.length);
-    console.log('Markers with no data:', noDataCount);
-    console.log('Markers that match filter:', matchCount);
-    console.log('Visible markers on map:', visibleBounds.length);
-    console.log('Areas with matches:', Array.from(areasWithMatches));
 
     updateLegendVisibility(areasWithMatches);
 }
@@ -666,6 +647,7 @@ function filterMapMarkers() {
 function updateLegendVisibility(areasWithMatches) {
     const hasActiveFilters =
         document.getElementById('searchInput')?.value  ||
+        document.getElementById('areaFilterAdmin')?.value ||
         document.getElementById('areaFilter')?.value   ||
         document.getElementById('statusFilter')?.value;
 
@@ -690,60 +672,14 @@ function updateLegendVisibility(areasWithMatches) {
         }
     });
 
-    // Debug logging to help troubleshoot
-    console.log('Legend visibility update:', {
-        hasActiveFilters,
-        areasWithMatches: Array.from(areasWithMatches),
-        areaFilterValue: document.getElementById('areaFilter')?.value
-    });
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  AREA DROPDOWN
 // ═══════════════════════════════════════════════════════════════
 function populateAreaDropdown() {
-    // Populate table filter area dropdown
-    const tableSelect = document.getElementById('filterArea');
-    if (tableSelect) {
-        // Only add options if not already populated by Thymeleaf
-        if (tableSelect.options.length <= 1) {
-            for (let i = 1; i <= 9; i++) {
-                const opt = document.createElement('option');
-                opt.value = 'Area ' + i;   // value must match the text in column 2
-                opt.textContent = 'Area ' + i;
-                tableSelect.appendChild(opt);
-            }
-        }
-    }
-
-    // Populate map filter area dropdown
-    const mapSelect = document.getElementById('areaFilter');
-    if (mapSelect) {
-        // Clear first (avoid duplicates)
-        mapSelect.innerHTML = '';
-
-        // Check user role - System Admin sees all areas, others see only Area 1
-        if (IS_ADMIN) {
-            // System Admin: All Areas + Area 1-9
-            const allOpt = document.createElement('option');
-            allOpt.value = '';
-            allOpt.textContent = 'All Areas';
-            mapSelect.appendChild(allOpt);
-
-            for (let i = 1; i <= 9; i++) {
-                const opt = document.createElement('option');
-                opt.value = String(i); // IMPORTANT
-                opt.textContent = 'Area ' + i;
-                mapSelect.appendChild(opt);
-            }
-        } else {
-            // Area Admin and regular users: Only Area 1
-            const opt = document.createElement('option');
-            opt.value = '1';
-            opt.textContent = 'Area 1';
-            mapSelect.appendChild(opt);
-        }
-    }
+    // Thymeleaf already rendered the dropdowns with correct values server-side.
+    // Do NOT overwrite them — just leave them as-is.
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -760,27 +696,27 @@ function initFilters() {
         chevron.classList.toggle('fa-chevron-down',  hidden);
     });
 
-    document.getElementById('applyTableFilters')?.addEventListener('click', applyFilters);
-    document.getElementById('clearTableFilters')?.addEventListener('click', clearFilters);
+    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+    document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
 
     // Clear search ×
     document.getElementById('clearSearchBtn')?.addEventListener('click', function () {
-        document.getElementById('tableSearchInput').value = '';
+        document.getElementById('searchInput').value = '';
         applyFilters();
     });
 
     // Live search debounced
     let timer;
-    document.getElementById('tableSearchInput')?.addEventListener('input', function () {
+    document.getElementById('searchInput')?.addEventListener('input', function () {
         clearTimeout(timer);
         timer = setTimeout(applyFilters, 300);
     });
-    document.getElementById('tableSearchInput')?.addEventListener('keydown', function (e) {
+    document.getElementById('searchInput')?.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
     });
 
-    // Instant on dropdown change
-    ['filterArea', 'filterConnStatus', 'filterOfficeStatus'].forEach(id => {
+    // Instant on dropdown change - use correct IDs from HTML
+    ['areaFilterAdmin', 'areaFilter', 'statusFilter'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', applyFilters);
     });
 
@@ -799,51 +735,55 @@ function viewArchive() {
 function applyFilters() {
     if (!table) return;
 
-    const search      = (document.getElementById('tableSearchInput')?.value    || '').trim();
-    const area        = (document.getElementById('filterArea')?.value           || '').trim();
-    const connStatus  = (document.getElementById('filterConnStatus')?.value     || '').trim();
-    const offStatus   = (document.getElementById('filterOfficeStatus')?.value   || '').trim();
+    const search = (document.getElementById('searchInput')?.value || '').trim();
+    
+    // Get area filter based on user role
+    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
+    const area = (areaFilterElement?.value || '').trim();
+    
+    const status = (document.getElementById('statusFilter')?.value || '').trim();
 
     if (IS_ADMIN) {
         // Admin layout: # | Name | Area(2) | Region(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
-        table.column(2).search(area       ? '^' + escRx(area)      + '$' : '', true, false);
-        table.column(5).search(connStatus ? escRx(connStatus)           : '', true, false);
-        table.column(6).search(offStatus  ? escRx(offStatus)            : '', true, false);
+        table.column(2).search(area ? '^' + escRx(area) + '$' : '', true, false);
+        table.column(5).search(status ? (status === 'true' ? 'Active' : 'Inactive') : '', true, false);
     } else {
         // User layout: # | Name(1) | Conn(2) | Speed(3) | Remarks(4) | Actions(5)
-        table.column(2).search(connStatus ? escRx(connStatus) : '', true, false);
-        // clear columns that don't exist in user layout
-        table.column(0).search('');
+        table.column(2).search(status ? (status === 'true' ? 'Active' : 'Inactive') : '', true, false);
     }
 
     table.search(search).draw();
 
-    renderTags(search, area, connStatus, offStatus);
-    highlightSelects();
+    // Also filter the map markers
+    filterMapMarkers();
+
+    // Skip renderTags and highlightSelects since those elements don't exist in table.html
 }
 
 // ── Clear filters ─────────────────────────────────────────────────────────────
 function clearFilters() {
     if (!table) return;
 
-    document.getElementById('tableSearchInput').value = '';
-    document.getElementById('filterConnStatus').value = '';
+    document.getElementById('searchInput').value = '';
+    
+    // Clear area filter based on user role
+    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
+    if (areaFilterElement) areaFilterElement.value = '';
+    
+    document.getElementById('statusFilter').value = '';
 
     if (IS_ADMIN) {
-        const areaEl = document.getElementById('filterArea');
-        const offEl  = document.getElementById('filterOfficeStatus');
-        if (areaEl) areaEl.value = '';
-        if (offEl)  offEl.value  = '';
-        table.column(2).search('');
-        table.column(5).search('');
-        table.column(6).search('');
+        // Admin layout: clear area and connection columns
+        table.column(2).search('');  // Area column
+        table.column(5).search('');  // Connection column
     } else {
-        table.column(2).search('');
+        // User layout: clear connection column
+        table.column(2).search('');  // Connection column
     }
 
     table.search('').draw();
-    renderTags('', '', '', '');
-    highlightSelects();
+
+    // Skip renderTags and highlightSelects since those elements don't exist in table.html
 }
 
 // ── Render active filter pill tags ────────────────────────────────────────────
@@ -866,7 +806,7 @@ function renderTags(search, area, connStatus, offStatus) {
 
     if (search) tag(
         'tag-search', 'fas fa-search mr-1', `"${search}"`,
-        () => { document.getElementById('tableSearchInput').value = ''; applyFilters(); }
+        () => { document.getElementById('searchInput').value = ''; applyFilters(); }
     );
     if (area) tag(
         'tag-area', 'fas fa-map-marker-alt mr-1', area,
@@ -897,7 +837,7 @@ function highlightSelects() {
         const el = document.getElementById(id);
         if (el) el.classList.toggle('has-value', !!el.value);
     });
-    const s = document.getElementById('tableSearchInput');
+    const s = document.getElementById('searchInput');
     if (s) s.classList.toggle('has-value', !!s.value);
 }
 
@@ -1014,12 +954,13 @@ function performDelete(officeId, officeName) {
 // ── Save state before navigating to profile ───────────────────────────────────
 // Called by the View button click (see table.html onclick)
 function saveTableStateAndView(officeId) {
+    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
+    
     const state = {
-        search:     document.getElementById('tableSearchInput')?.value     || '',
-        area:       document.getElementById('filterArea')?.value           || '',
-        connStatus: document.getElementById('filterConnStatus')?.value     || '',
-        offStatus:  document.getElementById('filterOfficeStatus')?.value   || '',
-        scrollY:    window.scrollY
+        "search":     document.getElementById('searchInput')?.value     || "",
+        "area":       areaFilterElement?.value                           || "",
+        "status":     document.getElementById('statusFilter')?.value       || "",
+        "scrollY":    window.scrollY
     };
     sessionStorage.setItem('tableFilterState',  JSON.stringify(state));
     sessionStorage.setItem('tableFilterSource', 'table');

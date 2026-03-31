@@ -48,13 +48,16 @@ public class DataTableController {
         Integer roleId = currentUser != null ? currentUser.getRole()   : null;
         Integer areaId = currentUser != null ? currentUser.getAreaId() : null;
 
-        // Fetch offices based on role
+        // Fetch offices based on role.
+        // Uses findAllNonArchivedForTable() — a dedicated query without the
+        // activeConnectivity JOIN FETCH, which prevents Hibernate from silently
+        // dropping the region/province/city joins due to multi-bag fetch conflicts.
         List<PostalOffice> offices;
 
         if (roleId != null && roleId == 1) {
-            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity();
+            offices = postalOfficeRepository.findAllNonArchivedForTable();
         } else {
-            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
+            offices = postalOfficeRepository.findAllNonArchivedForTable()
                 .stream()
                 .filter(po -> {
                     if (areaId == null) return false;
@@ -105,12 +108,25 @@ public class DataTableController {
         dto.put("connectionStatus", office.getConnectionStatus());
         dto.put("officeStatus",     office.getOfficeStatus());
         dto.put("speed",            office.getSpeed());
-        dto.put("area",             office.getArea()            != null ? office.getArea().getAreaName()         : null);
-        dto.put("region",           office.getRegion()          != null ? office.getRegion().getName()           : null);
-        dto.put("province",         office.getProvince()        != null ? office.getProvince().getName()         : null);
-        dto.put("cityMunicipality", office.getCityMunicipality()!= null ? office.getCityMunicipality().getName() : null);
-        dto.put("barangay",         office.getBarangay()        != null ? office.getBarangay().getName()         : null);
         dto.put("remarks",          office.getRemarks());
+
+        // Area is EAGER — safe to access directly
+        dto.put("area", office.getArea() != null ? office.getArea().getAreaName() : null);
+
+        // LAZY associations — wrapped in try-catch to survive any
+        // Hibernate proxy edge cases (e.g. uninitialized proxy after DISTINCT query).
+        try { dto.put("region",   office.getRegion()           != null ? office.getRegion().getName()           : null); }
+        catch (Exception e) { dto.put("region",   null); }
+
+        try { dto.put("province", office.getProvince()         != null ? office.getProvince().getName()         : null); }
+        catch (Exception e) { dto.put("province", null); }
+
+        try { dto.put("cityMunicipality", office.getCityMunicipality() != null ? office.getCityMunicipality().getName() : null); }
+        catch (Exception e) { dto.put("cityMunicipality", null); }
+
+        try { dto.put("barangay", office.getBarangay()         != null ? office.getBarangay().getName()         : null); }
+        catch (Exception e) { dto.put("barangay", null); }
+
         return dto;
     }
 }

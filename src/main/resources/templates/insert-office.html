@@ -21,8 +21,8 @@
                 <div class="wizard-steps mb-4">
                     <button type="button" class="wizard-step-indicator active" data-step="1">1. Basic Info</button>
                     <button type="button" class="wizard-step-indicator" data-step="2">2. Location</button>
-                    <button type="button" class="wizard-step-indicator" data-step="3">3. Connectivity</button>
-                    <button type="button" class="wizard-step-indicator" data-step="4">4. Contact</button>
+                    <button type="button" class="wizard-step-indicator" data-step="3">3. Contact</button>
+                    <button type="button" class="wizard-step-indicator" data-step="4">4. Connectivity</button>
                     <button type="button" class="wizard-step-indicator" data-step="5">5. Additional Info</button>
                 </div>
 
@@ -53,28 +53,6 @@
                                             </div>
                                         </div>
                                         <small class="form-text text-muted">Official name of the post office</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="postmaster">Postmaster</label>
-                                        <input type="text" class="form-control" id="postmaster" name="postmaster"
-                                               placeholder="Full name of Postmaster" style="text-transform:uppercase;">
-                                        <small class="form-text text-muted">Officer in charge</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="postmasterContactNumber">Postmaster Contact Number</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" id="postmasterContactNumber"
-                                                   name="postmasterContactNumber" placeholder="e.g., 09XX-XXX-XXXX">
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -201,9 +179,68 @@
                 </div>
 
                 <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 3: Connectivity                                       -->
+                <!-- STEP 3: Contact                                            -->
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-3">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-address-book text-primary"></i> Contact Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-muted mb-3"><i class="fas fa-building mr-1"></i> Postal Office Contact</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postalOfficeContactPerson">Contact Person</label>
+                                        <input type="text" class="form-control" id="postalOfficeContactPerson"
+                                               name="postalOfficeContactPerson"
+                                               placeholder="Full name of contact person"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postalOfficeContactNumber">Contact Number</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" id="postalOfficeContactNumber"
+                                                   name="postalOfficeContactNumber"
+                                                   placeholder="e.g., +63-2-1234-5678">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h6 class="text-muted mb-3 mt-4"><i class="fas fa-user-tie mr-1"></i> Postmaster Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="postmaster">Postmaster</label>
+                                        <input type="text" class="form-control" id="postmaster" name="postmaster"
+                                               placeholder="Full name of Postmaster" style="text-transform:uppercase;">
+                                        <small class="form-text text-muted">Officer in charge</small>
+                                    </div>
+                                </div>
+                           
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-prev">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-primary btn-next">
+                                Next <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- STEP 4: Connectivity                                       -->
+                <!-- ══════════════════════════════════════════════════════════ -->
+                <div class="wizard-step" id="step-4">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
                             <h6 class="mb-0"><i class="fas fa-wifi text-primary"></i> Connectivity Information</h6>
@@ -257,6 +294,11 @@
                                         <label for="internetServiceProvider">
                                             <i class="fas fa-network-wired text-primary mr-1"></i>
                                             Internet Service Provider
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="The company providing internet service to this post office (e.g. PLDT, Globe, Converge)."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-question-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
                                         <select class="form-control" id="internetServiceProvider"
                                                 name="internetServiceProvider">
@@ -320,6 +362,11 @@
                                         <label for="typeOfConnection">
                                             <i class="fas fa-plug text-primary mr-1"></i>
                                             Type of Connection
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="The physical medium used for internet connectivity (e.g. Fiber — fastest and most reliable; DSL — uses phone line; Wireless — radio signal; Satellite — for remote areas)."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-question-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
                                         <select class="form-control" id="typeOfConnection" name="typeOfConnection">
                                             <option value="">-- Select Type --</option>
@@ -349,12 +396,17 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="staticIpAddress">
+                                        <label for="ipAddressType">
                                             <i class="fas fa-server text-primary mr-1"></i>
-                                            Static IP Address
+                                            IP Address Type
                                         </label>
-                                        <input type="text" class="form-control" id="staticIpAddress"
-                                               name="staticIpAddress" placeholder="e.g., 192.168.1.100">
+                                        <select class="form-control" id="ipAddressType"
+                                               name="ipAddressType">
+                                            <option value="">Select IP Address Type</option>
+                                            <option value="dynamic">Dynamic IP</option>
+                                            <option value="static">Static IP</option>
+                                            <option value="not_sure">Not sure</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -481,52 +533,6 @@
                 </div>
 
                 <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 4: Contact                                            -->
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <div class="wizard-step" id="step-4">
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-address-book text-primary"></i> Contact Information</h6>
-                        </div>
-                        <div class="card-body">
-                            <h6 class="text-muted mb-3"><i class="fas fa-building mr-1"></i> Postal Office Contact</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="postalOfficeContactPerson">Contact Person</label>
-                                        <input type="text" class="form-control" id="postalOfficeContactPerson"
-                                               name="postalOfficeContactPerson"
-                                               placeholder="Full name of contact person"
-                                               style="text-transform:uppercase;">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="postalOfficeContactNumber">Contact Number</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" id="postalOfficeContactNumber"
-                                                   name="postalOfficeContactNumber"
-                                                   placeholder="e.g., +63-2-1234-5678">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary btn-prev">
-                                <i class="fas fa-arrow-left"></i> Previous
-                            </button>
-                            <button type="button" class="btn btn-primary btn-next">
-                                Next <i class="fas fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ══════════════════════════════════════════════════════════ -->
                 <!-- STEP 5: Additional Info                                    -->
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-5">
@@ -610,95 +616,6 @@
                                 </div>
                             </div>
 
-                            <!-- Photo Upload -->
-                            <hr class="my-4">
-                            <h6 class="text-muted mb-3">
-                                <i class="fas fa-camera text-primary mr-1"></i> Photo Upload
-                                <small class="text-muted font-weight-normal ml-1">(Optional)</small>
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="d-block mb-1" style="font-size:.82rem;font-weight:600;color:#495057;">
-                                        <i class="fas fa-user-circle mr-1"></i> Profile Photo
-                                    </label>
-                                    <div class="upload-drop-zone" id="profileDropZone"
-                                         onclick="document.getElementById('insertProfilePhoto').click()"
-                                         ondragover="wizardHandleDragOver(event)"
-                                         ondragleave="wizardHandleDragLeave(event)"
-                                         ondrop="wizardHandleDrop(event,'insertProfilePhoto')">
-                                        <div class="upload-drop-inner" id="profileDropInner">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <div>Click or drag photo here</div>
-                                            <small>JPG, PNG, WEBP · max 5MB</small>
-                                        </div>
-                                        <img id="insertProfilePreview" class="upload-preview" style="display:none" alt="">
-                                    </div>
-                                    <input type="file" id="insertProfilePhoto" accept="image/*" style="display:none"
-                                           onchange="wizardPreviewPhoto(this,'profileDropInner','insertProfilePreview')">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="d-block mb-1" style="font-size:.82rem;font-weight:600;color:#495057;">
-                                        <i class="fas fa-image mr-1"></i> Cover Photo 1
-                                    </label>
-                                    <div class="upload-drop-zone"
-                                         onclick="document.getElementById('insertCover1').click()"
-                                         ondragover="wizardHandleDragOver(event)"
-                                         ondragleave="wizardHandleDragLeave(event)"
-                                         ondrop="wizardHandleDrop(event,'insertCover1')">
-                                        <div class="upload-drop-inner" id="cover1DropInner">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <div>Click or drag photo here</div>
-                                            <small>JPG, PNG, WEBP · max 5MB</small>
-                                        </div>
-                                        <img id="insertCover1Preview" class="upload-preview" style="display:none" alt="">
-                                    </div>
-                                    <input type="file" id="insertCover1" accept="image/*" style="display:none"
-                                           onchange="wizardPreviewPhoto(this,'cover1DropInner','insertCover1Preview')">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="d-block mb-1" style="font-size:.82rem;font-weight:600;color:#495057;">
-                                        <i class="fas fa-image mr-1"></i> Cover Photo 2
-                                    </label>
-                                    <div class="upload-drop-zone"
-                                         onclick="document.getElementById('insertCover2').click()"
-                                         ondragover="wizardHandleDragOver(event)"
-                                         ondragleave="wizardHandleDragLeave(event)"
-                                         ondrop="wizardHandleDrop(event,'insertCover2')">
-                                        <div class="upload-drop-inner" id="cover2DropInner">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <div>Click or drag photo here</div>
-                                            <small>JPG, PNG, WEBP · max 5MB</small>
-                                        </div>
-                                        <img id="insertCover2Preview" class="upload-preview" style="display:none" alt="">
-                                    </div>
-                                    <input type="file" id="insertCover2" accept="image/*" style="display:none"
-                                           onchange="wizardPreviewPhoto(this,'cover2DropInner','insertCover2Preview')">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="d-block mb-1" style="font-size:.82rem;font-weight:600;color:#495057;">
-                                        <i class="fas fa-image mr-1"></i> Cover Photo 3
-                                    </label>
-                                    <div class="upload-drop-zone"
-                                         onclick="document.getElementById('insertCover3').click()"
-                                         ondragover="wizardHandleDragOver(event)"
-                                         ondragleave="wizardHandleDragLeave(event)"
-                                         ondrop="wizardHandleDrop(event,'insertCover3')">
-                                        <div class="upload-drop-inner" id="cover3DropInner">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <div>Click or drag photo here</div>
-                                            <small>JPG, PNG, WEBP · max 5MB</small>
-                                        </div>
-                                        <img id="insertCover3Preview" class="upload-preview" style="display:none" alt="">
-                                    </div>
-                                    <input type="file" id="insertCover3" accept="image/*" style="display:none"
-                                           onchange="wizardPreviewPhoto(this,'cover3DropInner','insertCover3Preview')">
-                                </div>
-                            </div>
-                            <div class="alert alert-light border-left border-primary py-2 mt-1"
-                                 style="border-left-width:4px!important;">
-                                <i class="fas fa-info-circle text-primary mr-1"></i>
-                                Photos will be uploaded automatically after saving.
-                            </div>
                         </div>
                         <div class="card-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary btn-prev">
@@ -719,10 +636,9 @@
 <!-- ── Styles ─────────────────────────────────────────────── -->
 <link rel="stylesheet" href="/css/insert-office-status-cards.css">
 
-
-
 <link rel="stylesheet" href="/css/insert-office-wizard.css">
 <script src="/js/insert-office-wizard.js"></script>
+<!-- Tooltip init handled by main-layout.html script #23 -->
 
 </div>
 </html>

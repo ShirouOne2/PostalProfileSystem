@@ -6,13 +6,15 @@ import com.pps.profilesystem.Service.UserCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,6 +30,56 @@ public class UserCrudController {
     private UserCacheService userCacheService;
 
     /**
+     * Get current logged-in user
+     */
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+        return userRepository.findByEmail(auth.getName()).orElse(null);
+    }
+
+    /**
+     * Check if current user is system admin
+     */
+    private boolean isSystemAdmin(User user) {
+        return user != null && Integer.valueOf(1).equals(user.getRole());
+    }
+
+    /**
+     * Filter users by area for area admins
+     */
+    private List<User> filterUsersByArea(List<User> users, User currentUser) {
+        if (isSystemAdmin(currentUser)) {
+            return users; // System admin sees all users
+        }
+        
+        Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+        if (userAreaId == null) {
+            return List.of(); // Area admin with no area assigned sees nothing
+        }
+        
+        // Area admin sees users in their area or users with no area (system admins)
+        return users.stream()
+            .filter(u -> userAreaId.equals(u.getAreaId()) || u.getAreaId() == null)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if user can access target user
+     */
+    private boolean canAccessUser(User targetUser, User currentUser) {
+        if (isSystemAdmin(currentUser)) {
+            return true; // System admin can access all
+        }
+        
+        Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+        Integer targetAreaId = targetUser.getAreaId();
+        
+        // Area admin can access users in their area or users with no area (system admins)
+        return userAreaId != null && (userAreaId.equals(targetAreaId) || targetAreaId == null);
+    }
+
+    /**
      * CREATE - Add new user
      * POST /api/users
      */
@@ -36,6 +88,8 @@ public class UserCrudController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            User currentUser = getCurrentUser();
+            
             // Validate required fields
             if (userDTO.getUsername() == null || userDTO.getUsername().trim().isEmpty()) {
                 response.put("success", false);
@@ -59,6 +113,26 @@ public class UserCrudController {
                 response.put("success", false);
                 response.put("message", "Role is required");
                 return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Area admin restrictions
+            if (!isSystemAdmin(currentUser)) {
+                // Area admin cannot create system admins
+                if (Integer.valueOf(1).equals(userDTO.getRole())) {
+                    response.put("success", false);
+                    response.put("message", "Area admins cannot create system admin users");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                
+                // Area admin can only create users in their area or with no area (system admins)
+                Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+                Integer targetAreaId = userDTO.getAreaId();
+                
+                if (userAreaId != null && targetAreaId != null && !userAreaId.equals(targetAreaId)) {
+                    response.put("success", false);
+                    response.put("message", "Area admins can only create users in their assigned area");
+                    return ResponseEntity.badRequest().body(response);
+                }
             }
             
             // Check if username already exists
@@ -108,8 +182,11 @@ public class UserCrudController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
         try {
-            List<User> users = userRepository.findAll();
-            List<Map<String, Object>> result = users.stream()
+            User currentUser = getCurrentUser();
+            List<User> allUsers = userRepository.findAll();
+            List<User> filteredUsers = filterUsersByArea(allUsers, currentUser);
+            
+            List<Map<String, Object>> result = filteredUsers.stream()
                     .map(this::convertToDTO)
                     .toList();
             return ResponseEntity.ok(result);
@@ -125,10 +202,18 @@ public class UserCrudController {
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
         try {
-            Optional<User> user = userRepository.findById(id);
+            User currentUser = getCurrentUser();
+            Optional<User> userOpt = userRepository.findById(id);
             
-            if (user.isPresent()) {
-                return ResponseEntity.ok(convertToDTO(user.get()));
+            if (userOpt.isPresent()) {
+                User targetUser = userOpt.get();
+                if (!canAccessUser(targetUser, currentUser)) {
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("success", false);
+                    errorResponse.put("message", "Access denied - you can only view users in your area");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+                }
+                return ResponseEntity.ok(convertToDTO(targetUser));
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -146,6 +231,7 @@ public class UserCrudController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            User currentUser = getCurrentUser();
             Optional<User> existingUserOpt = userRepository.findById(id);
             
             if (existingUserOpt.isEmpty()) {
@@ -155,6 +241,13 @@ public class UserCrudController {
             }
             
             User existingUser = existingUserOpt.get();
+            
+            // Check access permissions
+            if (!canAccessUser(existingUser, currentUser)) {
+                response.put("success", false);
+                response.put("message", "Access denied - you can only update users in your area");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
             
             // Validate required fields
             if (userDTO.getUsername() == null || userDTO.getUsername().trim().isEmpty()) {
@@ -173,6 +266,26 @@ public class UserCrudController {
                 response.put("success", false);
                 response.put("message", "Role is required");
                 return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Area admin restrictions
+            if (!isSystemAdmin(currentUser)) {
+                // Area admin cannot promote users to system admin
+                if (Integer.valueOf(1).equals(userDTO.getRole()) && !Integer.valueOf(1).equals(existingUser.getRole())) {
+                    response.put("success", false);
+                    response.put("message", "Area admins cannot promote users to system admin");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                
+                // Area admin can only assign users to their area or no area (system admins)
+                Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
+                Integer targetAreaId = userDTO.getAreaId();
+                
+                if (userAreaId != null && targetAreaId != null && !userAreaId.equals(targetAreaId)) {
+                    response.put("success", false);
+                    response.put("message", "Area admins can only assign users to their assigned area");
+                    return ResponseEntity.badRequest().body(response);
+                }
             }
             
             // Check if username is taken by another user
@@ -241,14 +354,33 @@ public class UserCrudController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            if (!userRepository.existsById(id)) {
+            User currentUser = getCurrentUser();
+            Optional<User> userOpt = userRepository.findById(id);
+            
+            if (userOpt.isEmpty()) {
                 response.put("success", false);
                 response.put("message", "User not found");
                 return ResponseEntity.notFound().build();
             }
             
+            User targetUser = userOpt.get();
+            
+            // Check access permissions
+            if (!canAccessUser(targetUser, currentUser)) {
+                response.put("success", false);
+                response.put("message", "Access denied - you can only delete users in your area");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            // Area admin cannot delete system admins
+            if (!isSystemAdmin(currentUser) && Integer.valueOf(1).equals(targetUser.getRole())) {
+                response.put("success", false);
+                response.put("message", "Area admins cannot delete system admin users");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
             // Evict from cache before deleting
-            userRepository.findById(id).ifPresent(u -> userCacheService.evictUser(u.getEmail()));
+            userCacheService.evictUser(targetUser.getEmail());
 
             // Delete user
             userRepository.deleteById(id);

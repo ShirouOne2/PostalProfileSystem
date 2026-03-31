@@ -67,6 +67,20 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
            "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
     List<PostalOffice> findAllNonArchivedWithConnectivity();
 
+    /**
+     * Table-view query: fetches location hierarchy without activeConnectivity join
+     * to avoid Hibernate DISTINCT issues that can cause region/province/city to appear null.
+     * connectionStatus is read directly from the postal_offices column.
+     */
+    @Query("SELECT DISTINCT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.region " +
+           "LEFT JOIN FETCH po.province " +
+           "LEFT JOIN FETCH po.cityMunicipality " +
+           "LEFT JOIN FETCH po.barangay " +
+           "WHERE NOT EXISTS (SELECT 1 FROM ArchivedOffice ao WHERE ao.postalOffice = po)")
+    List<PostalOffice> findAllNonArchivedForTable();
+
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "LEFT JOIN FETCH po.activeConnectivity " +
            "LEFT JOIN FETCH po.area " +
