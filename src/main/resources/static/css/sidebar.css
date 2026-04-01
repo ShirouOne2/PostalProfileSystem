@@ -299,11 +299,12 @@ body {
 @media (max-width: 768px) {
     #sidebar {
         left: -260px;
-        transition: 0.3s;
+        transition: transform 0.3s ease;
+        z-index: 1050;
     }
 
     #sidebar.active {
-        left: 0;
+        transform: translateX(260px);
     }
 
     .main-content {

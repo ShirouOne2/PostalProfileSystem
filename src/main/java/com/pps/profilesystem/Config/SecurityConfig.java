@@ -31,8 +31,7 @@ public class SecurityConfig {
                     "/assets/**",
                     "/postal-offices/**",
                     "/api/keep-alive",          // public ping for session check
-                    "/api/postal-offices/**",   // map data API
-                    "/api/postal-office/**"     // office profile API
+                    "/api/user/current"         // public check for authentication status
                 ).permitAll()
                 // FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
                 // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
@@ -57,7 +56,17 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
+            )
+            // Configure frame options for profile popup - allow same origin
+            // Also add cache control headers so authenticated pages are never cached.
+            // This prevents the browser Back button from showing protected pages after logout.
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .cacheControl(cache -> {})   // enables no-cache / no-store / must-revalidate
             );
 
         return http.build();

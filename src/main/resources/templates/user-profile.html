@@ -177,26 +177,48 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="up-form-label">Current Password</label>
-                        <input type="password" id="currentPassword"
-                               class="form-control up-input"
-                               placeholder="Enter current password">
+                        <div class="input-group">
+                            <input type="password" id="currentPassword"
+                                   class="form-control up-input"
+                                   placeholder="Enter current password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword" style="border-left: none;">
+                                    <i class="fas fa-eye" id="currentPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="up-form-label">New Password</label>
-                        <input type="password" id="newPassword"
-                               class="form-control up-input"
-                               placeholder="Min. 6 characters">
+                        <div class="input-group">
+                            <input type="password" id="newPassword"
+                                   class="form-control up-input"
+                                   placeholder="Min. 6 characters">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword" style="border-left: none;">
+                                    <i class="fas fa-eye" id="newPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="up-form-label">Confirm New Password</label>
-                        <input type="password" id="confirmPassword"
-                               class="form-control up-input"
-                               placeholder="Repeat new password">
+                        <div class="input-group">
+                            <input type="password" id="confirmPassword"
+                                   class="form-control up-input"
+                                   placeholder="Repeat new password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword" style="border-left: none;">
+                                    <i class="fas fa-eye" id="confirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-2 mt-1">
-                    <button class="btn up-btn-save" id="savePasswordBtn">
+                    <button type="button" class="btn up-btn-save" id="savePasswordBtn"
+                            th:data-user-id="${user.id}">
                         <i class="fas fa-save mr-1"></i> Save Password
                     </button>
                     <small class="text-muted ml-2">
@@ -209,8 +231,7 @@
         </div>
     </div>
 
-    <!-- ── Password Change Script ────────────────────────────────── -->
-    <script th:src="@{/js/user-profile.js}"></script>
+    <!-- Password script loaded by main-layout.html after jQuery -->
 
 </div>
 </body>

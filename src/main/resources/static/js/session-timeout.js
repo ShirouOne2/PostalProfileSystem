@@ -19,6 +19,34 @@
     const LOGOUT_URL         = '/login?timeout=true';
     const KEEP_ALIVE_URL     = '/api/keep-alive';
 
+    // ── Security: Prevent back navigation to login when authenticated ────────
+    function preventLoginPageAccess() {
+        // Check if we're on the login page and have a valid session
+        if (window.location.pathname === '/login' || window.location.pathname.includes('login')) {
+            fetch('/api/user/current', { 
+                method: 'GET', 
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // User is still authenticated, redirect to main app
+                    window.location.href = '/table';
+                }
+            })
+            .catch(() => {
+                // If request fails, allow staying on login page
+                console.log('[SessionTimeout] Could not verify session status');
+            });
+        }
+    }
+
+    // Run check on page load
+    preventLoginPageAccess();
+
+    // Also check when user navigates back (popstate event)
+    window.addEventListener('popstate', preventLoginPageAccess);
+
     // ── Internal state ───────────────────────────────────────────────────────
     let warningTimer      = null;
     let logoutTimer       = null;

@@ -2,14 +2,10 @@ package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.Connectivity;
 import com.pps.profilesystem.Entity.PostalOffice;
-import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.ArchivedOfficeRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
-import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,9 +28,6 @@ public class QuartersApiController {
     @Autowired
     private ArchivedOfficeRepository archivedOfficeRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
     /**
      * Main endpoint for the Quarters page table.
      * Filters offices by year, quarter, area, and status.
@@ -48,36 +41,10 @@ public class QuartersApiController {
             @RequestParam(required = false) String status) {
 
         try {
-            // Get the logged-in user
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String email = auth.getName();
-            User currentUser = userRepository.findByEmail(email).orElse(null);
-
-            Integer roleId = currentUser != null ? currentUser.getRole() : null;
-            Integer userAreaId = currentUser != null ? currentUser.getAreaId() : null;
-
             // Parse params
             Integer yearInt = parseInteger(year);
             Integer quarterInt = parseQuarter(quarter);
             Integer areaInt = parseInteger(area);
-
-            // Apply user area restrictions: non-system-admin users can only see their assigned area
-            if (roleId != null && roleId != 1) {
-                // User is not a system admin, restrict to their assigned area
-                if (userAreaId != null) {
-                    // If no area filter is set, default to user's area
-                    if (areaInt == null) {
-                        areaInt = userAreaId;
-                    } else if (!areaInt.equals(userAreaId)) {
-                        // User is trying to access an area they're not assigned to - redirect to their area
-                        areaInt = userAreaId;
-                    }
-                } else {
-                    // User has no area assigned, return empty results
-                    return new ArrayList<>();
-                }
-            }
-            // If roleId is null or roleId == 1 (system admin), allow all areas
 
             // Resolve year/quarter — default to current if not provided
             int resolvedYear = (yearInt != null) ? yearInt : LocalDateTime.now().getYear();
@@ -200,6 +167,10 @@ public class QuartersApiController {
         dto.put("status",   po.getConnectionStatus());
         dto.put("areaId",   po.getArea() != null ? po.getArea().getId() : null);
         dto.put("area",     po.getArea() != null ? po.getArea().getAreaName() : null);
+        dto.put("regionId", po.getRegion() != null ? po.getRegion().getId() : null);
+        dto.put("region",   po.getRegion() != null ? po.getRegion().getName() : null);
+        dto.put("province", po.getProvince() != null ? po.getProvince().getName() : null);
+        dto.put("cityMunicipality", po.getCityMunicipality() != null ? po.getCityMunicipality().getName() : null);
         dto.put("noOfEmployees",    po.getNoOfEmployees());
         dto.put("noOfPostalTellers",  po.getNoOfPostalTellers());
         dto.put("noOfLetterCarriers", po.getNoOfLetterCarriers());

@@ -1,6 +1,8 @@
 package com.pps.profilesystem.Controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
@@ -8,7 +10,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 @Slf4j
 public class AuthApiController {
 
@@ -26,7 +28,30 @@ public class AuthApiController {
         users.put("user@example.com", "password123");
     }
 
-    @PostMapping("/request-otp")
+    @GetMapping("/user/current")
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+                // User is authenticated
+                return ResponseEntity.ok(Map.of(
+                    "authenticated", true,
+                    "username", auth.getName(),
+                    "authorities", auth.getAuthorities().stream()
+                        .map(Object::toString)
+                        .toList()
+                ));
+            } else {
+                // User is not authenticated
+                return ResponseEntity.ok(Map.of("authenticated", false));
+            }
+        } catch (Exception e) {
+            log.error("Error checking current user", e);
+            return ResponseEntity.ok(Map.of("authenticated", false));
+        }
+    }
+
+    @PostMapping("/auth/request-otp")
     public ResponseEntity<?> requestOtp(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         
@@ -57,7 +82,7 @@ public class AuthApiController {
         );
     }
 
-    @PostMapping("/verify-otp")
+    @PostMapping("/auth/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String otp = request.get("otp");
@@ -101,7 +126,7 @@ public class AuthApiController {
         );
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/auth/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String token = request.get("token");

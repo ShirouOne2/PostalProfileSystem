@@ -496,9 +496,6 @@ function initializeReportTable() {
                     const isAnyAdmin = $('body').data('is-any-admin') === true;
 
                     let buttons = `
-                    <button class="btn btn-sm btn-info view-btn" data-id="${row.id}" data-name="${row.name || 'Office'}">
-                        <i class="fas fa-eye"></i>
-                    </button>
                     <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -528,8 +525,17 @@ function initializeReportTable() {
     });
 
     // Delegated button events
-    $('#postOfficeTable').on('click', '.view-btn', function () { 
-        viewOfficeFromReport($(this).data('id'), $(this).data('name'));
+    $('#postOfficeTable').on('click', 'tbody tr', function (e) { 
+        // Don't trigger if clicking on buttons or links
+        if ($(e.target).closest('button, a').length > 0) {
+            return;
+        }
+        
+        const row = $(this).closest('tr');
+        const rowData = $('#postOfficeTable').DataTable().row(row).data();
+        if (rowData && rowData.id) {
+            viewOfficeFromReport(rowData.id, rowData.name || 'Office');
+        }
     });
 
     $('#postOfficeTable').on('click', '.edit-btn', function () { 
