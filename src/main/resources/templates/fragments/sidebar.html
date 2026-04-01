@@ -22,11 +22,18 @@
             General
         </div>
 
+        <a th:href="@{/dashboard}" class="sidebar-link" 
+           th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
+           data-page="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+
         <a th:href="@{/table}" class="sidebar-link" 
            th:classappend="${activePage == 'table'} ? 'active' : ''"
            data-page="table">
-            <i class="fas fa-table"></i>
-            <span>Post Office</span>
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Postal Office Locator</span>
         </a>
 
         <!-- CONNECTIVITY with REPORT submenu -->
@@ -36,7 +43,7 @@
             <a href="#" class="sidebar-link sidebar-dropdown-toggle"
                th:classappend="${activePage == 'quarters' or activePage == 'report'} ? 'active' : ''">
                 <i class="fas fa-wifi"></i>
-                <span>Connectivity</span>
+                <span>Internet</span>
                 <i class="fas fa-chevron-right dropdown-arrow ms-auto"></i>
             </a>
 
@@ -45,7 +52,7 @@
                    th:classappend="${activePage == 'quarters'} ? 'active' : ''"
                    data-page="quarters">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Quarterly Data</span>
+                    <span>Connectivity</span>
                 </a>
                 <a th:href="@{/report}" class="sidebar-sublink"
                    th:classappend="${activePage == 'report'} ? 'active' : ''"
@@ -70,13 +77,13 @@
            th:classappend="${activePage == 'insert'} ? 'active' : ''"
            data-page="insert">
             <i class="fas fa-plus"></i>
-            <span>Insert</span>
+            <span>Add New Postal Office</span>
         </a>
 
-        <a href="#" class="sidebar-link" onclick="return false;">
+        <!-- <a href="#" class="sidebar-link" onclick="return false;">
             <i class="fas fa-file-excel"></i>
             <span>Import</span>
-        </a>
+        </a> -->
 
         <!-- ADMIN-only links -->
         <div sec:authorize="hasRole('ROLE_ADMIN') or hasRole('ROLE_AREA_ADMIN')">

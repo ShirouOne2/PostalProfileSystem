@@ -648,7 +648,14 @@ function initializeTable() {
 
             { data: 'areaId',  render: d => d ? 'Area ' + d : 'N/A' },
 
-            { data: 'name',    defaultContent: 'N/A' },
+            { 
+                data: 'name',    
+                defaultContent: 'N/A',
+                render: function(data, type, row) {
+                    if (!data) return 'N/A';
+                    return `<a href="#" class="office-name-link" onclick="openOfficeProfilePopup('${row.id}', '${data.replace(/'/g, "\\'")}'); return false;">${data}</a>`;
+                }
+            },
 
             { data: 'address', defaultContent: 'N/A' },
 
@@ -718,12 +725,6 @@ function initializeTable() {
 
                     let buttons = `
                     
-                    <button class="btn btn-sm btn-info view-btn" data-id="${row.id}" data-name="${row.name || 'Office'}">
-
-                        <i class="fas fa-eye"></i>
-
-                    </button>
-
                     <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
 
                         <i class="fas fa-edit"></i>
@@ -789,11 +790,7 @@ function initializeTable() {
 
     // Delegated button events
 
-    $('#postOfficeTable').on('click', '.view-btn',   function () { 
-
-        viewOffice($(this).data('id'), $(this).data('name'));
-
-    });
+    // Row click functionality removed - profile viewing should only work through links
 
     $('#postOfficeTable').on('click', '.edit-btn',   function () { 
 
@@ -2641,35 +2638,287 @@ function performDelete(id, officeName) {
 
             }
 
-        },
-
-        error: function(xhr) {
-
-            Swal.fire({
-
-                icon: 'error',
-
-                title: 'Error',
-
-                text: xhr.responseJSON?.message || 'An error occurred while deleting the post office',
-
-                confirmButtonText: 'OK'
-
-            });
-
         }
 
     });
 
 }
 
+// ── Office Profile Popup Function ───────────────────────────────────────────
 
+function openOfficeProfilePopup(officeId, officeName) {
 
-// ── Restore quarters filter state on return from profile ─────────────────────
+console.log('Opening profile for office:', officeId, officeName);
 
-// Runs inside DOMContentLoaded in quarters $(document).ready — see bottom of file
+// Show loading dialog
 
+Swal.fire({
 
+title: 'Loading Profile...',
+
+html: `Fetching profile for <strong>${officeName || 'Post Office'}</strong>`,
+
+allowOutsideClick: false,
+
+allowEscapeKey: false,
+
+showConfirmButton: false,
+
+didOpen: () => { Swal.showLoading(); }
+
+});
+
+// Fetch office profile data via AJAX
+
+$.ajax({
+
+url: `/api/profile/${officeId}`,
+
+method: 'GET',
+
+timeout: 15000,
+
+success: function(response) {
+
+Swal.close();
+
+// Create and show profile modal
+
+createProfileModal(response, officeName);
+
+},
+
+error: function(xhr, status, error) {
+
+Swal.close();
+
+let errorMessage = 'Failed to load office profile.';
+
+if (xhr.responseJSON && xhr.responseJSON.message) {
+
+errorMessage = xhr.responseJSON.message;
+
+} else if (xhr.status === 404) {
+
+errorMessage = 'Office profile not found.';
+
+} else if (xhr.status === 500) {
+
+errorMessage = 'Server error. Please try again later.';
+
+}
+
+Swal.fire({
+
+icon: 'error',
+
+title: 'Error',
+
+text: errorMessage,
+
+confirmButtonColor: '#002868'
+
+});
+
+}
+
+});
+
+}
+
+function createProfileModal(profileData, officeName) {
+
+// Create modal HTML
+
+const modalHtml = `
+
+<div class="modal fade" id="officeProfileModal" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="modal-dialog modal-lg" role="document">
+
+<div class="modal-content">
+
+<div class="modal-header" style="background: linear-gradient(135deg, #002868, #1a3a7a); color: white;">
+
+<h5 class="modal-title">
+
+<i class="fas fa-building mr-2"></i>
+
+${officeName || 'Office Profile'}
+
+</h5>
+
+<button type="button" class="close text-white" data-dismiss="modal">
+
+<span>&times;</span>
+
+</button>
+
+</div>
+
+<div class="modal-body">
+
+<div class="row">
+
+<div class="col-md-6">
+
+<h6 class="text-primary font-weight-bold">Office Information</h6>
+
+<table class="table table-sm table-borderless">
+
+<tr>
+
+<td><strong>Office Name:</strong></td>
+
+<td>${profileData.name || 'N/A'}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Address:</strong></td>
+
+<td>${profileData.address || 'N/A'}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>ZIP Code:</strong></td>
+
+<td>${profileData.zipCode || 'N/A'}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Area:</strong></td>
+
+<td>${profileData.areaId ? 'Area ' + profileData.areaId : 'N/A'}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Postmaster:</strong></td>
+
+<td>${profileData.postmaster || 'N/A'}</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<div class="col-md-6">
+
+<h6 class="text-primary font-weight-bold">Connectivity Information</h6>
+
+<table class="table table-sm table-borderless">
+
+<tr>
+
+<td><strong>Connection Status:</strong></td>
+
+<td>
+
+${profileData.status ? 
+
+'<span class="badge badge-success">Active</span>' : 
+
+'<span class="badge badge-danger">Inactive</span>'}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Speed:</strong></td>
+
+<td>${profileData.speed || 'N/A'}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Remarks:</strong></td>
+
+<td>${profileData.remarks || '—'}</td>
+
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+${profileData.additionalInfo ? `
+
+<div class="mt-3">
+
+<h6 class="text-primary font-weight-bold">Additional Information</h6>
+
+<p class="text-muted">${profileData.additionalInfo}</p>
+
+</div>
+
+` : ''}
+
+</div>
+
+<div class="modal-footer">
+
+<button type="button" class="btn btn-secondary" data-dismiss="modal">
+
+<i class="fas fa-times mr-1"></i> Close
+
+</button>
+
+<button type="button" class="btn btn-primary" onclick="viewFullProfile('${profileData.id}')">
+
+<i class="fas fa-external-link-alt mr-1"></i> View Full Profile
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+// Remove existing modal if present
+
+$('#officeProfileModal').remove();
+
+// Add modal to body and show it
+
+$('body').append(modalHtml);
+
+$('#officeProfileModal').modal('show');
+
+// Clean up modal after it's hidden
+
+$('#officeProfileModal').on('hidden.bs.modal', function () {
+
+$(this).remove();
+
+});
+
+}
+
+function viewFullProfile(officeId) {
+
+// Navigate to full profile page
+
+window.location.href = '/profile/' + officeId + '?source=quarters';
+
+}
 
 // ── Cleanup on navigation ────────────────────────────────────────────────
 

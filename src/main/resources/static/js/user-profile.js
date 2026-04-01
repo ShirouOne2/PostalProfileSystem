@@ -1,62 +1,113 @@
-/* ── User Profile Page Scripts ────────────────────────────────── */
+/**
+ * user-profile.js
+ * Handles the "Change Password" section on the My Profile page.
+ *
+ * Uses vanilla JS (no jQuery) so it works regardless of load order.
+ * Wrapped in DOMContentLoaded so it runs safely after the DOM is ready.
+ */
+document.addEventListener('DOMContentLoaded', function () {
 
-$(document).ready(function () {
-    var userId = /*[[${user.id}]]*/ 0;
+    // ── Toggle password visibility ────────────────────────────────────
+    function wireToggle(btnId, inputId, iconId) {
+        var btn   = document.getElementById(btnId);
+        var input = document.getElementById(inputId);
+        var icon  = document.getElementById(iconId);
+        if (!btn || !input || !icon) return;
 
-    $('#savePasswordBtn').on('click', function () {
-        var current = $('#currentPassword').val().trim();
-        var newPw   = $('#newPassword').val().trim();
-        var confirm = $('#confirmPassword').val().trim();
-        var $btn    = $(this);
+        btn.addEventListener('click', function () {
+            var isPassword = input.type === 'password';
+            input.type     = isPassword ? 'text' : 'password';
+            icon.classList.toggle('fa-eye',        !isPassword);
+            icon.classList.toggle('fa-eye-slash',   isPassword);
+        });
+    }
 
-        // Clear previous alert
-        $('#pwAlert').hide().removeClass('alert-success alert-danger');
+    wireToggle('toggleCurrentPassword', 'currentPassword', 'currentPasswordIcon');
+    wireToggle('toggleNewPassword',     'newPassword',      'newPasswordIcon');
+    wireToggle('toggleConfirmPassword', 'confirmPassword',  'confirmPasswordIcon');
 
-        // Validate
-        if (!current || !newPw || !confirm) {
-            showAlert('danger', 'Please fill in all password fields.');
+    // ── Save Password button ──────────────────────────────────────────
+    var saveBtn = document.getElementById('savePasswordBtn');
+    if (!saveBtn) return;
+
+    saveBtn.addEventListener('click', function () {
+        var userId          = saveBtn.getAttribute('data-user-id');
+        var currentPassword = (document.getElementById('currentPassword')?.value  || '').trim();
+        var newPassword     = (document.getElementById('newPassword')?.value       || '').trim();
+        var confirmPassword = (document.getElementById('confirmPassword')?.value   || '').trim();
+
+        // ── Client-side validation ────────────────────────────────────
+        if (!currentPassword) {
+            showAlert('warning', 'Please enter your current password.');
             return;
         }
-        if (newPw.length < 6) {
-            showAlert('danger', 'New password must be at least 6 characters.');
+        if (!newPassword) {
+            showAlert('warning', 'Please enter a new password.');
             return;
         }
-        if (newPw !== confirm) {
-            showAlert('danger', 'New password and confirmation do not match.');
+        if (newPassword.length < 6) {
+            showAlert('warning', 'New password must be at least 6 characters.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showAlert('danger', 'New password and confirm password do not match.');
+            return;
+        }
+        if (newPassword === currentPassword) {
+            showAlert('warning', 'New password must be different from your current password.');
             return;
         }
 
-        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+        // ── Disable button while saving ───────────────────────────────
+        saveBtn.disabled    = true;
+        saveBtn.textContent = 'Saving…';
 
-        $.ajax({
-            url: '/api/users/' + userId + '/change-password',
-            method: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                currentPassword: current,
-                newPassword:     newPw
-            }),
-            success: function (res) {
-                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Password');
-                if (res.success) {
-                    showAlert('success', '<i class="fas fa-check-circle mr-1"></i> Password changed successfully!');
-                    $('#currentPassword, #newPassword, #confirmPassword').val('');
-                } else {
-                    showAlert('danger', res.message || 'Failed to change password.');
-                }
-            },
-            error: function (xhr) {
-                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Password');
-                var msg = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
-                showAlert('danger', msg);
+        fetch('/api/users/' + userId + '/change-password', {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                showAlert('success', 'Password changed successfully!');
+                // Clear all password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value     = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                showAlert('danger', data.message || 'Failed to change password. Please try again.');
             }
+        })
+        .catch(function () {
+            showAlert('danger', 'An error occurred. Please try again.');
+        })
+        .finally(function () {
+            saveBtn.disabled    = false;
+            saveBtn.innerHTML   = '<i class="fas fa-save mr-1"></i> Save Password';
         });
     });
 
-    function showAlert(type, msg) {
-        $('#pwAlert')
-            .addClass('alert-' + type)
-            .html(msg)
-            .slideDown(200);
+    // ── Alert helper ─────────────────────────────────────────────────
+    function showAlert(type, message) {
+        var alertEl = document.getElementById('pwAlert');
+        if (!alertEl) return;
+
+        // Map type to Bootstrap alert class + icon
+        var iconClass = 'fa-info-circle';
+        if (type === 'success') iconClass = 'fa-check-circle';
+        if (type === 'danger')  iconClass = 'fa-times-circle';
+        if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+
+        alertEl.className = 'alert alert-' + type;
+        alertEl.innerHTML = '<i class="fas ' + iconClass + ' mr-2"></i>' + message;
+        alertEl.style.display = 'block';
+
+        // Auto-hide after 5 seconds (except errors)
+        if (type !== 'danger') {
+            setTimeout(function () {
+                alertEl.style.display = 'none';
+            }, 5000);
+        }
     }
 });

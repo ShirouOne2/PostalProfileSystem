@@ -30,9 +30,10 @@ public class SecurityConfig {
                     "/images/**",
                     "/assets/**",
                     "/postal-offices/**",
-                    "/api/keep-alive"          // public ping for session check
+                    "/api/keep-alive",          // public ping for session check
+                    "/api/user/current"         // public check for authentication status
                 ).permitAll()
-                // ✅ FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
+                // FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
                 // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
                 // 403 Forbidden on /api/notifications/stream, causing silent SSE failure.
                 .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN")
@@ -54,7 +55,17 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
+            )
+            // Configure frame options for profile popup - allow same origin
+            // Also add cache control headers so authenticated pages are never cached.
+            // This prevents the browser Back button from showing protected pages after logout.
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .cacheControl(cache -> {})   // enables no-cache / no-store / must-revalidate
             );
 
         return http.build();

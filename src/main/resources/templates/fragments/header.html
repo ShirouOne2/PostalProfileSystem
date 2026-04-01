@@ -6,6 +6,11 @@
     <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm sticky-top">
         <div class="container-fluid">
 
+            <!-- Hamburger Menu for Mobile -->
+            <button class="btn btn-link d-md-none mr-2" id="mobileSidebarToggle" type="button">
+                <i class="fas fa-bars fa-lg text-primary"></i>
+            </button>
+
             <!-- Logo -->
             <a class="navbar-brand d-flex align-items-center" th:href="@{/table}">
                 <img th:src="@{/assets/images/phlpostlogo.png}"
