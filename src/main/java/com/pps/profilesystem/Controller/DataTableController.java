@@ -95,6 +95,13 @@ public class DataTableController {
         return "table";
     }
 
+    @GetMapping("/dashboard-data")
+    @Transactional(readOnly = true)
+    public String getDashboardData(Model model) {
+        // Reuse the same logic as the table page
+        return viewPostOffices(model);
+    }
+
     private java.util.Map<String, Object> convertToMapDTO(PostalOffice office) {
         java.util.Map<String, Object> dto = new java.util.HashMap<>();
         dto.put("id",               office.getId());

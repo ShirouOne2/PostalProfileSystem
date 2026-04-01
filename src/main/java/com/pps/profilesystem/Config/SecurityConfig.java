@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .usernameParameter("email")
                 .passwordParameter("password")
                 .defaultSuccessUrl("/dashboard", true)
+                
                 .failureUrl("/login?error=true")
                 .permitAll()
             )

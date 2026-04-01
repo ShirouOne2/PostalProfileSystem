@@ -33,7 +33,7 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
-    <!-- DataTables CSS -->
+    <!-- DataTables CSS - Only load on table / quarters / users / archive / dashboard pages -->
     <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
@@ -356,7 +356,7 @@
     <!-- 8. Dashboard JS -->
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
-    <!-- 9. DataTables JS -->
+    <!-- 9. DataTables JS - AFTER jQuery! -->
     <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
             src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js" defer></script>
     
