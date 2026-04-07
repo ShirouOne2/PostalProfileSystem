@@ -166,13 +166,52 @@
         applyFilters();
     }
 
-    /* ── Update Active Filter Tags ────────────────────────── */
-    function updateActiveFilterTags(search, area, conn, office) {
-        const container = document.getElementById('dashActiveFilterTags');
-        container.innerHTML = '';
+    const adminColumnDefs = [
+        { targets: 0, width: '45px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
+            return meta.row + meta.settings._iDisplayStart + 1;
+        }},
+        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+            if (!data) return 'N/A';
+            var trNode = meta.settings.aoData[meta.row].nTr;
+            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+            return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
+        }},
+        { targets: 2, orderable: true },   // Area
+        { targets: 3, orderable: true },   // Region
+        { targets: 4, orderable: true },   // City
+        { targets: 5, width: '120px', orderable: true, className: 'dt-center' },  // Connection
+        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office
+        { targets: 7, orderable: false },  // Remarks
+        { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+    ];
 
-        if (search) {
-            container.appendChild(createTag('search', search, 'fas fa-search'));
+    dashboardTable = $('#systemAdminTable').DataTable({
+        pageLength: 25,
+        lengthMenu: [10, 25, 50, 100],
+        paging: true,
+        ordering: true,
+        info: true,
+        searching: true,
+        serverSide: false,
+
+        columnDefs: adminColumnDefs,
+        order: [[2, 'asc'], [1, 'asc']], // Sort by Area then Name
+
+        language: {
+            search: '',
+            searchPlaceholder: 'Quick search...',
+            lengthMenu: 'Show _MENU_ entries',
+            info: 'Showing _START_–_END_ of _TOTAL_ offices',
+            infoEmpty: 'No offices found',
+            infoFiltered: '(filtered from _MAX_ total)',
+            paginate: { first: '«', previous: '‹', next: '›', last: '»' },
+            zeroRecords: 'No matching offices found'
+        },
+
+        dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
+        responsive: true,
+        initComplete: function() {
+            updateActiveFilterCount();
         }
         if (area) {
             container.appendChild(createTag('area', area, 'fas fa-map-marker-alt'));
@@ -195,20 +234,48 @@
         return tag;
     }
 
-    function removeFilter(type) {
-        switch (type) {
-            case 'search':
-                document.getElementById('dashSearchInput').value = '';
-                break;
-            case 'area':
-                document.getElementById('dashFilterArea').value = '';
-                break;
-            case 'active':
-                document.getElementById('dashFilterConnStatus').value = '';
-                break;
-            case 'open':
-                document.getElementById('dashFilterOfficeStatus').value = '';
-                break;
+    const userColumnDefs = [
+        { targets: 0, width: '60px', orderable: false, className: 'dt-center' }, // #
+        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+            if (!data) return 'N/A';
+            var trNode = meta.settings.aoData[meta.row].nTr;
+            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+            return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
+        }},   // Office Name
+        { targets: 2, orderable: true },   // Area
+        { targets: 3, orderable: true, className: 'dt-center' }, // Connectivity
+        { targets: 4, orderable: true, className: 'dt-center' }, // Office Status
+        { targets: 5, orderable: false }, // Remarks
+        { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+    ];
+
+    dashboardTable = $('#officeTable').DataTable({
+        pageLength: 25,
+        lengthMenu: [10, 25, 50, 100],
+        paging: true,
+        ordering: true,
+        info: true,
+        searching: true,
+        serverSide: false,
+
+        columnDefs: userColumnDefs,
+        order: [[1, 'asc']], // Sort by Name
+
+        language: {
+            search: '',
+            searchPlaceholder: 'Quick search...',
+            lengthMenu: 'Show _MENU_ entries',
+            info: 'Showing _START_–_END_ of _TOTAL_ offices',
+            infoEmpty: 'No offices found',
+            infoFiltered: '(filtered from _MAX_ total)',
+            paginate: { first: '«', previous: '‹', next: '›', last: '»' },
+            zeroRecords: 'No matching offices found'
+        },
+
+        dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
+        responsive: true,
+        initComplete: function() {
+            updateActiveFilterCount();
         }
         applyFilters();
     }

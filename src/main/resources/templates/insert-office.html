@@ -297,21 +297,26 @@
                                             <span data-toggle="tooltip" data-placement="top"
                                                   title="The company providing internet service to this post office (e.g. PLDT, Globe, Converge)."
                                                   style="cursor:help;">
-                                                <i class="fas fa-question-circle text-muted" style="font-size:11px;"></i>
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
                                             </span>
                                         </label>
                                         <select class="form-control" id="internetServiceProvider"
                                                 name="internetServiceProvider">
-                                            <option value="">-- Select ISP --</option>
-                                            <option value="PLDT">PLDT</option>
-                                            <option value="Globe">Globe</option>
-                                            <option value="Smart">Smart</option>
-                                            <option value="Converge">Converge</option>
-                                            <option value="Sky Broadband">Sky Broadband</option>
-                                            <option value="Eastern Telecoms">Eastern Telecoms</option>
-                                            <option value="DITO">DITO</option>
-                                            <option value="Radius Telecoms">Radius Telecoms</option>
-                                            <option value="Others">Others</option>
+                                            <option value="">-- Select Classification --</option>
+                                            <option value="Regular">Regular</option>
+                                            <option value="Extension">Extension</option>
+                                            <option value="Delivery">Delivery</option>
+                                            <option value="Non-Delivery">Non-Delivery</option>
+                                            <option value="Acceptance with Delivery">Acceptance with Delivery</option>
+                                            <option value="Acceptance">Acceptance</option>
+                                            <option value="Mother">Mother</option>
+                                            <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
+                                            <option value="Post Shop">Post Shop</option>
+                                            <option value="Campus">Campus</option>
+                                            <option value="Mall Based">Mall Based</option>
+                                            <option value="Postal Station - LGU">Postal Station - LGU</option>
+                                            <option value="Barangay Based">Barangay Based</option>
+                                            <option value="Private">Private</option>
                                         </select>
                                     </div>
                                 </div>
@@ -320,14 +325,27 @@
                                         <label for="classification">
                                             <i class="fas fa-tag text-primary mr-1"></i>
                                             Classification
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Type of postal office classification based on operations and services."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
                                         <select class="form-control" id="classification" name="classification">
                                             <option value="" selected>-- Select Classification --</option>
                                             <option value="Regular">Regular</option>
                                             <option value="Extension">Extension</option>
+                                            <option value="Delivery">Delivery</option>
+                                            <option value="Non-Delivery">Non-Delivery</option>
+                                            <option value="Acceptance with Delivery">Acceptance with Delivery</option>
+                                            <option value="Acceptance">Acceptance</option>
                                             <option value="Mother">Mother</option>
+                                            <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
+                                            <option value="Post Shop">Post Shop</option>
                                             <option value="Campus">Campus</option>
                                             <option value="Mall Based">Mall Based</option>
+                                            <option value="Postal Station - LGU">Postal Station - LGU</option>
+                                            <option value="Barangay Based">Barangay Based</option>
                                             <option value="Private">Private</option>
                                         </select>
                                     </div>
@@ -357,7 +375,7 @@
                                             <span data-toggle="tooltip" data-placement="top"
                                                   title="The physical medium used for internet connectivity (e.g. Fiber — fastest and most reliable; DSL — uses phone line; Wireless — radio signal; Satellite — for remote areas)."
                                                   style="cursor:help;">
-                                                <i class="fas fa-question-circle text-muted" style="font-size:11px;"></i>
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
                                             </span>
                                         </label>
                                         <select class="form-control" id="typeOfConnection" name="typeOfConnection">
@@ -391,6 +409,11 @@
                                         <label for="ipAddressType">
                                             <i class="fas fa-server text-primary mr-1"></i>
                                             IP Address Type
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Dynamic IP changes each time you connect, Static IP stays the same."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
                                         <select class="form-control" id="ipAddressType"
                                                name="ipAddressType">
@@ -399,36 +422,6 @@
                                             <option value="static">Static IP</option>
                                             <option value="not_sure">Not sure</option>
                                         </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ISP Contact -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="ispContactPerson">
-                                            <i class="fas fa-user-headset text-primary mr-1"></i>
-                                            ISP Contact Person
-                                        </label>
-                                        <input type="text" class="form-control" id="ispContactPerson"
-                                               name="ispContactPerson" placeholder="Name of ISP contact"
-                                               style="text-transform:uppercase;">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="ispContactNumber">
-                                            <i class="fas fa-phone-alt text-primary mr-1"></i>
-                                            ISP Contact Number
-                                        </label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" id="ispContactNumber"
-                                                   name="ispContactNumber" placeholder="e.g., +63-2-9876-5432">
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -494,8 +487,13 @@
                                     <div class="form-group">
                                         <label for="dateConnected">
                                             <i class="fas fa-calendar-check text-success mr-1"></i>Date Connected
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Date when internet connection was established (automatically set when status changes to Active)."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
-                                        <input type="datetime-local" class="form-control" id="dateConnected"
+                                        <input type="date" class="form-control" id="dateConnected"
                                                name="dateConnected" disabled>
                                         <small class="form-text text-muted">Auto-set when status is Active</small>
                                     </div>
@@ -504,8 +502,13 @@
                                     <div class="form-group">
                                         <label for="dateDisconnected">
                                             <i class="fas fa-calendar-times text-danger mr-1"></i>Date Disconnected
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Date when internet connection was terminated (automatically set when status changes to Inactive)."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
                                         </label>
-                                        <input type="datetime-local" class="form-control" id="dateDisconnected"
+                                        <input type="date" class="form-control" id="dateDisconnected"
                                                name="dateDisconnected">
                                         <small class="form-text text-muted">Auto-set when status is Inactive</small>
                                     </div>

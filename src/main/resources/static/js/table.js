@@ -985,6 +985,7 @@ function renderOfficePopup(data, officeId) {
                     ${infoRow('fas fa-map', 'Address', data.address)}
                     ${infoRow('fas fa-user-tie', 'Postmaster', data.postmaster)}
                     ${infoRow('fas fa-tag', 'Classification', data.classification)}
+                    ${infoRow('fas fa-concierge-bell', 'Services Provided', data.serviceProvided)}
                 </div>
 
                 <!-- Middle: Connectivity -->
