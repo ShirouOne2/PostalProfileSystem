@@ -1,318 +1,308 @@
-/**
- * Dashboard — Stats Cards + Filter Panel + System Admin Table
- *
- * System Admin columns: # | Name | Area | Region | City | Connection | Office | Remarks | Actions
- * Area/User columns: # | Office Name | Area | Connectivity | Office Status | Remarks | Actions
- *
- * Edit modal handled by edit-modal.js — do NOT bind .btn-edit here.
- */
+/* Dashboard JavaScript */
 
-let dashboardTable;
-let map;
-let markers = [];
-let markerClusterGroup;
+(function () {
+    'use strict';
 
-// Detect which table layout is rendered (set by Thymeleaf th:if="${isSystemAdmin}")
-const IS_ADMIN = document.body?.dataset?.isSystemAdmin === 'true' || 
-    (document.getElementById('systemAdminTable')
-    ?.querySelector('thead th:nth-child(3)')
-    ?.textContent.trim().toLowerCase().includes('area') ?? false);
+    /* ── Detect role from rendered table ────────────────── */
+    const IS_ADMIN = !!document.querySelector('#dashTable thead th:nth-child(3)')
+            ?.textContent.trim().toLowerCase().includes('area');
 
-// Also check if user is Area Admin by looking for the isAreaAdmin data attribute
-const IS_AREA_ADMIN = document.body?.dataset?.isAreaAdmin === 'true' || false;
-const IS_PRIVILEGED_USER = IS_ADMIN || IS_AREA_ADMIN;
+    let dashTable;
+    let pendingArchiveId = null;
 
-document.addEventListener('DOMContentLoaded', function () {
+    /* ── Bootstrap DataTable ────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Initialize Stats Cards ─────────────────────────────────────────────
-    initializeStatsCards();
+        if ($.fn.DataTable.isDataTable('#dashTable')) {
+            $('#dashTable').DataTable().destroy();
+        }
 
-    // ── Initialize Filter Panel ───────────────────────────────────────────
-    initializeFilterPanel();
+        const adminCols = [
+            { targets: 0, width: '45px', orderable: false, className: 'dt-center',
+                  render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+            { targets: 1, orderable: true },
+            { targets: 2, orderable: true },
+            { targets: 3, orderable: true },
+            { targets: 4, orderable: true },
+            { targets: 5, width: '120px', orderable: true, className: 'dt-center' },
+            { targets: 6, width: '105px', orderable: true, className: 'dt-center' },
+            { targets: 7, orderable: false },
+            { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false }
+        ];
 
-    // ── Initialize System Admin Table (if visible) ───────────────────────
-    if (IS_ADMIN && document.getElementById('systemAdminTable')) {
-        initializeSystemAdminTable();
-    }
+        const userCols = [
+            { targets: 0, width: '45px', orderable: false, className: 'dt-center',
+                  render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+            { targets: 1, orderable: true },
+            { targets: 2, width: '140px', orderable: true, className: 'dt-center' },
+            { targets: 3, width: '120px', orderable: true },
+            { targets: 4, orderable: false },
+            { targets: 5, width: '110px', orderable: false, className: 'dt-center', searchable: false }
+        ];
 
-    // ── Initialize Regular Dashboard Table (if visible) ───────────────────
-    if (!IS_ADMIN && document.getElementById('officeTable')) {
-        initializeOfficeTable();
-    }
-
-    // ── Initialize Map ─────────────────────────────────────────────────────
-    if (document.getElementById('map')) {
-        initializeMap();
-    }
-});
-
-// ── Stats Cards Functionality ───────────────────────────────────────────
-function initializeStatsCards() {
-    // Stats cards are static from server, no additional JS needed initially
-    // Can add real-time updates here if needed
-}
-
-// ── Filter Panel Functionality ───────────────────────────────────────────
-function initializeFilterPanel() {
-    const toggleFilterBody = document.getElementById('toggleFilterBody');
-    const filterBody = document.getElementById('filterBody');
-    const filterChevron = document.getElementById('filterChevron');
-    const applyFilters = document.getElementById('applyFilters');
-    const resetFilters = document.getElementById('resetFilters');
-
-    // Toggle filter body visibility
-    if (toggleFilterBody && filterBody && filterChevron) {
-        toggleFilterBody.addEventListener('click', function() {
-            const isHidden = filterBody.style.display === 'none';
-            filterBody.style.display = isHidden ? 'block' : 'none';
-            filterChevron.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        dashTable = new DataTable('#dashTable', {
+            pageLength: 25,
+            lengthMenu: [10, 25, 50, 100],
+            paging:    true,
+            ordering:  true,
+            info:      true,
+            searching: true,
+            serverSide: false,
+            columnDefs: IS_ADMIN ? adminCols : userCols,
+            order: IS_ADMIN ? [[2, 'asc'], [1, 'asc']] : [[1, 'asc']],
+            language: {
+                search: '', searchPlaceholder: 'Quick search…',
+                lengthMenu: 'Show _MENU_ entries',
+                info: 'Showing _START_–_END_ of _TOTAL_ offices',
+                infoEmpty: 'No offices found',
+                infoFiltered: '(filtered from _MAX_ total)',
+                paginate: { first: '«', previous: '‹', next: '›', last: '»' },
+                zeroRecords: 'No matching offices found'
+            },
+            dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
+            responsive: true,
+            stateSave: false,
+            drawCallback: function () { updateSummary(this.api()); }
         });
-    }
 
-    // Apply filters
-    if (applyFilters) {
-        applyFilters.addEventListener('click', function() {
-            applyTableFilters();
+        /* Hide default DT search */
+        document.querySelector('.dataTables_filter')?.style.setProperty('display','none','important');
+
+        /* Wire filters */
+        initFilters();
+        updateSummary(dashTable);
+    });
+
+    /* ── Filters ────────────────────────────────────────── */
+    function initFilters() {
+        /* Toggle panel */
+        document.getElementById('dashToggleFilterBody')?.addEventListener('click', function () {
+            const body    = document.getElementById('dashFilterBody');
+            const chevron = document.getElementById('dashFilterChevron');
+            const hidden  = body.classList.toggle('d-none');
+            chevron.classList.toggle('fa-chevron-up',  !hidden);
+            chevron.classList.toggle('fa-chevron-down', hidden);
         });
-    }
 
-    // Reset filters
-    if (resetFilters) {
-        resetFilters.addEventListener('click', function() {
-            resetTableFilters();
+        document.getElementById('dashApplyFilters')?.addEventListener('click', applyFilters);
+        document.getElementById('dashClearFilters')?.addEventListener('click', clearFilters);
+
+        /* Clear search × */
+        document.getElementById('dashClearSearchBtn')?.addEventListener('click', function () {
+            document.getElementById('dashSearchInput').value = '';
+            applyFilters();
         });
-    }
 
-    // Enter key on search input
-    const searchInput = document.getElementById('tableSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                applyTableFilters();
-            }
+        /* Live search */
+        let timer;
+        document.getElementById('dashSearchInput')?.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(applyFilters, 300);
         });
-    }
-}
+        document.getElementById('dashSearchInput')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
+        });
 
-function applyTableFilters() {
-    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
-    if (!$.fn.DataTable.isDataTable(tableId)) return;
-    const table = $(tableId).DataTable();
-    
-    const searchValue = document.getElementById('tableSearchInput')?.value || '';
-    const areaValue = document.getElementById('filterArea')?.value || '';
-    const connectivityValue = document.getElementById('filterConnectivity')?.value || '';
-    const officeStatusValue = document.getElementById('filterOfficeStatus')?.value || '';
+        /* Instant on dropdown */
+        ['dashFilterArea', 'dashFilterConnStatus', 'dashFilterOfficeStatus'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', applyFilters);
+        });
 
-    // Apply search
-    table.search(searchValue);
+        /* Print / Export */
+        document.getElementById('dashPrintBtn')?.addEventListener('click', printReport);
+        document.getElementById('dashExportBtn')?.addEventListener('click', exportCSV);
 
-    if (IS_ADMIN) {
-        // Admin: # | Name(1) | Area(2) | Region(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
-        table.column(2).search(areaValue ? areaValue : '');
-        table.column(5).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
-        table.column(6).search(officeStatusValue ? officeStatusValue : '');
-    } else {
-        // Non-admin: # | Name(1) | Area(2) | Conn(3) | Office(4) | Remarks(5) | Actions(6)
-        table.column(2).search(areaValue ? areaValue : '');
-        table.column(3).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
-        table.column(4).search(officeStatusValue ? officeStatusValue : '');
+        /* Archive modal */
+        document.querySelectorAll('.btn-archive').forEach(btn => {
+            btn.addEventListener('click', function () {
+                pendingArchiveId = this.dataset.officeId;
+                document.getElementById('dashArchiveOfficeName').textContent = this.dataset.officeName;
+                $('#dashArchiveModal').modal('show');
+            });
+        });
+
+        document.getElementById('dashConfirmArchiveBtn')?.addEventListener('click', confirmArchive);
     }
 
-    table.draw();
-    updateActiveFilterCount();
-}
+    /* ── Apply Filters ───────────────────────────────────── */
+    function applyFilters() {
+        const search = document.getElementById('dashSearchInput')?.value.trim() || '';
+        const area   = document.getElementById('dashFilterArea')?.value || '';
+        const conn   = document.getElementById('dashFilterConnStatus')?.value || '';
+        const office = document.getElementById('dashFilterOfficeStatus')?.value || '';
 
-function resetTableFilters() {
-    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
-    if (!$.fn.DataTable.isDataTable(tableId)) return;
-    const table = $(tableId).DataTable();
-    
-    // Reset all filters
-    table.search('').columns().search('').draw();
+        // Build regex filters
+        const searchRegex = search ? new RegExp(search, 'i') : null;
+        const areaRegex   = area   ? new RegExp(area, 'i')   : null;
+        const connRegex   = conn   ? new RegExp(conn, 'i')   : null;
+        const officeRegex = office ? new RegExp(office, 'i') : null;
 
-    // Reset form inputs
-    if (document.getElementById('tableSearchInput')) document.getElementById('tableSearchInput').value = '';
-    if (document.getElementById('filterArea')) document.getElementById('filterArea').value = '';
-    if (document.getElementById('filterConnectivity')) document.getElementById('filterConnectivity').value = '';
-    if (document.getElementById('filterOfficeStatus')) document.getElementById('filterOfficeStatus').value = '';
+        // Apply filters
+        dashTable.column(1).search(searchRegex ? searchRegex : '').draw();
+        if (IS_ADMIN) {
+            dashTable.column(2).search(areaRegex ? areaRegex : '').draw();
+            dashTable.column(5).search(connRegex ? connRegex : '').draw();
+            dashTable.column(6).search(officeRegex ? officeRegex : '').draw();
+        } else {
+            dashTable.column(2).search(connRegex ? connRegex : '').draw();
+        }
 
-    updateActiveFilterCount();
-}
+        updateActiveFilterTags(search, area, conn, office);
+        updateFilterCount(search, area, conn, office);
+    }
 
-function updateActiveFilterCount() {
-    const searchInput = document.getElementById('tableSearchInput')?.value || '';
-    const areaValue = document.getElementById('filterArea')?.value || '';
-    const connectivityValue = document.getElementById('filterConnectivity')?.value || '';
-    const officeStatusValue = document.getElementById('filterOfficeStatus')?.value || '';
+    /* ── Clear Filters ───────────────────────────────────── */
+    function clearFilters() {
+        document.getElementById('dashSearchInput').value = '';
+        document.getElementById('dashFilterArea').value = '';
+        document.getElementById('dashFilterConnStatus').value = '';
+        document.getElementById('dashFilterOfficeStatus').value = '';
 
-    const activeFilters = [searchInput, areaValue, connectivityValue, officeStatusValue].filter(v => v !== '').length;
-    const badge = document.getElementById('activeFilterCount');
-    
-    if (badge) {
-        if (activeFilters > 0) {
-            badge.textContent = activeFilters;
+        // Remove visual states
+        document.querySelectorAll('.filter-input, .filter-select').forEach(el => {
+            el.classList.remove('has-value');
+        });
+
+        applyFilters();
+    }
+
+    /* ── Update Active Filter Tags ────────────────────────── */
+    function updateActiveFilterTags(search, area, conn, office) {
+        const container = document.getElementById('dashActiveFilterTags');
+        container.innerHTML = '';
+
+        if (search) {
+            container.appendChild(createTag('search', search, 'fas fa-search'));
+        }
+        if (area) {
+            container.appendChild(createTag('area', area, 'fas fa-map-marker-alt'));
+        }
+        if (conn) {
+            container.appendChild(createTag('active', conn, 'fas fa-wifi'));
+        }
+        if (office) {
+            container.appendChild(createTag('open', office, 'fas fa-door-open'));
+        }
+    }
+
+    function createTag(type, value, icon) {
+        const tag = document.createElement('span');
+        tag.className = `filter-tag-pill tag-${type}`;
+        tag.innerHTML = `
+            <i class="${icon} mr-1"></i>${value}
+            <button class="tag-remove-btn" onclick="removeFilter('${type}')">×</button>
+        `;
+        return tag;
+    }
+
+    function removeFilter(type) {
+        switch (type) {
+            case 'search':
+                document.getElementById('dashSearchInput').value = '';
+                break;
+            case 'area':
+                document.getElementById('dashFilterArea').value = '';
+                break;
+            case 'active':
+                document.getElementById('dashFilterConnStatus').value = '';
+                break;
+            case 'open':
+                document.getElementById('dashFilterOfficeStatus').value = '';
+                break;
+        }
+        applyFilters();
+    }
+
+    /* ── Update Filter Count ─────────────────────────────── */
+    function updateFilterCount(search, area, conn, office) {
+        const count = [search, area, conn, office].filter(v => v).length;
+        const badge = document.getElementById('dashActiveFilterCount');
+        if (count > 0) {
+            badge.textContent = count;
             badge.style.display = 'inline-block';
         } else {
             badge.style.display = 'none';
         }
     }
 
-    // Update summary text
-    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
-    if ($.fn.DataTable.isDataTable(tableId)) {
-        const table = $(tableId).DataTable();
-        const summaryText = document.getElementById('tableSummaryText');
-        if (summaryText) {
-            const total = table.data().length;
-            const filtered = table.rows({search: 'applied'}).count();
-            summaryText.textContent = filtered === total ? `${total} offices` : `${filtered} of ${total} offices`;
+    /* ── Update Summary ────────────────────────────────────── */
+    function updateSummary(api) {
+        const total = api.page.info().recordsDisplay;
+        const filtered = api.rows({search:'applied'}).count();
+        const summary = document.getElementById('dashSummaryText');
+        if (filtered < total) {
+            summary.textContent = `Showing ${filtered} of ${total} offices`;
+        } else {
+            summary.textContent = `${total} offices total`;
         }
     }
-}
 
-// ── System Admin Table Functionality ───────────────────────────────────────
-function initializeSystemAdminTable() {
-    if ($.fn.DataTable.isDataTable('#systemAdminTable')) {
-        $('#systemAdminTable').DataTable().destroy();
+    /* ── Print Report ───────────────────────────────────────── */
+    function printReport() {
+        const printWindow = window.open('', '_blank');
+        const table = document.getElementById('dashTable').cloneNode(true);
+        
+        // Remove action column for print
+        table.querySelectorAll('th:last-child, td:last-child').forEach(el => el.remove());
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Post Office Dashboard Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    .text-center { text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h2>Post Office Dashboard Report</h2>
+                <p>Generated: ${new Date().toLocaleString()}</p>
+                ${table.outerHTML}
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
     }
 
-    const adminColumnDefs = [
-        { targets: 0, width: '45px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
-            return meta.row + meta.settings._iDisplayStart + 1;
-        }},
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
-            if (!data) return 'N/A';
-            var trNode = meta.settings.aoData[meta.row].nTr;
-            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
-            return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
-        }},
-        { targets: 2, orderable: true },   // Area
-        { targets: 3, orderable: true },   // Region
-        { targets: 4, orderable: true },   // City
-        { targets: 5, width: '120px', orderable: true, className: 'dt-center' },  // Connection
-        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office
-        { targets: 7, orderable: false },  // Remarks
-        { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
-    ];
-
-    dashboardTable = new DataTable('#systemAdminTable', {
-        pageLength: 25,
-        lengthMenu: [10, 25, 50, 100],
-        paging: true,
-        ordering: true,
-        info: true,
-        searching: true,
-        serverSide: false,
-
-        columnDefs: adminColumnDefs,
-        order: [[2, 'asc'], [1, 'asc']], // Sort by Area then Name
-
-        language: {
-            search: '',
-            searchPlaceholder: 'Quick search...',
-            lengthMenu: 'Show _MENU_ entries',
-            info: 'Showing _START_–_END_ of _TOTAL_ offices',
-            infoEmpty: 'No offices found',
-            infoFiltered: '(filtered from _MAX_ total)',
-            paginate: { first: '«', previous: '‹', next: '›', last: '»' },
-            zeroRecords: 'No matching offices found'
-        },
-
-        dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
-        responsive: true,
-        initComplete: function() {
-            updateActiveFilterCount();
-        }
-    });
-}
-
-// ── Regular Office Table Functionality ───────────────────────────────────────
-function initializeOfficeTable() {
-    if ($.fn.DataTable.isDataTable('#officeTable')) {
-        $('#officeTable').DataTable().destroy();
-    }
-
-    const userColumnDefs = [
-        { targets: 0, width: '60px', orderable: false, className: 'dt-center' }, // #
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
-            if (!data) return 'N/A';
-            var trNode = meta.settings.aoData[meta.row].nTr;
-            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
-            return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
-        }},   // Office Name
-        { targets: 2, orderable: true },   // Area
-        { targets: 3, orderable: true, className: 'dt-center' }, // Connectivity
-        { targets: 4, orderable: true, className: 'dt-center' }, // Office Status
-        { targets: 5, orderable: false }, // Remarks
-        { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
-    ];
-
-    dashboardTable = new DataTable('#officeTable', {
-        pageLength: 25,
-        lengthMenu: [10, 25, 50, 100],
-        paging: true,
-        ordering: true,
-        info: true,
-        searching: true,
-        serverSide: false,
-
-        columnDefs: userColumnDefs,
-        order: [[1, 'asc']], // Sort by Name
-
-        language: {
-            search: '',
-            searchPlaceholder: 'Quick search...',
-            lengthMenu: 'Show _MENU_ entries',
-            info: 'Showing _START_–_END_ of _TOTAL_ offices',
-            infoEmpty: 'No offices found',
-            infoFiltered: '(filtered from _MAX_ total)',
-            paginate: { first: '«', previous: '‹', next: '›', last: '»' },
-            zeroRecords: 'No matching offices found'
-        },
-
-        dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
-        responsive: true,
-        initComplete: function() {
-            updateActiveFilterCount();
-        }
-    });
-}
-
-// ── Map Functionality ─────────────────────────────────────────────────────
-function initializeMap() {
-    // Initialize map if map element exists
-    if (typeof L !== 'undefined' && document.getElementById('map')) {
-        map = L.map('map').setView([14.5995, 120.9842], 6); // Philippines center
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Add markers for offices
-        addOfficeMarkers();
-    }
-}
-
-function addOfficeMarkers() {
-    // This would typically fetch office coordinates and add markers
-    // Implementation depends on your data structure
-}
-
-// ── Export Functionality ───────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            exportTableData();
+    /* ── Export CSV ─────────────────────────────────────────── */
+    function exportCSV() {
+        const rows = dashTable.data().toArray();
+        const headers = IS_ADMIN 
+            ? ['Name', 'Area', 'Region', 'City/Municipality', 'Connection', 'Office Status', 'Remarks']
+            : ['Name', 'Connection Status', 'Speed', 'Remarks'];
+        
+        let csv = headers.join(',') + '\n';
+        
+        rows.forEach(row => {
+            const data = IS_ADMIN
+                ? [row[1], row[2], row[3], row[4], 
+                   row[5].includes('Active') ? 'Active' : 'Inactive',
+                   row[6].includes('Open') ? 'Open' : row[6].includes('Closed') ? 'Closed' : 'Unknown',
+                   row[7]]
+                : [row[1], 
+                   row[2].includes('Active') ? 'Active' : 'Inactive',
+                   row[3],
+                   row[4]];
+            
+            csv += data.map(field => `"${field}"`).join(',') + '\n';
         });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `post-office-dashboard-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', function() {
-            location.reload();
-        });
+    /* ── View Office Details ───────────────────────────────── */
+    function dashViewOffice(officeId) {
+        window.location.href = `/profile/${officeId}`;
     }
 });
 
@@ -359,6 +349,38 @@ window.addEventListener('beforeunload', function () {
     const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
     if (dashboardTable && $.fn.DataTable.isDataTable(tableId)) {
         dashboardTable.destroy();
+
+    /* ── Confirm Archive ───────────────────────────────────── */
+    function confirmArchive() {
+        if (!pendingArchiveId) return;
+        
+        const reason = document.getElementById('dashArchiveReasonInput').value.trim();
+        
+        fetch('/archive/archive', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id=${pendingArchiveId}&reason=${encodeURIComponent(reason)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Success!', 'Post office archived successfully.', 'success')
+                    .then(() => location.reload());
+            } else {
+                Swal.fire('Error!', data.message || 'Failed to archive post office.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Archive error:', error);
+            Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+        })
+        .finally(() => {
+            $('#dashArchiveModal').modal('hide');
+            pendingArchiveId = null;
+            document.getElementById('dashArchiveReasonInput').value = '';
+        });
     }
-    document.getElementById('editOfficeModal')?.remove();
-});
+
+})();

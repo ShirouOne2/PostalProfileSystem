@@ -17,10 +17,12 @@
     <!-- Sidebar Menu -->
     <div class="sidebar-menu">
         
-        <!-- General Section -->
-        <div class="sidebar-heading">
-            General
-        </div>
+        <a th:href="@{/dashboard}" class="sidebar-link" 
+           th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
+           data-page="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
 
         <a th:href="@{/dashboard}" class="sidebar-link" 
            th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
