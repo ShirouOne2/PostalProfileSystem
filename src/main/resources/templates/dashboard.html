@@ -81,7 +81,8 @@
                 <div class="d-flex align-items-center" style="gap:8px;">
                     <span id="tableSummaryText"></span>
                     <button id="toggleFilterBody" class="btn btn-sm btn-light border"
-                            style="height:28px;padding:0 10px;font-size:12px;" title="Toggle">
+                            style="height:28px;padding:0 10px;font-size:12px;" 
+                            data-toggle="tooltip" data-placement="top" title="Toggle Filters">
                         <i class="fas fa-chevron-up" id="filterChevron"></i>
                     </button>
                 </div>
@@ -99,7 +100,8 @@
                                    placeholder="Office name..."
                                    style="border-radius:6px 0 0 6px !important;">
                             <div class="input-group-append">
-                                <button class="filter-clear-x" id="clearSearchBtn" title="Clear">
+                                <button class="filter-clear-x" id="clearSearchBtn" 
+                                        data-toggle="tooltip" data-placement="top" title="Clear Search">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -234,7 +236,7 @@
                                     <button class="btn btn-sm btn-warning btn-edit"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            title="Edit Office">
+                                            data-toggle="tooltip" data-placement="top" title="Edit Office">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-archive"
@@ -242,7 +244,7 @@
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
                                             sec:authorize="hasRole('ADMIN')"
-                                            title="Archive Office">
+                                            data-toggle="tooltip" data-placement="top" title="Archive Office">
                                         <i class="fas fa-archive"></i>
                                     </button>
                                 </td>
@@ -331,7 +333,7 @@
                                     <button class="btn btn-sm btn-warning btn-edit"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            title="Edit">
+                                            data-toggle="tooltip" data-placement="top" title="Edit Office">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </td>

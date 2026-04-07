@@ -196,7 +196,7 @@ function initializeSystemAdminTable() {
         { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
     ];
 
-    dashboardTable = new DataTable('#systemAdminTable', {
+    dashboardTable = $('#systemAdminTable').DataTable({
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
         paging: true,
@@ -248,7 +248,7 @@ function initializeOfficeTable() {
         { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
     ];
 
-    dashboardTable = new DataTable('#officeTable', {
+    dashboardTable = $('#officeTable').DataTable({
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
         paging: true,

@@ -10,11 +10,39 @@
             setTimeout(initTooltips, 100);
             return;
         }
-        $('[data-toggle="tooltip"]').tooltip();
+        try {
+            // Destroy existing tooltips to prevent duplicates
+            $('[data-toggle="tooltip"]').tooltip('dispose');
+            // Initialize all tooltips
+            $('[data-toggle="tooltip"]').tooltip({
+                container: 'body',
+                trigger: 'hover focus',
+                delay: { show: 300, hide: 100 }
+            });
+        } catch (error) {
+            console.warn('Tooltip initialization error:', error);
+        }
+        
         // Re-init inside edit modal each time it opens
         $('#editOfficeModal').on('shown.bs.modal', function () {
-            $(this).find('[data-toggle="tooltip"]').tooltip();
+            setTimeout(function() {
+                try {
+                    $(this).find('[data-toggle="tooltip"]').tooltip('dispose').tooltip({
+                        container: 'body',
+                        trigger: 'hover focus',
+                        delay: { show: 300, hide: 100 }
+                    });
+                } catch (error) {
+                    console.warn('Modal tooltip re-init error:', error);
+                }
+            }, 200);
         });
     }
-    document.addEventListener('DOMContentLoaded', initTooltips);
+    
+    // Also initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTooltips);
+    } else {
+        initTooltips();
+    }
 })();
