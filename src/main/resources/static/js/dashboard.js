@@ -304,6 +304,51 @@
     function dashViewOffice(officeId) {
         window.location.href = `/profile/${officeId}`;
     }
+});
+
+// ── Edit Button Handler for Dashboard ─────────────────────────────────────
+// Dashboard should use table row data instead of API call
+// since dashboard already has complete data loaded from server
+$(document).on('click', '.btn-edit', function () {
+    var id = $(this).data('office-id');
+    if (!id) return;
+    
+    // Get data from table row instead of API call
+    var tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    var table = $(tableId).DataTable();
+    var rowData = table.row($(this).closest('tr')).data();
+    
+    if (rowData && typeof window.openModal === 'function') {
+        window.openModal(rowData); 
+    } else {
+        console.error('Edit modal functions not loaded or no row data available');
+        Swal.fire('Error', 'Edit modal not properly loaded', 'error');
+    }
+});
+
+function exportTableData() {
+    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    const table = $(tableId).DataTable();
+    
+    // Export to CSV
+    const csvData = table.data().toArray().map(function(row) {
+        return row.join(',');
+    }).join('\n');
+    
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'postal-offices-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// ── Cleanup ───────────────────────────────────────────────────────────────
+window.addEventListener('beforeunload', function () {
+    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    if (dashboardTable && $.fn.DataTable.isDataTable(tableId)) {
+        dashboardTable.destroy();
 
     /* ── Confirm Archive ───────────────────────────────────── */
     function confirmArchive() {

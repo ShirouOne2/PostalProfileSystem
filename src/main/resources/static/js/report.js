@@ -166,9 +166,9 @@ function initializePrint() {
             var year     = cells.eq(0).text().trim();
             var quarter  = cells.eq(1).text().trim();
             var conn     = cells.eq(2).find('.font-weight-bold').text().trim() || cells.eq(2).text().trim() || '—';
-            var newlyConn= cells.eq(3).find('.badge-success').text().trim() || '—';
+            var newlyConn= cells.eq(3).find('.badge-success').text().trim() || cells.eq(3).find('.text-muted').text().trim() || cells.eq(3).text().trim() || '—';
             var disconn  = cells.eq(4).find('.font-weight-bold').text().trim() || cells.eq(4).text().trim() || '—';
-            var newlyDisc= cells.eq(5).find('.badge-danger').text().trim() || '—';
+            var newlyDisc= cells.eq(5).find('.badge-danger').text().trim() || cells.eq(5).find('.text-muted').text().trim() || cells.eq(5).text().trim() || '—';
             var total    = cells.eq(6).text().trim() || '—';
             var status   = cells.eq(7).text().trim() || '—';
 
@@ -176,9 +176,9 @@ function initializePrint() {
             tableRows += '<td>' + year     + '</td>';
             tableRows += '<td>' + quarter  + '</td>';
             tableRows += '<td style="text-align:center;color:#1a9e72;font-weight:600;">' + conn      + '</td>';
-            tableRows += '<td style="text-align:center;">'                               + newlyConn + '</td>';
+            tableRows += '<td style="text-align:center;color:#28a745;font-weight:600;">' + newlyConn + '</td>';
             tableRows += '<td style="text-align:center;color:#c0392b;font-weight:600;">' + disconn   + '</td>';
-            tableRows += '<td style="text-align:center;">'                               + newlyDisc + '</td>';
+            tableRows += '<td style="text-align:center;color:#dc3545;font-weight:600;">' + newlyDisc + '</td>';
             tableRows += '<td style="text-align:center;color:#2e59d9;font-weight:600;">' + total     + '</td>';
             tableRows += '<td style="text-align:center;">'                               + status    + '</td>';
             tableRows += '</tr>';
@@ -311,9 +311,9 @@ function initializeExportExcel() {
             var yearTxt       = cells.eq(0).text().trim();
             var quarterTxt    = cells.eq(1).text().trim();
             var connectedTxt  = cells.eq(2).find('.font-weight-bold').text().trim() || cells.eq(2).text().trim();
-            var newConnTxt    = cells.eq(3).find('.badge-success').text().trim()    || cells.eq(3).text().trim();
+            var newConnTxt    = cells.eq(3).find('.badge-success').text().trim()    || cells.eq(3).find('.text-muted').text().trim() || cells.eq(3).text().trim();
             var disconnTxt    = cells.eq(4).find('.font-weight-bold').text().trim() || cells.eq(4).text().trim();
-            var newDisconnTxt = cells.eq(5).find('.badge-danger').text().trim()     || cells.eq(5).text().trim();
+            var newDisconnTxt = cells.eq(5).find('.badge-danger').text().trim()     || cells.eq(5).find('.text-muted').text().trim() || cells.eq(5).text().trim();
             var totalTxt      = cells.eq(6).text().trim();
             var statusTxt     = cells.eq(7).text().trim();
 

@@ -23,7 +23,7 @@
                     <input type="hidden" id="editAreaIdHidden">
 
                     <!-- ── Admin-only sections: Basic Info, Location, Coordinates ── -->
-                    <div sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
+                    <div sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN')">
 
                     <!-- ── Basic Information ──────────────────────────────── -->
                     <h6 class="mt-2 mb-2 text-primary">
@@ -48,22 +48,13 @@
                             <div class="form-group">
                                 <label for="editClassification">Classification</label>
                                 <select class="form-control" id="editClassification">
-                                    <option value="xxx" disabled>Choose Classification</option>
-                                    <option value="">-- None --</option>
-                                    <option value="REGULAR">REGULAR</option>
-                                    <option value="EXTENSION">EXTENSION</option>
-                                    <option value="DELIVERY">DELIVERY</option>
-                                    <option value="NON-DELIVERY">NON-DELIVERY</option>
-                                    <option value="ACCEPTANCE WITH DELIVERY">ACCEPTANCE WITH DELIVERY</option>
-                                    <option value="ACCEPTANCE">ACCEPTANCE</option>
-                                    <option value="MOTHER">MOTHER</option>
-                                    <option value="PERSONNEL HANDLING DELIVERY">PERSONNEL HANDLING DELIVERY</option>
-                                    <option value="POST SHOP">POST SHOP</option>
-                                    <option value="CAMPUS">CAMPUS</option>
-                                    <option value="MALL BASED">MALL BASED</option>
-                                    <option value="POSTAL STATION - LGU">POSTAL STATION - LGU</option>
-                                    <option value="BARANGAY BASED">BARANGAY BASED</option>
-                                    <option value="PRIVATE">PRIVATE</option>
+                                    <option value="">-- Select Classification --</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Extension">Extension</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Campus">Campus</option>
+                                    <option value="Mall Based">Mall Based</option>
+                                    <option value="Private">Private</option>
                                 </select>
                             </div>
                         </div>
@@ -72,12 +63,21 @@
                                 <label for="editServiceProvided">Services Provided</label>
                                 <select class="form-control" id="editServiceProvided">
                                     <option value="">-- Select Service --</option>
-                                    <option value="DELIVERY">DELIVERY</option>
-                                    <option value="ACCEPTANCE">ACCEPTANCE</option>
-                                    <option value="ACCEPTANCE AND DELIVERY">ACCEPTANCE AND DELIVERY</option>
+                                    <option value="Delivery">Delivery</option>
+                                    <option value="Acceptance">Acceptance</option>
+                                    <option value="Acceptance and Delivery">Acceptance and Delivery</option>
                                 </select>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- ── Address ───────────────────────────────────────── -->
+                    <h6 class="mt-3 mb-2 text-primary">
+                        <i class="fas fa-address-card mr-1"></i>Address
+                    </h6>
+                    <div class="form-group">
+                        <label for="editAddress">Complete Address</label>
+                        <textarea class="form-control" id="editAddress" rows="2"></textarea>
                     </div>
 
                     <!-- ── Location ───────────────────────────────────────── -->
@@ -135,10 +135,6 @@
                                 <input type="text" class="form-control" id="editZipCode">
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="editAddress">Complete Address</label>
-                        <textarea class="form-control" id="editAddress" rows="2"></textarea>
                     </div>
 
                     <!-- ── Coordinates ────────────────────────────────────── -->
@@ -271,7 +267,7 @@
                     </div>
 
                     <!-- ── Admin-only sections: Staff, Contact, Remarks, Photos ── -->
-                    <div sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
+                    <div sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN')">
 
                     <!-- ── Staff Information ──────────────────────────────── -->
                     <h6 class="mt-3 mb-2 text-primary">
@@ -446,6 +442,16 @@
 
                     <!-- ── Scoped Styles ──────────────────────────────────── -->
                     <link rel="stylesheet" href="/css/edit-modal-photos.css">
+
+                    <style>
+                        /* Show N/A placeholder in a muted italic style so users can
+                           clearly distinguish "no data in DB" from an empty editable field */
+                        #editOfficeForm input::placeholder,
+                        #editOfficeForm textarea::placeholder {
+                            color: #adb5bd;
+                            font-style: italic;
+                        }
+                    </style>
 
                 </form>
             </div>

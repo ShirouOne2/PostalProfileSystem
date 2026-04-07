@@ -91,6 +91,7 @@ public class DataTableController {
         model.addAttribute("activePage",    "table");
         model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
+        model.addAttribute("userAreaId", areaId);
 
         return "table";
     }

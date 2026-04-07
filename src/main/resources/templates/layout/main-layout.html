@@ -193,27 +193,21 @@
     </div>
 
     <!-- Edit Postal Office Modal -->
-    <div th:if="${activePage == 'table' or activePage == 'profile'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
+    <div th:if="${activePage == 'table' or activePage == 'profile' or activePage == 'dashboard'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
     <!-- ── Office Profile Popup Modal (used by table & quarters name links) ── -->
     <div class="modal fade" id="officeProfilePopup" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
             <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-                <div class="modal-header py-2 px-3">
-                    <h6 class="modal-title mb-0 font-weight-bold" id="officeProfilePopupTitle">
-                        <i class="fas fa-map-marker-alt mr-2"></i>
+                <div class="modal-header py-3 px-4"
+                     style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;border:none;">
+                    <h5 class="modal-title font-weight-bold mb-0">
+                        <i class="fas fa-building mr-2"></i>
                         <span id="officeProfilePopupName">Office Profile</span>
-                    </h6>
-                    <div class="d-flex align-items-center" style="gap:8px;">
-                        <a id="officeProfileOpenFull" href="#" target="_blank"
-                           class="btn btn-sm btn-outline-light"
-                           style="font-size:11px;">
-                            <i class="fas fa-external-link-alt mr-1"></i>Full Page
-                        </a>
-                        <button type="button" class="close text-white ml-2" data-dismiss="modal">
-                            <span>&times;</span>
-                        </button>
-                    </div>
+                    </h5>
+                    <button type="button" class="close text-white ml-2" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body p-0" id="officeProfilePopupBody">
                     <div class="d-flex align-items-center justify-content-center" style="height:300px;">
@@ -222,6 +216,14 @@
                             Loading profile...
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer" style="background:#f8f9fa;">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <a id="officeProfileOpenFull" href="#" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
+                    </a>
                 </div>
             </div>
         </div>
@@ -317,37 +319,175 @@
     })();
     </script>
 
-    <!-- 6. Office Profile Popup (used by table & quarters name links) -->
+    <!-- 6. Office Profile Popup — renders office data inline via API (no iframe) -->
     <script>
     /**
      * openOfficeProfilePopup(officeId, officeName)
-     * Opens an inline popup showing the office profile via iframe.
-     * The "Full Page" button opens the same URL in a new tab.
+     * Fetches /api/postal-office/{id} and renders a rich profile popup inline.
+     * Used by table, dashboard, and quarters pages.
+     * Note: dashboard.js, table.js, quarters.js also define this function —
+     * because main-layout loads BEFORE those page scripts, the page scripts
+     * will override this definition. That's fine — they all do the same thing.
      */
     window.openOfficeProfilePopup = function (officeId, officeName) {
         if (!officeId) return;
-        var url = '/profile/' + officeId + '?source=popup';
 
-        document.getElementById('officeProfilePopupName').textContent = officeName || 'Office Profile';
-        document.getElementById('officeProfileOpenFull').href = '/profile/' + officeId;
+        var nameEl = document.getElementById('officeProfilePopupName');
+        var bodyEl = document.getElementById('officeProfilePopupBody');
+        var fullEl = document.getElementById('officeProfileOpenFull');
 
-        var body = document.getElementById('officeProfilePopupBody');
-        body.innerHTML =
+        if (!nameEl || !bodyEl) return;
+
+        nameEl.textContent = officeName || 'Post Office Profile';
+        if (fullEl) fullEl.href = '/profile/' + officeId;
+
+        bodyEl.innerHTML =
             '<div class="d-flex align-items-center justify-content-center" style="height:300px;">' +
             '<div class="text-center text-muted">' +
             '<i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Loading profile...</div></div>';
 
         $('#officeProfilePopup').modal('show');
 
-        // Load via iframe (profile page is server-rendered)
-        var iframe = document.createElement('iframe');
-        iframe.src = url;
-        iframe.style.cssText = 'width:100%;height:75vh;border:none;display:block;';
-        iframe.onload = function () { /* loaded */ };
-
-        body.innerHTML = '';
-        body.appendChild(iframe);
+        fetch('/api/postal-office/' + officeId)
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (data) {
+                _renderOfficeProfilePopup(data, officeId);
+            })
+            .catch(function () {
+                bodyEl.innerHTML =
+                    '<div class="text-center py-5">' +
+                    '<i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>' +
+                    '<p class="text-muted">Failed to load profile data.</p>' +
+                    '<a href="/profile/' + officeId + '" class="btn btn-primary btn-sm">' +
+                    '<i class="fas fa-external-link-alt mr-1"></i>Open Full Profile</a></div>';
+            });
     };
+
+    function _renderOfficeProfilePopup(data, officeId) {
+        var nameEl = document.getElementById('officeProfilePopupName');
+        var bodyEl = document.getElementById('officeProfilePopupBody');
+        if (!bodyEl) return;
+
+        if (nameEl) nameEl.textContent = data.name || 'Post Office Profile';
+
+        var area = data.areaId ? 'Area ' + data.areaId : (data.area || 'N/A');
+
+        var connBadge = data.connectionStatus
+            ? '<span class="badge badge-success px-3 py-2"><i class="fas fa-wifi mr-1"></i>Active</span>'
+            : '<span class="badge badge-danger px-3 py-2"><i class="fas fa-wifi mr-1"></i>Inactive</span>';
+
+        var officeBadge = data.officeStatus === 'OPEN'
+            ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
+            : data.officeStatus === 'CLOSED'
+            ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
+            : '<span class="badge badge-secondary px-3 py-2">—</span>';
+
+        function infoRow(icon, label, value) {
+            var val = (value !== null && value !== undefined && value !== '') ? value : '—';
+            return '<div class="mb-2 d-flex align-items-start" style="font-size:13px;">' +
+                '<i class="' + icon + ' text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i>' +
+                '<div><span class="text-muted" style="font-size:11px;display:block;">' + label + '</span>' +
+                '<strong>' + val + '</strong></div></div>';
+        }
+
+        bodyEl.innerHTML =
+            // Cover photo banner
+            '<div style="height:180px;overflow:hidden;position:relative;background:#1a3a7a;">' +
+            '<img src="/api/postal-office/' + officeId + '/cover-photo"' +
+            '     onerror="this.style.display=\'none\'"' +
+            '     style="width:100%;height:100%;object-fit:cover;opacity:0.7;">' +
+            '<div style="position:absolute;bottom:0;left:0;right:0;' +
+            '     padding:40px 20px 16px;background:linear-gradient(transparent,rgba(0,0,0,0.6));">' +
+            '<h4 class="text-white font-weight-bold mb-1" style="text-shadow:0 1px 4px rgba(0,0,0,0.5);">' +
+            (data.name || 'N/A') + '</h4>' +
+            '<div style="display:flex;gap:6px;">' + connBadge + ' ' + officeBadge + '</div>' +
+            '</div></div>' +
+
+            // Profile photo + name row
+            '<div class="d-flex align-items-center px-4 pt-3 pb-2" style="gap:14px;">' +
+            '<div style="width:60px;height:60px;border-radius:50%;overflow:hidden;' +
+            '     border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;">' +
+            '<img src="/api/postal-office/' + officeId + '/profile-photo"' +
+            '     onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(data.name || 'PO') + '&size=60&background=002868&color=fff\'"' +
+            '     style="width:100%;height:100%;object-fit:cover;"></div>' +
+            '<div>' +
+            '<div class="font-weight-bold" style="font-size:15px;color:#002868;">' + (data.name || 'N/A') + '</div>' +
+            '<div class="text-muted" style="font-size:12px;">' +
+            (data.address ? '<i class="fas fa-map-marker-alt mr-1"></i>' + data.address : '') +
+            '</div></div></div>' +
+
+            // Tabs: Basic | Connectivity | Contact
+            '<ul class="nav nav-tabs px-4" id="popupTabs" style="border-bottom:1px solid #dee2e6;">' +
+            '<li class="nav-item"><a class="nav-link active" href="#" data-popup-tab="basic" style="font-size:12px;">Basic Info</a></li>' +
+            '<li class="nav-item"><a class="nav-link" href="#" data-popup-tab="connectivity" style="font-size:12px;">Connectivity</a></li>' +
+            '<li class="nav-item"><a class="nav-link" href="#" data-popup-tab="contact" style="font-size:12px;">Contact & Staff</a></li>' +
+            '</ul>' +
+
+            // Tab panes
+            '<div class="p-4" id="popupTabContent">' +
+
+            // Basic tab (active)
+            '<div id="popup-tab-basic">' +
+            '<div class="row">' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-map-marker-alt', 'Area', area) +
+            infoRow('fas fa-envelope', 'ZIP Code', data.zipCode) +
+            infoRow('fas fa-tag', 'Classification', data.classification) +
+            '</div>' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-user-tie', 'Postmaster', data.postmaster) +
+            infoRow('fas fa-concierge-bell', 'Services', data.serviceProvided) +
+            infoRow('fas fa-sticky-note', 'Remarks', data.remarks) +
+            '</div></div></div>' +
+
+            // Connectivity tab (hidden)
+            '<div id="popup-tab-connectivity" style="display:none;">' +
+            '<div class="row">' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-building', 'ISP', data.internetServiceProvider) +
+            infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection) +
+            infoRow('fas fa-tachometer-alt', 'Speed', data.speed) +
+            '</div>' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-network-wired', 'Static IP', data.staticIpAddress) +
+            infoRow('fas fa-door-open', 'Office Status', data.officeStatus) +
+            '</div></div></div>' +
+
+            // Contact tab (hidden)
+            '<div id="popup-tab-contact" style="display:none;">' +
+            '<div class="row">' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-phone', 'Office Contact', data.postalOfficeContactPerson) +
+            infoRow('fas fa-phone-alt', 'Contact Number', data.postalOfficeContactNumber) +
+            infoRow('fas fa-users', 'Employees', data.noOfEmployees) +
+            '</div>' +
+            '<div class="col-md-6">' +
+            infoRow('fas fa-headset', 'ISP Contact', data.ispContactPerson) +
+            infoRow('fas fa-phone-volume', 'ISP Number', data.ispContactNumber) +
+            infoRow('fas fa-cash-register', 'Tellers', data.noOfPostalTellers) +
+            '</div></div></div>' +
+
+            '</div>'; // end tab content
+
+        // Wire tab switching
+        bodyEl.querySelectorAll('[data-popup-tab]').forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                var target = this.getAttribute('data-popup-tab');
+                bodyEl.querySelectorAll('[data-popup-tab]').forEach(function (t) {
+                    t.classList.remove('active');
+                });
+                this.classList.add('active');
+                ['basic', 'connectivity', 'contact'].forEach(function (name) {
+                    var el = document.getElementById('popup-tab-' + name);
+                    if (el) el.style.display = (name === target) ? '' : 'none';
+                });
+            });
+        });
+    }
     </script>
     
     <!-- 7. Leaflet JS -->
@@ -364,8 +504,8 @@
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
    <!-- 10.1. Edit Modal JS -->
-   <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal.js}"></script>
-   <script th:if="${activePage == 'table'}" th:src="@{/js/edit-modal-photos.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/edit-modal-photos.js}"></script>
    
    <!-- 11. Quarters JS -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>

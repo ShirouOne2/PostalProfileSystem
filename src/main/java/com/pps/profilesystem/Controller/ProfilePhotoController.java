@@ -48,33 +48,41 @@ public class ProfilePhotoController {
     @Transactional
     public ResponseEntity<?> uploadProfilePhoto(@PathVariable Integer id,
                                                 @RequestParam("file") MultipartFile file) {
-        return handleUpload(id, file, "profile");
+        return handleUpload(id, file, "profile", 1);
     }
 
     /* ── Serve profile picture ───────────────────────────────── */
     @GetMapping("/{id}/profile-photo")
     @Transactional(readOnly = true)
     public ResponseEntity<Resource> serveProfilePhoto(@PathVariable Integer id) {
-        return handleServe(id, "profile");
+        return handleServe(id, "profile", 1);
     }
 
     /* ── Upload cover photo ──────────────────────────────────── */
     @PostMapping("/{id}/cover-photo")
     @Transactional
     public ResponseEntity<?> uploadCoverPhoto(@PathVariable Integer id,
-                                              @RequestParam("file") MultipartFile file) {
-        return handleUpload(id, file, "cover");
+                                              @RequestParam("file") MultipartFile file,
+                                              @RequestParam(value = "slot", defaultValue = "1") Integer slot) {
+        return handleUpload(id, file, "cover", slot);
     }
 
     /* ── Serve cover photo ───────────────────────────────────── */
     @GetMapping("/{id}/cover-photo")
     @Transactional(readOnly = true)
     public ResponseEntity<Resource> serveCoverPhoto(@PathVariable Integer id) {
-        return handleServe(id, "cover");
+        return handleServe(id, "cover", 1); // default to slot 1
+    }
+
+    /* ── Serve specific cover photo slot ─────────────────────── */
+    @GetMapping("/{id}/cover-photo/{slot}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Resource> serveCoverPhotoSlot(@PathVariable Integer id, @PathVariable Integer slot) {
+        return handleServe(id, "cover", slot);
     }
 
     /* ── Shared upload logic ─────────────────────────────────── */
-    private ResponseEntity<?> handleUpload(Integer id, MultipartFile file, String type) {
+    private ResponseEntity<?> handleUpload(Integer id, MultipartFile file, String type, Integer slot) {
         if (file == null || file.isEmpty())
             return error(400, "No file selected.");
 
@@ -135,7 +143,7 @@ public class ProfilePhotoController {
     }
 
     /* ── Shared serve logic ──────────────────────────────────── */
-    private ResponseEntity<Resource> handleServe(Integer id, String type) {
+    private ResponseEntity<Resource> handleServe(Integer id, String type, Integer slot) {
         Optional<PostalOffice> opt = postalOfficeRepository.findById(id);
         if (opt.isEmpty()) return ResponseEntity.notFound().build();
 

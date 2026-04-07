@@ -57,6 +57,11 @@ public class QuartersController {
 
         int currentYear = (year != null) ? year : LocalDate.now().getYear();
 
+        // Set default quarter to current quarter if none specified
+        String currentQuarter = getCurrentQuarterInfo().get("quarter").toString();
+        String selectedQuarter = (quarterFilter != null && !quarterFilter.isEmpty())
+                ? quarterFilter : currentQuarter;
+
         // Parse areaId from filter string
         Integer areaId = null;
         if (areaFilter != null && !areaFilter.trim().isEmpty()) {
@@ -90,12 +95,12 @@ public class QuartersController {
 
         // Pass filter-aware stats and latest quarter data
         model.addAttribute("connectivityStats",
-                getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
+                getConnectivityStats(currentYear, selectedQuarter, areaId, statusFilter));
         model.addAttribute("latestQuarter",
-                getLatestQuarterData(currentYear, quarterFilter, areaId, statusFilter));
+                getLatestQuarterData(currentYear, selectedQuarter, areaId, statusFilter));
 
         model.addAttribute("selectedAreaFilter", areaId != null && areaId != -1 ? areaId.toString() : "");
-        model.addAttribute("selectedQuarterFilter", quarterFilter);
+        model.addAttribute("selectedQuarterFilter", selectedQuarter);
         model.addAttribute("selectedStatusFilter", statusFilter);
         model.addAttribute("activePage", "quarters");
 
@@ -105,6 +110,7 @@ public class QuartersController {
         model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
         model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
+        model.addAttribute("userAreaId", userAreaId);
 
         return "quarters";
     }
@@ -165,16 +171,10 @@ public class QuartersController {
             int year, String quarterFilter, Integer areaId, String statusFilter) {
 
         try {
-            // Determine which quarter to show (default to current quarter if no filter)
-            String targetQuarter = quarterFilter;
-            if (targetQuarter == null || targetQuarter.isEmpty()) {
-                LocalDate now = LocalDate.now();
-                int month = now.getMonthValue();
-                if (month <= 3) targetQuarter = "Q1";
-                else if (month <= 6) targetQuarter = "Q2";
-                else if (month <= 9) targetQuarter = "Q3";
-                else targetQuarter = "Q4";
-            }
+            // Determine which quarter to show.
+            // Default to current quarter for dynamic behavior
+            String targetQuarter = (quarterFilter != null && !quarterFilter.isEmpty())
+                    ? quarterFilter : getCurrentQuarterInfo().get("quarter").toString();
 
             // Get quarter date range
             int quarterIndex = Integer.parseInt(targetQuarter.substring(1)) - 1;
@@ -220,7 +220,7 @@ public class QuartersController {
         } catch (Exception e) {
             // Return empty data on error
             Map<String, Object> empty = new HashMap<>();
-            empty.put("quarter", "Q1");
+            empty.put("quarter", getCurrentQuarterInfo().get("quarter").toString());
             empty.put("year", year);
             empty.put("connected", 0L);
             empty.put("disconnected", 0L);
@@ -257,8 +257,9 @@ public class QuartersController {
     // ── Helper: snapshot date based on quarter filter ─────────────────────────
 
     private LocalDateTime resolveSnapshotDate(int year, String quarterFilter) {
+        // Default to current quarter snapshot
         if (quarterFilter == null || quarterFilter.isEmpty()) {
-            return LocalDateTime.of(year, 12, 31, 23, 59, 59);
+            quarterFilter = getCurrentQuarterInfo().get("quarter").toString();
         }
         switch (quarterFilter.toUpperCase()) {
             case "Q1":

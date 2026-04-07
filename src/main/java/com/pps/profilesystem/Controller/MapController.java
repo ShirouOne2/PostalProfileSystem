@@ -1,8 +1,13 @@
 package com.pps.profilesystem.Controller;
 
+import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,18 +34,46 @@ public class MapController {
     @Autowired
     private PostalOfficeRepository postalOfficeRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // ── /api/post-offices  (dashboard map) ───────────────────────────────────
 
     @GetMapping("/post-offices")
     @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> getPostOffices() {
         try {
+            // Get the logged-in user for area filtering
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String email = auth.getName();
+            User currentUser = userRepository.findByEmail(email).orElse(null);
+
+            Integer roleId = currentUser != null ? currentUser.getRole() : null;
+            Integer areaId = currentUser != null ? currentUser.getAreaId() : null;
+
+            List<PostalOffice> offices;
+            
+            if (roleId != null && roleId == 1) {
+                // System Admin sees all offices
+                offices = postalOfficeRepository.findAllWithAreaForMapNonArchived();
+            } else {
+                // Area Admin and regular users see only offices in their assigned area
+                offices = postalOfficeRepository.findAllWithAreaForMapNonArchived()
             System.out.println("[MapController] Attempting to fetch post offices...");
             List<Map<String, Object>> result =
                 postalOfficeRepository.findAllWithAreaForMapNonArchived()
                     .stream()
-                    .map(this::convertToMapDTO)
+                    .filter(po -> {
+                        if (areaId == null) return false;
+                        return po.getArea() != null && areaId.equals(po.getArea().getId());
+                    })
                     .collect(Collectors.toList());
+            }
+
+            List<Map<String, Object>> result = offices.stream()
+                .map(this::convertToMapDTO)
+                .collect(Collectors.toList());
+            
             System.out.println("[MapController] Successfully fetched " + result.size() + " offices");
             return ResponseEntity.ok(result);
         } catch (Exception e) {

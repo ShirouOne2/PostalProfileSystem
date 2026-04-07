@@ -56,14 +56,14 @@ $(function () {
         var id = $(this).data('office-id');
         if (!id) return;
         $.getJSON('/api/postal-office/' + id)
-            .done(function (d) { openModal(d); })
+            .done(function (d) { window.openModal(d); })
             .fail(function (xhr) {
                 Swal.fire('Error', (xhr.responseJSON || {}).message || 'Failed to load office.', 'error');
             });
     });
 
     /* ─── Open modal ────────────────────────────────────────────────────────── */
-    function openModal(d) {
+    window.openModal = function openModal(d) {
         $.when(_areasCache, _regionsCache).then(
             function (areasResult, regionsResult) {
                 populateSelect('#editAreaId',   areasResult[0],   'id', 'name', '-- Select Area --');
@@ -126,21 +126,42 @@ $(function () {
         }
     }
 
+    /* ─── Helper: set field value or N/A placeholder ────────────────────────── */
+    function setField(selector, value) {
+        var $el = $(selector);
+        if (value !== null && value !== undefined && String(value).trim() !== '') {
+            $el.val(value).attr('placeholder', '');
+        } else {
+            $el.val('').attr('placeholder', 'N/A');
+        }
+    }
+
     /* ─── Fill every field in the modal ─────────────────────────────────────── */
     function fillModal(d) {
         $('#editOfficeId').val(d.id || '');
 
         // Basic
-        $('#editName').val(d.name || '');
-        $('#editPostmaster').val(d.postmaster || '');
-        $('#editClassification').val(d.classification || '');
-        $('#editServiceProvided').val(d.serviceProvided || '');
+        setField('#editName',           d.name);
+        setField('#editPostmaster',     d.postmaster);
+        
+        // Classification and Service Provided - handle null values properly
+        if (d.classification) {
+            $('#editClassification').val(d.classification);
+        } else {
+            $('#editClassification').val('');
+        }
+        
+        if (d.serviceProvided) {
+            $('#editServiceProvided').val(d.serviceProvided);
+        } else {
+            $('#editServiceProvided').val('');
+        }
 
         // Address / coordinates
-        $('#editAddress').val(d.address || '');
-        $('#editZipCode').val(d.zipCode || '');
-        $('#editLatitude').val(d.latitude   != null ? d.latitude   : '');
-        $('#editLongitude').val(d.longitude != null ? d.longitude  : '');
+        setField('#editAddress',    d.address);
+        setField('#editZipCode',    d.zipCode);
+        setField('#editLatitude',   d.latitude   != null ? d.latitude   : null);
+        setField('#editLongitude',  d.longitude  != null ? d.longitude  : null);
 
         // Connectivity
         $('#editStatus').val(
@@ -149,20 +170,20 @@ $(function () {
         $('#editOfficeStatus').val(d.officeStatus || '');
         $('#editISP').val(d.internetServiceProvider || '');
         $('#editTypeOfConnection').val(d.typeOfConnection || '');
-        $('#editSpeed').val(d.speed || '');
-        $('#editStaticIP').val(d.staticIpAddress || '');
+        setField('#editSpeed',      d.speed);
+        setField('#editStaticIP',   d.staticIpAddress);
 
-        // Staff
-        $('#editNoOfEmployees').val(d.noOfEmployees     != null ? d.noOfEmployees     : 0);
-        $('#editNoOfTellers').val(d.noOfPostalTellers   != null ? d.noOfPostalTellers  : 0);
-        $('#editNoOfCarriers').val(d.noOfLetterCarriers != null ? d.noOfLetterCarriers : 0);
+        // Staff — show 0 if null (valid number)
+        $('#editNoOfEmployees').val(d.noOfEmployees     != null ? d.noOfEmployees     : '').attr('placeholder', d.noOfEmployees     != null ? '' : 'N/A');
+        $('#editNoOfTellers').val(d.noOfPostalTellers   != null ? d.noOfPostalTellers  : '').attr('placeholder', d.noOfPostalTellers  != null ? '' : 'N/A');
+        $('#editNoOfCarriers').val(d.noOfLetterCarriers != null ? d.noOfLetterCarriers : '').attr('placeholder', d.noOfLetterCarriers != null ? '' : 'N/A');
 
         // Contacts
-        $('#editContactPerson').val(d.postalOfficeContactPerson || '');
-        $('#editContactNumber').val(d.postalOfficeContactNumber || '');
-        $('#editISPContactPerson').val(d.ispContactPerson || '');
-        $('#editISPContactNumber').val(d.ispContactNumber || '');
-        $('#editRemarks').val(d.remarks || '');
+        setField('#editContactPerson',      d.postalOfficeContactPerson);
+        setField('#editContactNumber',      d.postalOfficeContactNumber);
+        setField('#editISPContactPerson',   d.ispContactPerson);
+        setField('#editISPContactNumber',   d.ispContactNumber);
+        setField('#editRemarks',            d.remarks);
 
         // Area — set visible select + mirror to hidden input.
         // applyAreaLock() will override for non-admin users right after this.
