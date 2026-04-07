@@ -44,6 +44,26 @@ public class ProfileController {
     }
 
     /**
+     * View profile popup - accessible via /profile-popup/{id}
+     * Uses profile-popup.html template for modern popup display
+     */
+    @GetMapping("/profile-popup/{id}")
+    @Transactional(readOnly = true)
+    public String showProfilePopup(@PathVariable Integer id, Model model) {
+        Optional<PostalOffice> officeOptional = postalOfficeRepository.findById(id);
+        if (officeOptional.isEmpty()) {
+            return "redirect:/table";
+        }
+
+        PostalOffice office = officeOptional.get();
+        model.addAttribute("office",    office);
+        model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("activePage", "profile");
+
+        return "profile-popup";
+    }
+
+    /**
      * Alternative mapping - /postal-office/view/{id}
      */
     @GetMapping("/postal-office/view/{id}")
@@ -51,6 +71,17 @@ public class ProfileController {
     public String showProfileAlt(@PathVariable Integer id,
                                  @RequestParam(value = "source", defaultValue = "table") String source,
                                  Model model) {
+        return showProfile(id, source, model);
+    }
+
+    /**
+     * Handle legacy profile.html URL pattern - /profile.html?id=321
+     */
+    @GetMapping("/profile.html")
+    @Transactional(readOnly = true)
+    public String showProfileLegacy(@RequestParam("id") Integer id,
+                                    @RequestParam(value = "source", defaultValue = "table") String source,
+                                    Model model) {
         return showProfile(id, source, model);
     }
 

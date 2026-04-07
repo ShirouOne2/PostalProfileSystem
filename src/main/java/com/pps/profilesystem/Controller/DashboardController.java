@@ -89,41 +89,79 @@ public class DashboardController {
         model.addAttribute("activePage",    "dashboard");
         model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
+        
+        // For edit modal JavaScript
+        model.addAttribute("loggedInRoleId", roleId);
+        model.addAttribute("loggedInAreaId", areaId);
 
         return "dashboard";
     }
 
     private java.util.Map<String, Object> convertToMapDTO(PostalOffice office) {
         java.util.Map<String, Object> dto = new java.util.HashMap<>();
-        dto.put("id",               office.getId());
-        dto.put("name",             office.getName());
-        dto.put("address",          office.getAddress());
-        dto.put("zipCode",          office.getZipCode());
-        dto.put("postmaster",       office.getPostmaster());
-        dto.put("noOfEmployees",    office.getNoOfEmployees());
-        dto.put("latitude",         office.getLatitude());
-        dto.put("longitude",        office.getLongitude());
+        dto.put("id", office.getId());
+        dto.put("name", office.getName());
+        dto.put("address", office.getAddress());
+        dto.put("zipCode", office.getZipCode());
+        dto.put("postmaster", office.getPostmaster());
+        dto.put("noOfEmployees", office.getNoOfEmployees());
+        dto.put("latitude", office.getLatitude());
+        dto.put("longitude", office.getLongitude());
         dto.put("connectionStatus", office.getConnectionStatus());
-        dto.put("officeStatus",     office.getOfficeStatus());
-        dto.put("speed",            office.getSpeed());
-        dto.put("remarks",          office.getRemarks());
+        dto.put("officeStatus", office.getOfficeStatus());
+        dto.put("speed", office.getSpeed());
+        dto.put("remarks", office.getRemarks());
+        
+        // Add missing fields that were causing blank inputs
+        dto.put("classification", office.getClassification());
+        dto.put("serviceProvided", office.getServiceProvided());
+        dto.put("internetServiceProvider", office.getInternetServiceProvider());
+        dto.put("typeOfConnection", office.getTypeOfConnection());
+        dto.put("staticIpAddress", office.getStaticIpAddress());
+        dto.put("noOfPostalTellers", office.getNoOfPostalTellers());
+        dto.put("noOfLetterCarriers", office.getNoOfLetterCarriers());
+        dto.put("postalOfficeContactPerson", office.getPostalOfficeContactPerson());
+        dto.put("postalOfficeContactNumber", office.getPostalOfficeContactNumber());
+        dto.put("ispContactPerson", office.getIspContactPerson());
+        dto.put("ispContactNumber", office.getIspContactNumber());
 
         // Area is EAGER — safe to access directly
         dto.put("area", office.getArea() != null ? office.getArea().getAreaName() : null);
+        dto.put("areaId", office.getArea() != null ? office.getArea().getId() : null);
 
         // LAZY associations — wrapped in try-catch to survive any
         // Hibernate proxy edge cases (e.g. uninitialized proxy after DISTINCT query).
-        try { dto.put("region",   office.getRegion()           != null ? office.getRegion().getName()           : null); }
-        catch (Exception e) { dto.put("region",   null); }
+        try { 
+            dto.put("region", office.getRegion() != null ? office.getRegion().getName() : null);
+            dto.put("regionId", office.getRegion() != null ? office.getRegion().getId() : null);
+        } catch (Exception e) { 
+            dto.put("region", null);
+            dto.put("regionId", null);
+        }
 
-        try { dto.put("province", office.getProvince()         != null ? office.getProvince().getName()         : null); }
-        catch (Exception e) { dto.put("province", null); }
+        try { 
+            dto.put("province", office.getProvince() != null ? office.getProvince().getName() : null);
+            dto.put("provinceId", office.getProvince() != null ? office.getProvince().getId() : null);
+        } catch (Exception e) { 
+            dto.put("province", null);
+            dto.put("provinceId", null);
+        }
 
-        try { dto.put("cityMunicipality", office.getCityMunicipality() != null ? office.getCityMunicipality().getName() : null); }
-        catch (Exception e) { dto.put("cityMunicipality", null); }
+        try { 
+            dto.put("cityMunicipality", office.getCityMunicipality() != null ? office.getCityMunicipality().getName() : null);
+            dto.put("cityMunId", office.getCityMunicipality() != null ? office.getCityMunicipality().getId() : null);
+        } catch (Exception e) { 
+            dto.put("cityMunicipality", null);
+            dto.put("cityMunId", null);
+        }
 
-        try { dto.put("barangay", office.getBarangay()         != null ? office.getBarangay().getName()         : null); }
-        catch (Exception e) { dto.put("barangay", null); }
+        try { 
+            dto.put("barangay", office.getBarangay() != null ? office.getBarangay().getName() : null);
+            dto.put("barangayId", office.getBarangay() != null ? office.getBarangay().getId() : null);
+        } catch (Exception e) { 
+            dto.put("barangay", null);
+            dto.put("barangayId", null);
+        }
 
         return dto;
     }

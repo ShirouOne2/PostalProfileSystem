@@ -316,6 +316,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ── Edit Button Handler for Dashboard ─────────────────────────────────────
+// Dashboard should use table row data instead of API call
+// since dashboard already has complete data loaded from server
+$(document).on('click', '.btn-edit', function () {
+    var id = $(this).data('office-id');
+    if (!id) return;
+    
+    // Get data from table row instead of API call
+    var tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    var table = $(tableId).DataTable();
+    var rowData = table.row($(this).closest('tr')).data();
+    
+    if (rowData && typeof window.openModal === 'function') {
+        window.openModal(rowData); 
+    } else {
+        console.error('Edit modal functions not loaded or no row data available');
+        Swal.fire('Error', 'Edit modal not properly loaded', 'error');
+    }
+});
+
 function exportTableData() {
     const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
     const table = $(tableId).DataTable();

@@ -35,53 +35,66 @@ public class PostalOfficeEditRestController {
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public ResponseEntity<?> getOffice(@PathVariable Integer id) {
-        return postalOfficeRepository.findById(id)
-            .<ResponseEntity<?>>map(o -> {
-                Map<String, Object> d = new LinkedHashMap<>();
+        try {
+            return postalOfficeRepository.findById(id)
+                .<ResponseEntity<?>>map(o -> {
+                    Map<String, Object> d = new LinkedHashMap<>();
 
-                // Basic
-                d.put("id",                         o.getId());
-                d.put("name",                       o.getName());
-                d.put("postmaster",                 o.getPostmaster());
-                d.put("classification",             o.getClassification());
-                d.put("serviceProvided",            o.getServiceProvided());
+                    // Basic
+                    d.put("id",                         o.getId());
+                    d.put("name",                       o.getName());
+                    d.put("postmaster",                 o.getPostmaster());
+                    d.put("classification",             o.getClassification());
+                    d.put("serviceProvided",            o.getServiceProvided());
 
-                // Address / coordinates
-                d.put("address",                    o.getAddress());
-                d.put("zipCode",                    o.getZipCode());
-                d.put("latitude",                   o.getLatitude());
-                d.put("longitude",                  o.getLongitude());
+                    // Address / coordinates
+                    d.put("address",                    o.getAddress());
+                    d.put("zipCode",                    o.getZipCode());
+                    d.put("latitude",                   o.getLatitude());
+                    d.put("longitude",                  o.getLongitude());
 
-                // Location hierarchy IDs — JS uses these to pre-select dropdowns
-                d.put("areaId",     o.getArea()             != null ? o.getArea().getId()             : null);
-                d.put("regionId",   o.getRegion()           != null ? o.getRegion().getId()           : null);
-                d.put("provinceId", o.getProvince()         != null ? o.getProvince().getId()         : null);
-                d.put("cityMunId",  o.getCityMunicipality() != null ? o.getCityMunicipality().getId() : null);
-                d.put("barangayId", o.getBarangay()         != null ? o.getBarangay().getId()         : null);
+                    // Location hierarchy IDs — JS uses these to pre-select dropdowns
+                    // Area is EAGER — safe to access directly
+                    d.put("areaId", o.getArea() != null ? o.getArea().getId() : null);
 
-                // Connectivity
-                d.put("connectionStatus",           o.getConnectionStatus());
-                d.put("officeStatus",               o.getOfficeStatus());
-                d.put("internetServiceProvider",    o.getInternetServiceProvider());
-                d.put("typeOfConnection",           o.getTypeOfConnection());
-                d.put("speed",                      o.getSpeed());
-                d.put("staticIpAddress",            o.getStaticIpAddress());
+                    // LAZY associations — wrapped in try-catch to avoid LazyInitializationException
+                    try { d.put("regionId",   o.getRegion()           != null ? o.getRegion().getId()           : null); }
+                    catch (Exception e) { d.put("regionId",   null); }
+                    try { d.put("provinceId", o.getProvince()         != null ? o.getProvince().getId()         : null); }
+                    catch (Exception e) { d.put("provinceId", null); }
+                    try { d.put("cityMunId",  o.getCityMunicipality() != null ? o.getCityMunicipality().getId() : null); }
+                    catch (Exception e) { d.put("cityMunId",  null); }
+                    try { d.put("barangayId", o.getBarangay()         != null ? o.getBarangay().getId()         : null); }
+                    catch (Exception e) { d.put("barangayId", null); }
 
-                // Staff
-                d.put("noOfEmployees",              o.getNoOfEmployees());
-                d.put("noOfPostalTellers",          o.getNoOfPostalTellers());
-                d.put("noOfLetterCarriers",         o.getNoOfLetterCarriers());
+                    // Connectivity
+                    d.put("connectionStatus",           o.getConnectionStatus());
+                    d.put("officeStatus",               o.getOfficeStatus());
+                    d.put("internetServiceProvider",    o.getInternetServiceProvider());
+                    d.put("typeOfConnection",           o.getTypeOfConnection());
+                    d.put("speed",                      o.getSpeed());
+                    d.put("staticIpAddress",            o.getStaticIpAddress());
 
-                // Contacts
-                d.put("postalOfficeContactPerson",  o.getPostalOfficeContactPerson());
-                d.put("postalOfficeContactNumber",  o.getPostalOfficeContactNumber());
-                d.put("ispContactPerson",           o.getIspContactPerson());
-                d.put("ispContactNumber",           o.getIspContactNumber());
-                d.put("remarks",                    o.getRemarks());
+                    // Staff
+                    d.put("noOfEmployees",              o.getNoOfEmployees());
+                    d.put("noOfPostalTellers",          o.getNoOfPostalTellers());
+                    d.put("noOfLetterCarriers",         o.getNoOfLetterCarriers());
 
-                return ResponseEntity.ok(d);
-            })
-            .orElse(ResponseEntity.notFound().build());
+                    // Contacts
+                    d.put("postalOfficeContactPerson",  o.getPostalOfficeContactPerson());
+                    d.put("postalOfficeContactNumber",  o.getPostalOfficeContactNumber());
+                    d.put("ispContactPerson",           o.getIspContactPerson());
+                    d.put("ispContactNumber",           o.getIspContactNumber());
+                    d.put("remarks",                    o.getRemarks());
+
+                    return ResponseEntity.ok(d);
+                })
+                .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            System.err.println("[PostalOfficeEditRestController] GET /" + id + " ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return error(500, "Failed to load office data: " + e.getMessage());
+        }
     }
 
     // ── PUT ───────────────────────────────────────────────────────────────────

@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 public class SecurityConfig {
@@ -15,6 +18,33 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            // Log the specific URL and user that caused the denial
+            System.err.println("Access Denied to: " + request.getRequestURI() + 
+                             " by user: " + request.getUserPrincipal() + 
+                             " Reason: " + accessDeniedException.getMessage());
+            
+            // Check if response is already committed
+            if (response.isCommitted()) {
+                System.err.println("Response already committed - cannot redirect");
+                return;
+            }
+            
+            // For AJAX/SSE requests, return 403 JSON
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With")) ||
+                request.getRequestURI().startsWith("/api/")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Access denied\",\"status\":403}");
+            } else {
+                // For regular requests, redirect to access denied page
+                response.sendRedirect("/access-denied");
+            }
+        };
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -22,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",
                     "/error",
+                    "/access-denied",
                     "/request-otp",
                     "/verify-otp",
                     "/reset-password",
@@ -59,6 +90,9 @@ public class SecurityConfig {
                 .clearAuthentication(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll()
+            )
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler(customAccessDeniedHandler())
             )
             // Configure frame options for profile popup - allow same origin
             // Also add cache control headers so authenticated pages are never cached.

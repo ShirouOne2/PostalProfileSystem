@@ -109,16 +109,20 @@
 }
 
 .filter-clear-x {
-    background: none;
-    border: none;
-    color: #6c757d;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 0 6px 6px 0 !important;
+    border: 1px solid #d1d3e2 !important;
+    border-left: none !important;
+    background: #f8f9fa;
+    color: #aaa;
     cursor: pointer;
-    padding: 0 8px;
+    transition: color 0.15s;
     font-size: 12px;
 }
 
 .filter-clear-x:hover {
-    color: #495057;
+    color: #dc3545;
 }
 
 /* DataTable Styling for Dashboard */

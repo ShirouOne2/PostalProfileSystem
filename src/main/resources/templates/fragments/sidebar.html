@@ -57,7 +57,7 @@
                 <a th:href="@{/report}" class="sidebar-sublink"
                    th:classappend="${activePage == 'report'} ? 'active' : ''"
                    data-page="report"
-                   sec:authorize="hasRole('ADMIN') or hasRole('ROLE_AREA_ADMIN')">
+                   sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN')">
                     <i class="fas fa-file-alt"></i>
                     <span>Report</span>
                 </a>
@@ -86,14 +86,14 @@
         </a> -->
 
         <!-- ADMIN-only links -->
-        <div sec:authorize="hasRole('ROLE_ADMIN') or hasRole('ROLE_AREA_ADMIN')">
+        <div sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN')">
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Admin</div>
 
             <a th:href="@{/users}" class="sidebar-link"
                th:classappend="${activePage == 'users'} ? 'active' : ''"
                data-page="users"
-               sec:authorize="hasRole('ROLE_ADMIN')">
+               sec:authorize="hasRole('ADMIN')">
                 <i class="fas fa-users-cog"></i>
                 <span>User Management</span>
             </a>

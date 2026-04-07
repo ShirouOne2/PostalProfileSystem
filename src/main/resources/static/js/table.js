@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get office ID from the <tr> data-office-id attribute
             var trNode = meta.settings.aoData[meta.row].nTr;
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
-            var safeName = data.replace(/'/g, "\'");
-            return '<a href="#" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\'); return false;">' + data + '</a>';
+            var safeName = data.replace(/'/g, "\\'");
+            return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
         }},
         { targets: 2, orderable: true },   // Area
         { targets: 3, orderable: true },   // Region
@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!data) return 'N/A';
             var trNode = meta.settings.aoData[meta.row].nTr;
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
-            var safeName = data.replace(/'/g, "\'");
-            return '<a href="#" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\'); return false;">' + data + '</a>';
+            var safeName = data.replace(/'/g, "\\'");
+            return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
         }},   // Postal Office
         { targets: 2, width: '140px', orderable: true, className: 'dt-center' }, // Connection
         { targets: 3, width: '120px', orderable: true },  // Speed
@@ -335,7 +335,7 @@ function initializeMap() {
                     </div>
                     <img src="${coverPhotoSrc}" onerror="this.src='/images/no-image.png'" style="width:100%;height:110px;border-radius:8px;object-fit:cover;margin-bottom:8px;">
                     <div style="display:flex;gap:6px;">
-                        <button onclick="window.location.href='/profile/${officeId}'" style="flex:1;background:#002868;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">View Profile</button>
+                        <button onclick="openOfficeProfilePopup('${officeId}', '${nameRaw.replace(/'/g, "\\'")}')" style="flex:1;background:#002868;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">View Profile</button>
                     </div>
                 </div>
             `;
@@ -394,10 +394,9 @@ function initMapFilters() {
 
     function showSuggestions(term) {
         if (!suggestBox) return;
-        if (!term || term.length < 2) { hideSuggestions(); return; }
 
-        const q = term.toLowerCase();
-        
+        const q = (term || '').toLowerCase().trim();
+
         // If markers aren't loaded yet, show loading message
         if (!markers || markers.length === 0) {
             suggestBox.innerHTML = '<div style="padding:10px;text-align:center;color:#8a97a8;font-size:12px;">Loading post offices...</div>';
@@ -405,8 +404,9 @@ function initMapFilters() {
             return;
         }
 
+        // Show all offices when empty, otherwise filter by term
         const matches = markers
-            .filter(m => m._officeData && m._officeData.name.includes(q))
+            .filter(m => m._officeData && (!q || m._officeData.name.includes(q)))
             .slice(0, 10); // max 10 results
 
         if (!matches.length) { 
@@ -428,8 +428,8 @@ function initMapFilters() {
                 ? '<span style="width:8px;height:8px;border-radius:50%;background:#28a745;flex-shrink:0;display:inline-block;"></span>'
                 : '<span style="width:8px;height:8px;border-radius:50%;background:#dc3545;flex-shrink:0;display:inline-block;"></span>';
 
-            // Highlight the matching part
-            const idx  = d.nameRaw.toLowerCase().indexOf(q);
+            // Highlight the matching part (only if there's a search term)
+            const idx  = q ? d.nameRaw.toLowerCase().indexOf(q) : -1;
             let display = d.nameRaw;
             if (idx !== -1) {
                 display =
@@ -498,17 +498,15 @@ function initMapFilters() {
                     }, 2000);
                 }
                 
-                // Show profile in modal after a short delay to allow map animation
-                setTimeout(() => {
-                    showProfileModal(d.id, d.nameRaw);
-                }, 500);
+                // Open profile popup after short delay for map animation
+                setTimeout(() => openOfficeProfilePopup(d.id, d.nameRaw), 300);
             });
 
             suggestBox.appendChild(item);
         });
 
         // "View all matches" footer if more than 10
-        const totalMatches = markers.filter(m => m._officeData && m._officeData.name.includes(q)).length;
+        const totalMatches = markers.filter(m => m._officeData && (!q || m._officeData.name.includes(q))).length;
         if (totalMatches > 10) {
             const more = document.createElement('div');
             more.style.cssText =
@@ -533,7 +531,7 @@ function initMapFilters() {
         });
 
         searchInput.addEventListener('focus', function() {
-            if (this.value.trim()) showSuggestions(this.value.trim());
+            showSuggestions(this.value.trim());
         });
 
         searchInput.addEventListener('blur', function() {
@@ -951,162 +949,155 @@ function performDelete(officeId, officeName) {
     });
 })();
 
-// ── Save state before navigating to profile ───────────────────────────────────
-// Called by the View button click (see table.html onclick)
+// ── Open profile as popup (replaces full-page navigation) ────────────────────
 function saveTableStateAndView(officeId) {
-    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
-    
-    const state = {
-        "search":     document.getElementById('searchInput')?.value     || "",
-        "area":       areaFilterElement?.value                           || "",
-        "status":     document.getElementById('statusFilter')?.value       || "",
-        "scrollY":    window.scrollY
-    };
-    sessionStorage.setItem('tableFilterState',  JSON.stringify(state));
-    sessionStorage.setItem('tableFilterSource', 'table');
-    window.location.href = '/profile/' + officeId + '?source=table';
+    window.open('/profile-popup/' + officeId, '_blank');
 }
 
-// ── Profile Modal Functions ───────────────────────────────────────────────────────
-function showProfileModal(officeId, officeName) {
-    const modal = document.getElementById('profileModal');
-    const modalBody = document.getElementById('profileModalBody');
-    const viewFullBtn = document.getElementById('viewFullProfileBtn');
-    
-    // Set up the "View Full Profile" button
-    viewFullBtn.onclick = function() {
-        window.location.href = '/profile/' + officeId + '?source=table';
-    };
-    
-    // Show loading state
-    modalBody.innerHTML = `
-        <div class="text-center py-4">
-            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-            <p class="text-muted mt-2">Loading profile for ${officeName}...</p>
-        </div>
-    `;
-    
-    // Show the modal
-    $(modal).modal('show');
-    
-    // Load the profile data
-    fetchProfileData(officeId);
-}
+// ── Unified Office Profile Popup ──────────────────────────────────────────────
+function openOfficeProfilePopup(officeId, officeName) {
+    // Remove any existing popup first
+    $('#officeProfileModal').remove();
 
-function fetchProfileData(officeId) {
-    // Use the existing edit endpoint which is known to work
-    fetch(`/api/postal-office/${officeId}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to load profile');
-            return response.json();
-        })
-        .then(data => {
-            // Normalise field names: edit endpoint returns areaId, not area text
-            data.area = data.areaId ? 'Area ' + data.areaId : null;
-            // Build cover photo URL from office ID
-            data.coverPhotoUrl = `/api/postal-office/${officeId}/cover-photo`;
-            renderProfileInModal(data, officeId);
-        })
-        .catch(error => {
-            console.error('Error loading profile:', error);
-            document.getElementById('profileModalBody').innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                    <p class="text-muted mt-2">Failed to load profile data</p>
-                    <button class="btn btn-primary btn-sm" onclick="window.location.href='/profile/${officeId}'">
-                        <i class="fas fa-external-link-alt mr-1"></i>Open Full Profile
-                    </button>
+    // Build modal with loading state
+    $('body').append(`
+        <div class="modal fade" id="officeProfileModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                <div class="modal-content" style="border-radius:12px;overflow:hidden;">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;padding:16px 20px;">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-building mr-2"></i>
+                            <span id="popupOfficeName">${officeName || 'Post Office Profile'}</span>
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                    </div>
+                    <div class="modal-body p-0" id="officeProfileModalBody">
+                        <div class="text-center py-5">
+                            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                            <p class="text-muted mt-3">Loading profile...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="background:#f8f9fa;">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-primary" id="popupViewFullBtn"
+                                onclick="window.location.href='/profile/${officeId}'">
+                            <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
+                        </button>
+                    </div>
                 </div>
-            `;
+            </div>
+        </div>
+    `);
+
+    $('#officeProfileModal').modal('show');
+    $('#officeProfileModal').on('hidden.bs.modal', function () { $(this).remove(); });
+
+    // Fetch full profile data
+    fetch(`/api/postal-office/${officeId}`)
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(data => renderOfficePopup(data, officeId))
+        .catch((err) => {
+            console.error('[Profile Popup] fetch error:', err);
+            const body = document.getElementById('officeProfileModalBody');
+            if (body) body.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                    <p class="text-muted">Failed to load profile data.</p>
+                    <a href="/profile/${officeId}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-external-link-alt mr-1"></i>Open Full Profile
+                    </a>
+                </div>`;
         });
 }
 
-function renderProfileInModal(data, officeId) {
-    const modalBody = document.getElementById('profileModalBody');
-    
-    const statusBadge = data.connectionStatus 
-        ? '<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>Active</span>'
-        : '<span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i>Inactive</span>';
-    
-    const officeStatusBadge = data.officeStatus === 'OPEN' 
-        ? '<span class="badge badge-open"><i class="fas fa-door-open mr-1"></i>Open</span>'
-        : data.officeStatus === 'CLOSED' 
-        ? '<span class="badge badge-closed"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
-        : '<span class="badge badge-secondary">—</span>';
-    
-    const coverPhoto = data.coverPhotoUrl || '/images/no-image.png';
-    
-    modalBody.innerHTML = `
-        <div class="row">
-            <div class="col-md-4">
-                <img src="${coverPhoto}" onerror="this.src='/images/no-image.png'" 
-                     class="img-fluid rounded" alt="Cover Photo">
-            </div>
-            <div class="col-md-8">
-                <h4 class="font-weight-bold text-primary mb-3">${data.name || 'N/A'}</h4>
-                
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <small class="text-muted d-block">Connection Status</small>
-                        ${statusBadge}
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Office Status</small>
-                        ${officeStatusBadge}
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <small class="text-muted d-block">Address</small>
-                    <strong>${data.address || 'N/A'}</strong>
-                </div>
-                
-                <div class="row">
-                    <div class="col-6">
-                        <small class="text-muted d-block">Area</small>
-                        <strong>${data.area || 'N/A'}</strong>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">ZIP Code</small>
-                        <strong>${data.zipCode || 'N/A'}</strong>
-                    </div>
+function renderOfficePopup(data, officeId) {
+    const area      = data.areaId ? 'Area ' + data.areaId : 'N/A';
+    const connBadge = data.connectionStatus
+        ? '<span class="badge badge-success px-3 py-2"><i class="fas fa-wifi mr-1"></i>Active</span>'
+        : '<span class="badge badge-danger px-3 py-2"><i class="fas fa-wifi mr-1"></i>Inactive</span>';
+    const officeBadge = data.officeStatus === 'OPEN'
+        ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
+        : data.officeStatus === 'CLOSED'
+        ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
+        : '<span class="badge badge-secondary px-3 py-2">—</span>';
+
+    const coverPhoto = `/api/postal-office/${officeId}/cover-photo`;
+
+    document.getElementById('popupOfficeName').textContent = data.name || 'Post Office Profile';
+
+    document.getElementById('officeProfileModalBody').innerHTML = `
+        <!-- Cover Photo Banner -->
+        <div style="height:180px;overflow:hidden;position:relative;background:#1a3a7a;">
+            <img src="${coverPhoto}" onerror="this.style.display='none'"
+                 style="width:100%;height:100%;object-fit:cover;opacity:0.7;">
+            <div style="position:absolute;bottom:12px;left:20px;">
+                <h4 class="text-white font-weight-bold mb-1" style="text-shadow:0 1px 4px rgba(0,0,0,0.5);">
+                    ${data.name || 'N/A'}
+                </h4>
+                <div style="display:flex;gap:6px;">
+                    ${connBadge}
+                    ${officeBadge}
                 </div>
             </div>
         </div>
-        
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <h6 class="font-weight-bold text-muted mb-3">Contact Information</h6>
-                <div class="mb-2">
-                    <small class="text-muted">Postmaster:</small><br>
-                    <strong>${data.postmaster || 'Not assigned'}</strong>
+
+        <!-- Body -->
+        <div class="p-4">
+            <div class="row">
+
+                <!-- Left: Basic Info -->
+                <div class="col-md-4 mb-3">
+                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-info-circle mr-1"></i>Basic Information
+                    </h6>
+                    ${infoRow('fas fa-map-marker-alt', 'Area', area)}
+                    ${infoRow('fas fa-envelope', 'ZIP Code', data.zipCode)}
+                    ${infoRow('fas fa-map', 'Address', data.address)}
+                    ${infoRow('fas fa-user-tie', 'Postmaster', data.postmaster)}
+                    ${infoRow('fas fa-tag', 'Classification', data.classification)}
                 </div>
-                <div class="mb-2">
-                    <small class="text-muted">Contact Person:</small><br>
-                    <strong>${data.postalOfficeContactPerson || 'Not available'}</strong>
+
+                <!-- Middle: Connectivity -->
+                <div class="col-md-4 mb-3">
+                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-wifi mr-1"></i>Connectivity
+                    </h6>
+                    ${infoRow('fas fa-building', 'ISP', data.internetServiceProvider)}
+                    ${infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection)}
+                    ${infoRow('fas fa-tachometer-alt', 'Speed', data.speed)}
+                    ${infoRow('fas fa-network-wired', 'Static IP', data.staticIpAddress)}
+                    ${infoRow('fas fa-comment-alt', 'Remarks', data.remarks)}
                 </div>
-                <div class="mb-2">
-                    <small class="text-muted">Contact Number:</small><br>
-                    <strong>${data.postalOfficeContactNumber || 'Not available'}</strong>
+
+                <!-- Right: Staff & Contact -->
+                <div class="col-md-4 mb-3">
+                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-users mr-1"></i>Staff & Contact
+                    </h6>
+                    ${infoRow('fas fa-users', 'Employees', data.noOfEmployees)}
+                    ${infoRow('fas fa-cash-register', 'Tellers', data.noOfPostalTellers)}
+                    ${infoRow('fas fa-mail-bulk', 'Letter Carriers', data.noOfLetterCarriers)}
+                    ${infoRow('fas fa-phone', 'Office Contact', data.postalOfficeContactPerson)}
+                    ${infoRow('fas fa-phone-alt', 'Contact Number', data.postalOfficeContactNumber)}
                 </div>
-            </div>
-            <div class="col-md-6">
-                <h6 class="font-weight-bold text-muted mb-3">Operations</h6>
-                <div class="mb-2">
-                    <small class="text-muted">Number of Employees:</small><br>
-                    <strong>${data.noOfEmployees || 'Not available'}</strong>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Internet Speed:</small><br>
-                    <strong>${data.speed || 'Not available'}</strong>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Remarks:</small><br>
-                    <strong>${data.remarks || 'No remarks'}</strong>
-                </div>
+
             </div>
         </div>
     `;
+}
+
+function infoRow(icon, label, value) {
+    const val = (value !== null && value !== undefined && value !== '') ? value : '—';
+    return `
+        <div class="mb-2 d-flex align-items-start" style="font-size:13px;">
+            <i class="${icon} text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i>
+            <div>
+                <span class="text-muted" style="font-size:11px;display:block;">${label}</span>
+                <strong>${val}</strong>
+            </div>
+        </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════

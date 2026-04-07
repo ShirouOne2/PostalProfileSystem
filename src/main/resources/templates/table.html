@@ -7,267 +7,230 @@
     <title>Post Office - PHLPost</title>
 </head>
 
-<body th:data-is-area-admin="${isAreaAdmin}">
+<!--
+    Body data attributes are the single source of truth for JS role detection.
+    table.js reads document.body.dataset.isSystemAdmin / isAreaAdmin directly.
+-->
+<body th:data-is-system-admin="${isSystemAdmin}"
+      th:data-is-area-admin="${isAreaAdmin}">
 
 <div th:fragment="content">
+<div class="container-fluid py-4">
 
-    <div class="container-fluid py-4">
+    <!-- ══════════════════════════════════════════════════════
+         ROW 1 — Map + Search/Filter Panel
+    ══════════════════════════════════════════════════════ -->
+    <div class="row mb-4">
 
-        <!-- ── Main Card ──────────────────────────────────── -->
-        <div class="card shadow-sm">
-            <div class="card-body">
+        <!-- Map card -->
+        <div class="col-md-8 mb-3 mb-md-0">
+            <div class="card shadow-sm h-100"
+                 style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
+                <div class="card-header d-flex align-items-center py-2 px-3"
+                     style="background:linear-gradient(135deg,#002868,#1a3a7a);border-bottom:none;">
+                    <span class="font-weight-bold text-white" style="font-size:14px;">
+                        <i class="fas fa-map-marked-alt mr-2"></i>Branch Locator
+                    </span>
+                </div>
+                <div class="card-body p-3">
+                    <div id="map" style="height:400px;border-radius:8px;overflow:hidden;"></div>
 
-                <!-- ── Geographic Distribution ─────────────────────────── -->
-                <div class="row mb-4">
-
-                    <!-- Branch Locator Card -->
-                    <div class="col-md-8 mb-3 mb-md-0">
-                        <div class="card shadow-sm h-100" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
-                            <!-- Card Header -->
-                            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
-                                 style="background:linear-gradient(135deg,#002868 0%,#1a3a7a 100%);border-bottom:none;">
-                                <span class="font-weight-bold text-white" style="font-size:14px;">
-                                    <i class="fas fa-map-marked-alt mr-2"></i>Branch Locator
-                                </span>
-                               
+                    <!-- Area legend -->
+                    <div class="mt-3 p-2 rounded" id="mapLegend"
+                         style="background:#f8f9fc;border:1px solid #e3e6f0;">
+                        <small class="d-block mb-2 font-weight-bold text-muted text-uppercase"
+                               style="font-size:10px;letter-spacing:.5px;">
+                            <i class="fas fa-layer-group mr-1"></i>Area Legend
+                        </small>
+                        <!-- System Admin sees all areas, others see only their assigned area -->
+                        <div class="row" style="row-gap:4px;">
+                            <div class="col-6">
+                                <div class="d-flex flex-column" style="gap:5px;">
+                                    <span th:if="${isSystemAdmin}" data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
+                                    <span th:if="${isSystemAdmin}" data-area="2" style="font-size:12px;"><span style="background:#4ECDC4;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 2</span>
+                                    <span th:if="${isSystemAdmin}" data-area="3" style="font-size:12px;"><span style="background:#45B7D1;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 3</span>
+                                    <span th:if="${isSystemAdmin}" data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
+                                    <span th:if="${isSystemAdmin}" data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
+                                    <!-- Non-system admins see only their assigned area -->
+                                    <span th:unless="${isSystemAdmin}" th:if="${userAreaId != null}" th:data-area="${userAreaId}" style="font-size:12px;">
+                                        <span th:style="'background:' + ${userAreaId == 1 ? '#FF6B6B' : userAreaId == 2 ? '#4ECDC4' : userAreaId == 3 ? '#45B7D1' : userAreaId == 4 ? '#FFA07A' : userAreaId == 5 ? '#98D8C8' : userAreaId == 6 ? '#F7DC6F' : userAreaId == 7 ? '#BB8FCE' : userAreaId == 8 ? '#F8B739' : '#85C1E2'} + ';width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;'"></span>
+                                        Area <span th:text="${userAreaId}"></span>
+                                    </span>
+                                </div>
                             </div>
-                            <!-- Card Body -->
-                            <div class="card-body p-3">
-                                <div id="map" style="height:400px;border-radius:8px;overflow:hidden;"></div>
-
-                                <!-- Legend -->
-                                <div class="mt-3 p-2 rounded" id="mapLegend"
-                                     style="background:#f8f9fc;border:1px solid #e3e6f0;">
-                                    <small class="d-block mb-2 font-weight-bold text-muted text-uppercase"
-                                           style="font-size:10px;letter-spacing:.5px;">
-                                        <i class="fas fa-layer-group mr-1"></i>Area Legend
-                                    </small>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <!-- System Admin sees all areas -->
-                                            <div th:if="${isSystemAdmin}">
-                                                <div class="row" style="row-gap:4px;">
-                                                    <div class="col-6">
-                                                        <div class="d-flex flex-column" style="gap:5px;">
-                                                            <span data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
-                                                            <span data-area="2" style="font-size:12px;"><span style="background:#4ECDC4;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 2</span>
-                                                            <span data-area="3" style="font-size:12px;"><span style="background:#45B7D1;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 3</span>
-                                                            <span data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
-                                                            <span data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="d-flex flex-column" style="gap:5px;">
-                                                            <span data-area="6" style="font-size:12px;"><span style="background:#F7DC6F;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 6</span>
-                                                            <span data-area="7" style="font-size:12px;"><span style="background:#BB8FCE;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 7</span>
-                                                            <span data-area="8" style="font-size:12px;"><span style="background:#F8B739;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 8</span>
-                                                            <span data-area="9" style="font-size:12px;"><span style="background:#85C1E2;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 9</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- Area Admin sees all areas -->
-                                            <div th:if="${isAreaAdmin}">
-                                                <div class="row" style="row-gap:4px;">
-                                                    <div class="col-6">
-                                                        <div class="d-flex flex-column" style="gap:5px;">
-                                                            <span data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
-                                                            <span data-area="2" style="font-size:12px;"><span style="background:#4ECDC4;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 2</span>
-                                                            <span data-area="3" style="font-size:12px;"><span style="background:#45B7D1;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 3</span>
-                                                            <span data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
-                                                            <span data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="d-flex flex-column" style="gap:5px;">
-                                                            <span data-area="6" style="font-size:12px;"><span style="background:#F7DC6F;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 6</span>
-                                                            <span data-area="7" style="font-size:12px;"><span style="background:#BB8FCE;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 7</span>
-                                                            <span data-area="8" style="font-size:12px;"><span style="background:#F8B739;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 8</span>
-                                                            <span data-area="9" style="font-size:12px;"><span style="background:#85C1E2;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 9</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="col-6">
+                                <div class="d-flex flex-column" style="gap:5px;">
+                                    <span th:if="${isSystemAdmin}" data-area="6" style="font-size:12px;"><span style="background:#F7DC6F;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 6</span>
+                                    <span th:if="${isSystemAdmin}" data-area="7" style="font-size:12px;"><span style="background:#BB8FCE;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 7</span>
+                                    <span th:if="${isSystemAdmin}" data-area="8" style="font-size:12px;"><span style="background:#F8B739;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 8</span>
+                                    <span th:if="${isSystemAdmin}" data-area="9" style="font-size:12px;"><span style="background:#85C1E2;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 9</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Search & Filters Column -->
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column" style="gap:12px;">
-                            <!-- Search Card -->
-                            <div class="card shadow-sm" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
-                                <!-- Card Header -->
-                                <div class="card-header d-flex align-items-center py-2 px-3"
-                                     style="background:linear-gradient(135deg,#4e73df 0%,#224abe 100%);border-bottom:none;">
-                                    <span class="font-weight-bold text-white" style="font-size:14px;">
-                                        <i class="fas fa-search mr-2"></i>Search Location
-                                    </span>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body p-3">
-                                    <div style="position:relative;">
-                                        <input type="text" id="searchInput" class="form-control"
-                                               placeholder="Enter post office name..."
-                                               style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;padding-left:36px;">
-                                        <i class="fas fa-map-marker-alt"
-                                           style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#b0b7c3;font-size:13px;pointer-events:none;"></i>
-                                    </div>
-                                    
-                                    <!-- Suggestions Box - positioned below -->
-                                    <div id="mapSearchSuggestions" class="mt-2"
-                                         style="display:none;background:#fff;border:1px solid #d1d3e2;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-height:240px;overflow-y:auto;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Map Filters Card -->
-                            <div class="card shadow-sm" style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
-                                <!-- Card Header -->
-                                <div class="card-header d-flex align-items-center py-2 px-3"
-                                     style="background:linear-gradient(135deg,#4e73df 0%,#224abe 100%);border-bottom:none;">
-                                    <span class="font-weight-bold text-white" style="font-size:14px;">
-                                        <i class="fas fa-filter mr-2"></i>Map Filters
-                                    </span>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body p-3">
-                                    <div class="mb-3">
-                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
-                                               style="font-size:10px;letter-spacing:.5px;">
-                                            <i class="fas fa-map mr-1"></i>Area
-                                        </label>
-                                        <select th:if="${isSystemAdmin}" id="areaFilterAdmin" class="form-control"
-                                                 style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
-                                            <option value=""> Areas</option>
-                                        </select>
-                                        <select th:unless="${isSystemAdmin}" id="areaFilter" class="form-control"
-                                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
-                                            <option value="">Select Areas</option>
-                                            <option value="1">Area 1</option>
-                                            <option value="2">Area 2</option>
-                                            <option value="3">Area 3</option>
-                                            <option value="4">Area 4</option>
-                                            <option value="5">Area 5</option>
-                                            <option value="6">Area 6</option>
-                                            <option value="7">Area 7</option>
-                                            <option value="8">Area 8</option>
-                                            <option value="9">Area 9</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
-                                               style="font-size:10px;letter-spacing:.5px;">
-                                            <i class="fas fa-wifi mr-1"></i>Connectivity Status
-                                        </label>
-                                        <select id="statusFilter" class="form-control"
-                                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
-                                            <option value="">All Status</option>
-                                            <option value="true">&#9679; Connected</option>
-                                            <option value="false">&#9679; Disconnected</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
-                                               style="font-size:10px;letter-spacing:.5px;">
-                                            <i class="fas fa-sliders-h mr-1"></i>Actions
-                                        </label>
-                                        <div class="d-flex" style="gap:8px;">
-                                            <button id="applyFilters" class="btn btn-primary font-weight-bold flex-fill"
-                                                    style="border-radius:8px;font-size:13px;">
-                                                <i class="fas fa-search mr-1"></i>Apply Filters
-                                            </button>
-                                            <button id="clearFilters" class="btn btn-outline-secondary"
-                                                    style="border-radius:8px;font-size:13px;">
-                                                <i class="fas fa-times mr-1"></i>Clear
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ── Post Office Profile Modal ──────────────────────────────────────────── -->
-    <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title font-weight-bold">
-                        <i class="fas fa-map-marker-alt mr-2"></i>Post Office Profile
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" id="profileModalBody">
-                    <!-- Profile content will be loaded here -->
-                    <div class="text-center py-4">
-                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                        <p class="text-muted mt-2">Loading profile...</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Close
-                    </button>
-                    <button type="button" class="btn btn-primary" id="viewFullProfileBtn">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
-                    </button>
                 </div>
             </div>
-        </div>
-    </div>
+        </div><!-- /col-md-8 -->
 
-    <!-- ── Archive Reason Modal ──────────────────────────────────────────── -->
-    <div class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title font-weight-bold">
-                        <i class="fas fa-archive mr-2"></i>Archive Post Office
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
+        <!-- Search + Map Filters -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100"
+                 style="border-radius:12px;overflow:hidden;border:1px solid #e3e6f0;">
+                <div class="card-header d-flex align-items-center py-2 px-3"
+                     style="background:linear-gradient(135deg,#4e73df,#224abe);border-bottom:none;">
+                    <span class="font-weight-bold text-white" style="font-size:14px;">
+                        <i class="fas fa-search-location mr-2"></i>Search &amp; Map Filters
+                    </span>
                 </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-3">
-                        You are about to archive <strong id="archiveOfficeName"></strong>.
-                        This office will be hidden from all views but can be restored later.
-                    </p>
-                    <div class="form-group">
-                        <label for="archiveReasonInput">
-                            Reason for archiving <small class="text-muted">(optional)</small>
+                <div class="card-body p-3 d-flex flex-column" style="gap:14px;">
+
+                    <!-- Search input -->
+                    <div>
+                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                               style="font-size:10px;letter-spacing:.5px;">
+                            <i class="fas fa-search mr-1"></i>Search Location
                         </label>
-                        <textarea id="archiveReasonInput" class="form-control" rows="3"
-                                  placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                        <div style="position:relative;">
+                            <input type="text" id="searchInput" class="form-control"
+                                   placeholder="Enter post office name..."
+                                   style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;padding-left:36px;">
+                            <i class="fas fa-map-marker-alt"
+                               style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                                      color:#b0b7c3;font-size:13px;pointer-events:none;"></i>
+                        </div>
+                        <div id="mapSearchSuggestions" class="mt-1"
+                             style="display:none;background:#fff;border:1px solid #d1d3e2;border-radius:8px;
+                                    box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:220px;overflow-y:auto;"></div>
                     </div>
+
+                    <!-- Area filter -->
+                    <div>
+                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                               style="font-size:10px;letter-spacing:.5px;">
+                            <i class="fas fa-map mr-1"></i>Area
+                        </label>
+                        <!-- System Admin gets id="areaFilterAdmin" -->
+                        <select th:if="${isSystemAdmin}" id="areaFilterAdmin" class="form-control"
+                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                            <option value="">All Areas</option>
+                            <option value="1">Area 1</option>
+                            <option value="2">Area 2</option>
+                            <option value="3">Area 3</option>
+                            <option value="4">Area 4</option>
+                            <option value="5">Area 5</option>
+                            <option value="6">Area 6</option>
+                            <option value="7">Area 7</option>
+                            <option value="8">Area 8</option>
+                            <option value="9">Area 9</option>
+                        </select>
+                        <!-- Area Admin / User gets id="areaFilter" -->
+                        <select th:unless="${isSystemAdmin}" id="areaFilter" class="form-control"
+                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                            <option value="">All Areas</option>
+                            <option th:if="${userAreaId != null}" th:value="${userAreaId}" selected>
+                                Area <span th:text="${userAreaId}"></span>
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Connectivity Status filter -->
+                    <div>
+                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                               style="font-size:10px;letter-spacing:.5px;">
+                            <i class="fas fa-wifi mr-1"></i>Connectivity Status
+                        </label>
+                        <select id="statusFilter" class="form-control"
+                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
+                            <option value="">All Status</option>
+                            <option value="true">&#9679; Connected</option>
+                            <option value="false">&#9679; Disconnected</option>
+                        </select>
+                    </div>
+
+                    <!-- Apply / Clear -->
+                    <div class="d-flex mt-auto" style="gap:8px;">
+                        <button id="applyFilters" class="btn btn-primary font-weight-bold flex-fill"
+                                style="border-radius:8px;font-size:13px;">
+                            <i class="fas fa-search mr-1"></i>Apply
+                        </button>
+                        <button id="clearFilters" class="btn btn-outline-secondary"
+                                style="border-radius:8px;font-size:13px;">
+                            <i class="fas fa-times mr-1"></i>Clear
+                        </button>
+                    </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Cancel
-                    </button>
-                    <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
-                        <i class="fas fa-archive mr-1"></i>Archive
-                    </button>
+            </div>
+        </div><!-- /col-md-4 -->
+
+    </div><!-- /row (map row) -->
+
+
+</div><!-- /container-fluid -->
+
+<!-- ── Post Office Profile Modal ─────────────────────────────────────── -->
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Post Office Profile
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="profileModalBody">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="text-muted mt-2">Loading profile...</p>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="viewFullProfileBtn">
+                    <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
+                </button>
             </div>
         </div>
     </div>
-
 </div>
 
+<!-- ── Archive Reason Modal ───────────────────────────────────────────── -->
+<div class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-archive mr-2"></i>Archive Post Office
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    You are about to archive <strong id="archiveOfficeName"></strong>.
+                    This office will be hidden from all views but can be restored later.
+                </p>
+                <div class="form-group">
+                    <label for="archiveReasonInput">
+                        Reason for archiving <small class="text-muted">(optional)</small>
+                    </label>
+                    <textarea id="archiveReasonInput" class="form-control" rows="3"
+                              placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
+                    <i class="fas fa-archive mr-1"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /th:fragment -->
 </body>
 </html>

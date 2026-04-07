@@ -8,10 +8,19 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize carousel
     var carousel = document.getElementById('coverPhotoCarousel');
     if (carousel) {
-        new bootstrap.Carousel(carousel, {
-            interval: 5000,
-            ride: 'carousel'
-        });
+        // Check if bootstrap.Carousel is available (Bootstrap 4) or use jQuery if not
+        if (typeof bootstrap !== 'undefined' && bootstrap.Carousel) {
+            new bootstrap.Carousel(carousel, {
+                interval: 5000,
+                ride: 'carousel'
+            });
+        } else if (typeof $ !== 'undefined' && $.fn.carousel) {
+            // Fallback to jQuery for Bootstrap 4 compatibility
+            $(carousel).carousel({
+                interval: 5000,
+                ride: 'carousel'
+            });
+        }
     }
     
     // Tab switching
