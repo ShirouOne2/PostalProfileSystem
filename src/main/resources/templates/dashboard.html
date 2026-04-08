@@ -119,8 +119,8 @@
                                     th:selected="${area.areaName == ''}">Area</option>
                         </select>
                     </div>
-                    <!-- Area filter for Area Admins and regular users - shows only their assigned area -->
-                    <div th:unless="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                    <!-- Area filter for Area Admins only - shows only their assigned area -->
+                    <div th:unless="${isSystemAdmin}" th:if="${isAreaAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
                         <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
                         <select id="filterArea" class="form-control filter-select">
                             <option value="1">Area 1</option>
@@ -178,7 +178,7 @@
                                 <th class="text-center" style="width:45px;">#</th>
                                 <th> Name</th>
                                 <th style="width:110px;">Area</th>
-                                <th style="width:130px;">Region</th>
+                                <th style="width:130px;">Province</th>
                                 <th style="width:160px;">City/Municipality</th>
                                 <th class="text-center" style="width:120px;">
                                     Connection
@@ -188,7 +188,6 @@
                                     Office
                                     <span class="th-sub">Status</span>
                                 </th>
-                                <th style="width:160px;">Remarks</th>
                                 <th class="text-center" style="width:120px;">Actions</th>
                             </tr>
                         </thead>
@@ -206,7 +205,7 @@
                                        th:text="${office.name}">Office Name</a>
                                 </td>
                                 <td th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}"></td>
-                                <td th:text="${not #strings.isEmpty(office.region) ? office.region : 'N/A'}"></td>
+                                <td th:text="${not #strings.isEmpty(office.province) ? office.province : 'N/A'}"></td>
                                 <td th:text="${not #strings.isEmpty(office.cityMunicipality) ? office.cityMunicipality : 'N/A'}"></td>
                                 <td class="text-center">
                                     <span th:if="${office.connectionStatus}" class="badge badge-success">
@@ -225,12 +224,6 @@
                                     </span>
                                     <span th:if="${office.officeStatus == null or office.officeStatus == ''}"
                                           class="badge badge-unknown">—</span>
-                                </td>
-                                <td>
-                                    <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
-                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
-                                    <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
-                                          class="text-muted">—</span>
                                 </td>
                                 <td class="text-center action-buttons">
                                     <button class="btn btn-sm btn-warning btn-edit"
@@ -257,33 +250,18 @@
 
         <!-- Data Table (Area Admin / User view) — hidden for System Admin who has the full table above -->
         <div th:if="${not isSystemAdmin}" class="card shadow-sm mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3"
-                 style="background:linear-gradient(135deg,#4e73df 0%,#224abe 100%);border-bottom:none;">
-                <span class="font-weight-bold text-white" style="font-size:14px;">
-                    <i class="fas fa-table mr-2"></i>Postal Office Data
-                </span>
-                <div class="d-flex align-items-center" style="gap:8px;">
-                    <button id="exportBtn" class="btn btn-sm btn-light"
-                            style="border-radius:6px;font-size:11px;">
-                        <i class="fas fa-download mr-1"></i>Export
-                    </button>
-                    <button id="refreshBtn" class="btn btn-sm btn-light"
-                            style="border-radius:6px;font-size:11px;">
-                        <i class="fas fa-sync-alt mr-1"></i>Refresh
-                    </button>
-                </div>
-            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped mb-0" id="officeTable">
                         <thead class="thead-light">
                             <tr>
                                 <th class="text-center" style="width:60px;">#</th>
-                                <th>Office Name</th>
-                                <th>Area</th>
+                                <th>Name</th>
+                                <th th:if="${isAreaAdmin}" style="display:none;">Area</th>
+                                <th>Province</th>
+                                <th>City/Municipality</th>
                                 <th class="text-center">Connectivity</th>
                                 <th class="text-center">Office Status</th>
-                                <th>Remarks</th>
                                 <th class="text-center" style="width:120px;">Actions</th>
                             </tr>
                         </thead>
@@ -300,7 +278,9 @@
                                        class="office-name-link"
                                        th:text="${office.name}">Office Name</a>
                                 </td>
-                                <td th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}">Area</td>
+                                <td th:if="${isAreaAdmin}" th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}" style="display:none;">Area</td>
+                                <td th:text="${not #strings.isEmpty(office.province) ? office.province : 'N/A'}">Province</td>
+                                <td th:text="${not #strings.isEmpty(office.cityMunicipality) ? office.cityMunicipality : 'N/A'}">City/Municipality</td>
                                 <td class="text-center">
                                     <span th:if="${office.connectionStatus == true}"
                                           class="badge badge-success">
@@ -323,12 +303,6 @@
                                     <span th:if="${office.officeStatus == null or office.officeStatus == ''}"
                                           class="badge badge-unknown">—</span>
                                 </td>
-                                <td>
-                                    <span th:if="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
-                                          th:text="${office.remarks}" style="font-size:12px;color:#555;"></span>
-                                    <span th:unless="${office.remarks != null and !#strings.isEmpty(office.remarks)}"
-                                          class="text-muted">—</span>
-                                </td>
                                 <td class="text-center action-buttons">
                                     <button class="btn btn-sm btn-warning btn-edit"
                                             th:data-office-id="${office.id}"
@@ -347,6 +321,9 @@
     </div>
 
 </div>
+
+<!-- Edit Modal -->
+<div th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
 </body>
 </html>

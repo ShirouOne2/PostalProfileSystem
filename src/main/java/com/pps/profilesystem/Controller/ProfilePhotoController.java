@@ -81,6 +81,44 @@ public class ProfilePhotoController {
         return handleServe(id, "cover", slot);
     }
 
+    /* ---- Get all photos for an office ---- */
+    @GetMapping("/{id}/photos")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getOfficePhotos(@PathVariable Integer id) {
+        Optional<PostalOffice> opt = postalOfficeRepository.findById(id);
+        if (opt.isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Office not found");
+            return ResponseEntity.status(404).body(error);
+        }
+
+        PostalOffice office = opt.get();
+        java.util.List<Map<String, Object>> photos = new java.util.ArrayList<>();
+
+        // Add profile photo if exists
+        if (office.getProfilePicture() != null && !office.getProfilePicture().isBlank()) {
+            Map<String, Object> photo = new HashMap<>();
+            photo.put("type", "profile");
+            photo.put("slot", 0);
+            photo.put("url", "/api/postal-office/" + id + "/profile-photo");
+            photo.put("filename", office.getProfilePicture());
+            photos.add(photo);
+        }
+
+        // Add cover photo if exists
+        if (office.getCoverPhoto() != null && !office.getCoverPhoto().isBlank()) {
+            Map<String, Object> photo = new HashMap<>();
+            photo.put("type", "cover");
+            photo.put("slot", 1);
+            photo.put("url", "/api/postal-office/" + id + "/cover-photo");
+            photo.put("filename", office.getCoverPhoto());
+            photos.add(photo);
+        }
+
+        return ResponseEntity.ok(photos);
+    }
+
     /* ── Shared upload logic ─────────────────────────────────── */
     private ResponseEntity<?> handleUpload(Integer id, MultipartFile file, String type, Integer slot) {
         if (file == null || file.isEmpty())

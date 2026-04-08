@@ -8,12 +8,12 @@ import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
@@ -155,15 +155,15 @@ public class QuartersApiController {
     }
 
     @GetMapping("/export")
-    public void exportReport(
+    public ResponseEntity<String> exportReport(
             @RequestParam String type,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String areaFilter,
             @RequestParam(required = false) String quarterFilter,
-            @RequestParam(required = false) String statusFilter,
-            HttpServletResponse response) throws IOException {
-        response.setContentType("text/plain");
-        response.getWriter().write("Export feature coming soon for type: " + type);
+            @RequestParam(required = false) String statusFilter) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("Export feature coming soon for type: " + type);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

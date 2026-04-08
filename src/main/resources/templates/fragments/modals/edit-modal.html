@@ -46,9 +46,9 @@
 
 
 
-                    <!-- ── Admin-only sections: Photos, Basic Info, Location, Coordinates, Staff, Contact, Remarks ── -->
-
-                    <div sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN')">
+                    <!-- Full sections: Photos, Basic Info, Location, Coordinates -->
+                    <!-- Visible on all non-quarters pages to ALL roles -->
+                    <div th:if="${activePage != 'quarters'}">
 
 
 
@@ -480,9 +480,12 @@
 
 
 
+                    </div><!-- end non-quarters sections: Photos, Basic Info, Location, Coordinates -->
+
                     <!-- ══════════════════════════════════════════════════════
 
                          CONNECTIVITY — visible to ALL roles (Admin, Area Admin, User)
+                         Shown on ALL pages including quarters
 
                          ══════════════════════════════════════════════════ -->
 
@@ -692,8 +695,6 @@
 
                                         <option value="Eastern Telecoms">Eastern Telecoms</option>
 
-                                        <option value="DITO">DITO</option>
-
                                         <option value="Radius Telecoms">Radius Telecoms</option>
 
                                         <option value="Others">Others</option>
@@ -790,7 +791,8 @@
 
 
 
-                    <!-- ── Staff Information ──────────────────────────────── -->
+                    <!-- ── Staff Information — visible on non-quarters pages ── -->
+                    <div th:if="${activePage != 'quarters'}">
 
                     <h6 class="mt-3 mb-2 text-primary">
 
@@ -860,7 +862,9 @@
 
 
 
-                    </div><!-- end admin-only: Photos, Basic Info, Location, Coordinates, Staff, Contact, Remarks -->
+                    </div><!-- end staff and remarks -->
+
+                    </div><!-- end staff-remarks non-quarters -->
 
 
 
@@ -892,31 +896,31 @@
 
                 </form>
 
-            </div>
+                <div class="modal-footer">
 
-            <div class="modal-footer">
+                    <button type="button" class="btn btn-danger mr-auto" id="editModalArchiveBtn"
 
-                <button type="button" class="btn btn-danger mr-auto" id="editModalArchiveBtn"
+                            sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
 
-                        sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
+                        <i class="fas fa-archive"></i> Archive
 
-                    <i class="fas fa-archive"></i> Archive
+                    </button>
 
-                </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
 
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
 
-                    <i class="fas fa-times"></i> Cancel
+                    </button>
 
-                </button>
+                    <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
 
-                <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()">
+                        <i class="fas fa-save"></i> Save Changes
 
-                    <i class="fas fa-save"></i> Save Changes
+                    </button>
 
-                </button>
+                </div>
 
-            </div>
+            
 
         </div>
 

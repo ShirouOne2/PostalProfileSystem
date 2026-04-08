@@ -193,7 +193,7 @@
     </div>
 
     <!-- Edit Postal Office Modal -->
-    <div th:if="${activePage == 'table' or activePage == 'profile' or activePage == 'dashboard'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
+    <div th:if="${activePage == 'table' or activePage == 'profile' or activePage == 'dashboard' or activePage == 'quarters'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
     <!-- ── Office Profile Popup Modal (used by table & quarters name links) ── -->
     <div class="modal fade" id="officeProfilePopup" tabindex="-1" role="dialog" aria-hidden="true">
@@ -504,8 +504,8 @@
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
    <!-- 10.1. Edit Modal JS -->
-   <script th:if="${activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/edit-modal.js}"></script>
-   <script th:if="${activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/edit-modal-photos.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal-photos.js}"></script>
    
    <!-- 11. Quarters JS -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
@@ -521,7 +521,6 @@
 
    <!-- 15. Profile JS -->
    <script th:if="${activePage == 'profile'}" th:src="@{/js/profile.js}"></script>
-   <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal.js}"></script>
    <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
 
    <!-- 16. Session Timeout -->

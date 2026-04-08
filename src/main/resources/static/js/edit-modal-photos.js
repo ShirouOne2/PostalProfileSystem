@@ -17,28 +17,27 @@
  *      whether the dropdown is disabled or not.
  *
  * window.CURRENT_USER_ROLE_ID and window.CURRENT_USER_AREA_ID are injected by
- * the <script th:inline="javascript"> block in edit-modal.html via GlobalModelAdvice.
+ *      <script th:inline="javascript"> block in edit-modal.html via GlobalModelAdvice.
  */
 
-// Wait for jQuery to be available before initializing
-function initEditModalPhotos() {
-    if (typeof $ === 'undefined') {
-        setTimeout(initEditModalPhotos, 50);
-        return;
-    }
+// Declare variables in the global scope so they're accessible immediately
+var _areasCache   = null;
+var _regionsCache = null;
 
-$(function () {
-
-    /* ─── Preload areas + regions once, cache the jQuery Deferred ─────────── */
-    var _areasCache   = null;
-    var _regionsCache = null;
-
-    function preloadReferenceData() {
-        if (!_areasCache)   _areasCache   = $.getJSON('/api/postal/areas');
-        if (!_regionsCache) _regionsCache = $.getJSON('/api/postal/regions');
-    }
-
+// Preload reference data immediately
+function preloadReferenceData() {
+    if (!_areasCache)   _areasCache   = $.getJSON('/api/postal/areas');
+    if (!_regionsCache) _regionsCache = $.getJSON('/api/postal/regions');
+}
+if (typeof $ !== 'undefined') {
     preloadReferenceData();
+}
+
+// openModal function is defined in edit-modal.js to avoid conflicts
+
+// Now initialize the rest when jQuery is ready
+if (typeof $ !== 'undefined') {
+$(function () {
 
     /* ─── Keep hidden input in sync whenever the Area select changes ───────── */
     $(document).on('change', '#editAreaId', function () {
@@ -49,7 +48,7 @@ $(function () {
     $(document).on('click', '#profileEditBtn', function () {
         var d = window.OFFICE_DATA;
         if (!d || !d.id) { Swal.fire('Error', 'Office data not available.', 'error'); return; }
-        openModal(d);
+        window.openModal(d);
     });
 
     /* ─── TABLE PAGE: per-row edit buttons ─────────────────────────────────── */
@@ -57,41 +56,11 @@ $(function () {
         var id = $(this).data('office-id');
         if (!id) return;
         $.getJSON('/api/postal-office/' + id)
-            .done(function (d) { openModal(d); })
+            .done(function (d) { window.openModal(d); })
             .fail(function (xhr) {
                 Swal.fire('Error', (xhr.responseJSON || {}).message || 'Failed to load office.', 'error');
             });
     });
-
-    /* ─── Open modal ────────────────────────────────────────────────────────── */
-    function openModal(d) {
-        $.when(_areasCache, _regionsCache).then(
-            function (areasResult, regionsResult) {
-                populateSelect('#editAreaId',   areasResult[0],   'id', 'name', '-- Select Area --');
-                populateSelect('#editRegionId', regionsResult[0], 'id', 'name', '-- Select Region --');
-                fillModal(d);
-                applyAreaLock(d);
-                resetEditPhotoUI();
-                // Sync the visual toggle buttons to match the filled values
-                if (typeof window.syncStatusTogglesToModal === 'function') {
-                    window.syncStatusTogglesToModal();
-                }
-                $('#editOfficeModal').modal('show');
-                if (d.id && typeof editModalLoadPhotos === 'function') editModalLoadPhotos(d.id);
-            },
-            function () {
-                fillModal(d);
-                applyAreaLock(d);
-                resetEditPhotoUI();
-                // Sync the visual toggle buttons to match the filled values
-                if (typeof window.syncStatusTogglesToModal === 'function') {
-                    window.syncStatusTogglesToModal();
-                }
-                $('#editOfficeModal').modal('show');
-                if (d.id && typeof editModalLoadPhotos === 'function') editModalLoadPhotos(d.id);
-            }
-        );
-    }
 
     /* ─── Reset photo UI when modal opens fresh ────────────────── */
     function resetEditPhotoUI() {
@@ -259,7 +228,12 @@ $(function () {
         });
     }
 
-    function populateSelect(selector, list, idKey, labelKey, placeholder) {
+}); // Close jQuery ready function
+} // Close jQuery check
+
+/* ------------ Global Helper Functions ------------ */
+function populateSelect(selector, list, idKey, labelKey, placeholder) {
+    if (typeof $ !== 'undefined') {
         var $sel = $(selector);
         $sel.html('<option value="">' + placeholder + '</option>');
         $.each(list || [], function (_, item) {
@@ -267,15 +241,117 @@ $(function () {
         });
         $sel.prop('disabled', false);
     }
+}
 
-    function resetSelect(selector, placeholder, disabled) {
+function resetSelect(selector, placeholder, disabled) {
+    if (typeof $ !== 'undefined') {
         $(selector).html('<option value="">' + placeholder + '</option>').prop('disabled', disabled);
     }
+}
 
+/* ------------ Photo Upload Functions ------------ */
+function editModalUploadPhoto(input, photoType, slot) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            var boxId = photoType === 'profile' ? 'editProfileBox' : 'editCover' + slot + 'Box';
+            var previewId = photoType === 'profile' ? 'editProfilePreview' : 'editCover' + slot + 'Preview';
+            var placeholderId = photoType === 'profile' ? 'editProfilePlaceholder' : 'editCover' + slot + 'Placeholder';
+            
+            var box = document.getElementById(boxId);
+            var preview = document.getElementById(previewId);
+            var placeholder = document.getElementById(placeholderId);
+            
+            if (preview && placeholder) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                if (box) {
+                    box.classList.add('loaded');
+                    var deleteBtn = box.querySelector('.edit-photo-delete-btn');
+                    if (deleteBtn) deleteBtn.style.display = 'block';
+                }
+            }
+        };
+        
+        reader.readAsDataURL(file);
+    }
+}
+
+function editModalLoadPhotos(officeId) {
+    if (!officeId) return;
+    
+    // Load existing photos for this office
+    if (typeof $ !== 'undefined') {
+        $.getJSON('/api/postal-office/' + officeId + '/photos')
+        .done(function(photos) {
+            if (photos && photos.length > 0) {
+                photos.forEach(function(photo) {
+                    var boxId, previewId, placeholderId;
+                    
+                    if (photo.type === 'profile') {
+                        boxId = 'editProfileBox';
+                        previewId = 'editProfilePreview';
+                        placeholderId = 'editProfilePlaceholder';
+                    } else if (photo.type === 'cover' && photo.slot >= 1 && photo.slot <= 3) {
+                        boxId = 'editCover' + photo.slot + 'Box';
+                        previewId = 'editCover' + photo.slot + 'Preview';
+                        placeholderId = 'editCover' + photo.slot + 'Placeholder';
+                    }
+                    
+                    if (boxId && previewId && placeholderId) {
+                        var box = document.getElementById(boxId);
+                        var preview = document.getElementById(previewId);
+                        var placeholder = document.getElementById(placeholderId);
+                        
+                        if (preview && placeholder && box) {
+                            preview.src = photo.url || '/uploads/postal-offices/' + photo.filename;
+                            preview.style.display = 'block';
+                            placeholder.style.display = 'none';
+                            box.classList.add('loaded');
+                            
+                            var deleteBtn = box.querySelector('.edit-photo-delete-btn');
+                            if (deleteBtn) deleteBtn.style.display = 'block';
+                        }
+                    }
+                });
+            }
+        })
+        .fail(function() {
+            console.log('No existing photos found for office ' + officeId);
+        });
+    } // Close jQuery check for editModalLoadPhotos
+}
+
+/* ------------ Photo Delete Handlers ------------ */
+if (typeof $ !== 'undefined') {
+$(document).on('click', '.edit-photo-delete-btn', function() {
+    var $btn = $(this);
+    var $box = $btn.closest('.edit-photo-box');
+    var $preview = $box.find('.edit-photo-preview');
+    var $placeholder = $box.find('.edit-photo-placeholder');
+    var $input = $box.siblings('input[type="file"]');
+    
+    // Clear the preview and show placeholder
+    $preview.attr('src', '').hide();
+    $placeholder.show();
+    $box.removeClass('loaded');
+    $btn.hide();
+    
+    // Clear the file input
+    if ($input.length) {
+        $input.val('');
+    }
 });
+} // Close jQuery check for Photo Delete Handlers
 
-/* ─── Save ───────────────────────────────────────────────────────────────────── */
+/* ------------ Save ------------ */
 function saveOfficeChanges() {
+    if (typeof $ === 'undefined') return;
+    
     var id = $('#editOfficeId').val();
     if (!id) { Swal.fire('Error', 'No office ID.', 'error'); return; }
 
@@ -350,13 +426,14 @@ function saveOfficeChanges() {
     });
 }
 
-/* ─── Archive from Edit Modal ─────────────────────────────────────────────── */
-$(function () {
+/* ---- Archive from Edit Modal ---- */
+if (typeof $ !== 'undefined') {
+    $(function () {
 
-    $(document).on('click', '#editModalArchiveBtn', function () {
-        var id   = $('#editOfficeId').val();
-        var name = $('#editName').val() || 'this office';
-        if (!id) { Swal.fire('Error', 'No office selected.', 'error'); return; }
+        $(document).on('click', '#editModalArchiveBtn', function () {
+            var id   = $('#editOfficeId').val();
+            var name = $('#editName').val() || 'this office';
+            if (!id) { Swal.fire('Error', 'No office selected.', 'error'); return; }
 
         $('#editOfficeModal').modal('hide');
         $('#editOfficeModal').one('hidden.bs.modal', function () {
@@ -441,8 +518,4 @@ $(function () {
     });
 
 }); // Close jQuery ready function
-
-} // Close initEditModalPhotos function
-
-// Initialize the script
-initEditModalPhotos();
+} // Close jQuery check

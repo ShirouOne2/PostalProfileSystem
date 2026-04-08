@@ -457,7 +457,7 @@ function initializeReportTable() {
             }
         },
         columns: [
-            { data: null,      render: (data, type, row, meta) => meta.row + 1 },
+            { data: null,      render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             { data: 'areaId',  render: d => d ? 'Area ' + d : 'N/A' },
             { data: 'name',    defaultContent: 'N/A' },
             { data: 'address', defaultContent: 'N/A' },

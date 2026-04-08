@@ -32,41 +32,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Column definitions differ by role ────────────────────────────────
     const adminColumnDefs = [
-        { targets: 0, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
+        { targets: 0, data: null, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
             return meta.settings._iDisplayStart + meta.row + 1;
         }},
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+        { targets: 1, data: 'name', orderable: true, render: function(data, type, row, meta) {
             if (!data) return 'N/A';
             // Get office ID from the <tr> data-office-id attribute
-            var trNode = meta.settings.aoData[meta.row].nTr;
+            var table = this.api();
+            var trNode = table.row(meta.row).node();
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
             var safeName = data.replace(/'/g, "\\'");
             return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
         }},
-        { targets: 2, orderable: true },   // Area
-        { targets: 3, orderable: true },   // Region
-        { targets: 4, orderable: true },   // City
-        { targets: 5, width: '120px', orderable: true, className: 'dt-center' },  // Connection
-        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office
-        { targets: 7, orderable: false },  // Remarks
-        { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        { targets: 2, data: 'area', orderable: true, defaultContent: 'N/A' },   // Area
+        { targets: 3, data: 'region', orderable: true, defaultContent: 'N/A' },   // Region
+        { targets: 4, data: 'city', orderable: true, defaultContent: 'N/A' },   // City
+        { targets: 5, data: 'connectionStatus', width: '120px', orderable: true, className: 'dt-center', defaultContent: 'N/A' },  // Connection
+        { targets: 6, data: 'officeStatus', width: '105px', orderable: true, className: 'dt-center', defaultContent: 'N/A' },  // Office
+        { targets: 7, data: 'remarks', orderable: false, defaultContent: 'N/A' },  // Remarks
+        { targets: 8, data: null, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
     ];
 
     const userColumnDefs = [
-        { targets: 0, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
+        { targets: 0, data: null, width: '45px',  orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
             return meta.row + 1;
         }},
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+        { targets: 1, data: 'name', orderable: true, render: function(data, type, row, meta) {
             if (!data) return 'N/A';
-            var trNode = meta.settings.aoData[meta.row].nTr;
+            var table = this.api();
+            var trNode = table.row(meta.row).node();
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
             var safeName = data.replace(/'/g, "\\'");
             return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
         }},   // Postal Office
-        { targets: 2, width: '140px', orderable: true, className: 'dt-center' }, // Connection
-        { targets: 3, width: '120px', orderable: true },  // Speed
-        { targets: 4, orderable: false }, // Remarks
-        { targets: 5, width: '110px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        { targets: 2, data: 'connectionStatus', width: '140px', orderable: true, className: 'dt-center', defaultContent: 'N/A' }, // Connection
+        { targets: 3, data: 'speed', width: '120px', orderable: true, defaultContent: 'N/A' },  // Speed
+        { targets: 4, data: 'remarks', orderable: false, defaultContent: 'N/A' }, // Remarks
+        { targets: 5, data: null, width: '110px', orderable: false, className: 'dt-center', searchable: false } // Actions
     ];
 
     // ── Initialize DataTable ─────────────────────────────────────────────────
