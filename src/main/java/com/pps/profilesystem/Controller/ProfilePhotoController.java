@@ -59,19 +59,14 @@ public class ProfilePhotoController {
     }
 
     /* ── Upload cover photo ──────────────────────────────────── */
-    @PostMapping("/{id}/cover-photo")
-    @Transactional
-    public ResponseEntity<?> uploadCoverPhoto(@PathVariable Integer id,
-                                              @RequestParam("file") MultipartFile file,
-                                              @RequestParam(value = "slot", defaultValue = "1") Integer slot) {
-        return handleUpload(id, file, "cover", slot);
-    }
 
-    /* ── Serve cover photo ───────────────────────────────────── */
-    @GetMapping("/{id}/cover-photo")
-    @Transactional(readOnly = true)
-    public ResponseEntity<Resource> serveCoverPhoto(@PathVariable Integer id) {
-        return handleServe(id, "cover", 1); // default to slot 1
+    /* ── Upload specific cover photo slot ───────────────────── */
+    @PostMapping("/{id}/cover-photo/{slot}")
+    @Transactional
+    public ResponseEntity<?> uploadCoverPhotoSlot(@PathVariable Integer id,
+                                                  @PathVariable Integer slot,
+                                                  @RequestParam("file") MultipartFile file) {
+        return handleUpload(id, file, "cover", slot);
     }
 
     /* ── Serve specific cover photo slot ─────────────────────── */

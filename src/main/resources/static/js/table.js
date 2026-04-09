@@ -379,41 +379,37 @@ function initializeMap() {
 //  MAP FILTERS
 // ═══════════════════════════════════════════════════════════════
 function initMapFilters() {
-    // ── Autocomplete / Suggestion dropdown ───────────────────────────────────
+    // Create suggest box if it doesn't exist
     const searchInput = document.getElementById('searchInput');
     let suggestBox = document.getElementById('mapSearchSuggestions');
-
-    // The suggest box is now already in the HTML, so we just need to reference it
     if (!suggestBox && searchInput) {
         suggestBox = document.createElement('div');
         suggestBox.id = 'mapSearchSuggestions';
-        suggestBox.className = 'mt-2';
+        suggestBox.className = 'mt-1';
         suggestBox.style.cssText =
-            'display:none;background:#fff;border:1px solid #d1d3e2;border-radius:8px;' +
-            'box-shadow:0 2px 8px rgba(0,0,0,0.1);max-height:240px;overflow-y:auto;';
+            'display:block;background:#f8f9fc;border:1px solid #e3e6f0;border-radius:8px;' +
+            'max-height:150px;overflow-y:auto;padding:12px;';
         searchInput.parentElement.appendChild(suggestBox);
     }
 
-    function showSuggestions(term) {
+    function showAllOffices() {
+        // Ensure suggestBox exists
+        suggestBox = document.getElementById('mapSearchSuggestions');
         if (!suggestBox) return;
-
-        const q = (term || '').toLowerCase().trim();
 
         // If markers aren't loaded yet, show loading message
         if (!markers || markers.length === 0) {
             suggestBox.innerHTML = '<div style="padding:10px;text-align:center;color:#8a97a8;font-size:12px;">Loading post offices...</div>';
-            suggestBox.style.display = 'block';
             return;
         }
 
-        // Show all offices when empty, otherwise filter by term
+        // Show all offices
         const matches = markers
-            .filter(m => m._officeData && (!q || m._officeData.name.includes(q)))
-            .slice(0, 10); // max 10 results
+            .filter(m => m._officeData); // show all offices
+        console.log('showAllOffices: Showing', matches.length, 'offices (no limit)');
 
         if (!matches.length) { 
-            suggestBox.innerHTML = '<div style="padding:10px;text-align:center;color:#8a97a8;font-size:12px;">No matches found</div>';
-            suggestBox.style.display = 'block';
+            suggestBox.innerHTML = '<div style="padding:10px;text-align:center;color:#8a97a8;font-size:12px;">No post offices available</div>';
             return;
         }
 
@@ -430,7 +426,94 @@ function initMapFilters() {
                 ? '<span style="width:8px;height:8px;border-radius:50%;background:#28a745;flex-shrink:0;display:inline-block;"></span>'
                 : '<span style="width:8px;height:8px;border-radius:50%;background:#dc3545;flex-shrink:0;display:inline-block;"></span>';
 
-            // Highlight the matching part (only if there's a search term)
+            item.innerHTML =
+                dot +
+                '<div style="min-width:0;">' +
+                  '<div style="font-size:13px;color:#1f2a44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+                    d.nameRaw +
+                  '</div>' +
+                  '<div style="font-size:11px;color:#8a97a8;margin-top:1px;">' +
+                    d.areaRaw +
+                    (d.address && d.address !== 'Address not available'
+                        ? ' · ' + d.address.substring(0, 40) + (d.address.length > 40 ? '…' : '')
+                        : '') +
+                  '</div>' +
+                '</div>' +
+                '<span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;flex-shrink:0;' +
+                  (d.isActive
+                    ? 'background:#d4edda;color:#155724;'
+                    : 'background:#f8d7da;color:#721c24;') + '">' +
+                  (d.isActive ? 'Active' : 'Inactive') +
+                '</span>';
+
+            item.addEventListener('mouseenter', function() { this.style.background = '#f0f4ff'; });
+            item.addEventListener('mouseleave', function() { this.style.background = '#fff'; });
+
+            item.addEventListener('click', function() {
+                // Find the marker for this office and locate it on the map
+                const targetMarker = markers.find(m => m._officeData && m._officeData.id === d.id);
+                if (targetMarker) {
+                    // Center map on the selected marker with appropriate zoom
+                    map.setView(targetMarker.getLatLng(), 15, {
+                        animate: true,
+                        duration: 1
+                    });
+                    
+                    // Open the marker popup to highlight the location
+                    targetMarker.openPopup();
+                    
+                    // Briefly highlight the marker with a different style
+                    const originalStyle = targetMarker.options;
+                    targetMarker.setStyle({
+                        radius: 12,
+                        fillColor: '#FFD700',
+                        color: '#FF6347',
+                        weight: 3,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    });
+                    
+                    // Restore original style after 2 seconds
+                    setTimeout(() => {
+                        targetMarker.setStyle(originalStyle);
+                    }, 2000);
+                }
+            });
+
+            suggestBox.appendChild(item);
+        });
+
+    }
+
+    function filterOffices(term) {
+        suggestBox = document.getElementById('mapSearchSuggestions');
+        if (!suggestBox) return;
+
+        const q = (term || '').toLowerCase().trim();
+        
+        // Filter offices based on search term
+        const matches = markers
+            .filter(m => m._officeData && (!q || m._officeData.name.includes(q)));
+
+        if (!matches.length) { 
+            suggestBox.innerHTML = '<div style="padding:10px;text-align:center;color:#8a97a8;font-size:12px;">No matches found</div>';
+            return;
+        }
+
+        suggestBox.innerHTML = '';
+        matches.forEach(function(m) {
+            const d = m._officeData;
+            const item = document.createElement('div');
+            item.style.cssText =
+                'padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0f2f5;' +
+                'display:flex;align-items:center;gap:10px;transition:background 0.15s;';
+
+            // Status dot
+            const dot = d.isActive
+                ? '<span style="width:8px;height:8px;border-radius:50%;background:#28a745;flex-shrink:0;display:inline-block;"></span>'
+                : '<span style="width:8px;height:8px;border-radius:50%;background:#dc3545;flex-shrink:0;display:inline-block;"></span>';
+
+            // Highlight the matching part
             const idx  = q ? d.nameRaw.toLowerCase().indexOf(q) : -1;
             let display = d.nameRaw;
             if (idx !== -1) {
@@ -463,14 +546,7 @@ function initMapFilters() {
             item.addEventListener('mouseenter', function() { this.style.background = '#f0f4ff'; });
             item.addEventListener('mouseleave', function() { this.style.background = '#fff'; });
 
-            item.addEventListener('mousedown', function(e) {
-                // mousedown fires before blur, use preventDefault to keep focus
-                e.preventDefault();
-            });
-
             item.addEventListener('click', function() {
-                hideSuggestions();
-                
                 // Find the marker for this office and locate it on the map
                 const targetMarker = markers.find(m => m._officeData && m._officeData.id === d.id);
                 if (targetMarker) {
@@ -499,54 +575,27 @@ function initMapFilters() {
                         targetMarker.setStyle(originalStyle);
                     }, 2000);
                 }
-                
-                // Open profile popup after short delay for map animation
-                setTimeout(() => openOfficeProfilePopup(d.id, d.nameRaw), 300);
             });
 
             suggestBox.appendChild(item);
         });
-
-        // "View all matches" footer if more than 10
-        const totalMatches = markers.filter(m => m._officeData && (!q || m._officeData.name.includes(q))).length;
-        if (totalMatches > 10) {
-            const more = document.createElement('div');
-            more.style.cssText =
-                'padding:7px 14px;font-size:11px;color:#8a97a8;text-align:center;' +
-                'border-top:1px solid #f0f2f5;background:#fafbff;';
-            more.textContent = (totalMatches - 10) + ' more results — keep typing to narrow down';
-            suggestBox.appendChild(more);
-        }
-
-        suggestBox.style.display = 'block';
-    }
-
-    function hideSuggestions() {
-        if (suggestBox) suggestBox.style.display = 'none';
     }
 
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const term = this.value.trim();
-            showSuggestions(term);
+            if (term) {
+                filterOffices(term);
+            } else {
+                showAllOffices();
+            }
             filterMapMarkers();
         });
 
-        searchInput.addEventListener('focus', function() {
-            showSuggestions(this.value.trim());
-        });
-
-        searchInput.addEventListener('blur', function() {
-            // Small delay so click on suggestion fires first
-            setTimeout(hideSuggestions, 150);
-        });
-
-        // Keyboard navigation
-        searchInput.addEventListener('keydown', function(e) {
-            const items = suggestBox ? suggestBox.querySelectorAll('div[style*="cursor:pointer"]') : [];
-            if (!items.length) return;
-            if (e.key === 'Escape') { hideSuggestions(); }
-        });
+        // Show all offices when page loads
+        setTimeout(() => {
+            showAllOffices();
+        }, 1000);
     }
 
     // ── End autocomplete ──────────────────────────────────────────────────────
@@ -576,7 +625,10 @@ function initMapFilters() {
         const si = document.getElementById('searchInput');
         const sg = document.getElementById('mapSearchSuggestions');
         if (si) si.value = '';
-        if (sg) sg.style.display = 'none';
+        if (sg) {
+            sg.style.display = 'none';
+            sg.innerHTML = '';
+        }
         const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
         if (areaFilterElement) areaFilterElement.value = '';
         document.getElementById('statusFilter').value = '';
@@ -591,6 +643,7 @@ function initMapFilters() {
         if (allBounds.length) map.fitBounds(allBounds, { padding: [20, 20] });
 
         updateLegendVisibility(new Set());
+        // No profile display action taken
     });
 }
 
@@ -958,149 +1011,7 @@ function saveTableStateAndView(officeId) {
 
 // ── Unified Office Profile Popup ──────────────────────────────────────────────
 function openOfficeProfilePopup(officeId, officeName) {
-    // Remove any existing popup first
-    $('#officeProfileModal').remove();
-
-    // Build modal with loading state
-    $('body').append(`
-        <div class="modal fade" id="officeProfileModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-                <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-                    <div class="modal-header" style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;padding:16px 20px;">
-                        <h5 class="modal-title font-weight-bold">
-                            <i class="fas fa-building mr-2"></i>
-                            <span id="popupOfficeName">${officeName || 'Post Office Profile'}</span>
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                    </div>
-                    <div class="modal-body p-0" id="officeProfileModalBody">
-                        <div class="text-center py-5">
-                            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                            <p class="text-muted mt-3">Loading profile...</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="background:#f8f9fa;">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <i class="fas fa-times mr-1"></i>Close
-                        </button>
-                        <button type="button" class="btn btn-primary" id="popupViewFullBtn"
-                                onclick="window.location.href='/profile/${officeId}'">
-                            <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `);
-
-    $('#officeProfileModal').modal('show');
-    $('#officeProfileModal').on('hidden.bs.modal', function () { $(this).remove(); });
-
-    // Fetch full profile data
-    fetch(`/api/postal-office/${officeId}`)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => renderOfficePopup(data, officeId))
-        .catch((err) => {
-            console.error('[Profile Popup] fetch error:', err);
-            const body = document.getElementById('officeProfileModalBody');
-            if (body) body.innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
-                    <p class="text-muted">Failed to load profile data.</p>
-                    <a href="/profile/${officeId}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-external-link-alt mr-1"></i>Open Full Profile
-                    </a>
-                </div>`;
-        });
-}
-
-function renderOfficePopup(data, officeId) {
-    const area      = data.areaId ? 'Area ' + data.areaId : 'N/A';
-    const connBadge = data.connectionStatus
-        ? '<span class="badge badge-success px-3 py-2"><i class="fas fa-wifi mr-1"></i>Active</span>'
-        : '<span class="badge badge-danger px-3 py-2"><i class="fas fa-wifi mr-1"></i>Inactive</span>';
-    const officeBadge = data.officeStatus === 'OPEN'
-        ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
-        : data.officeStatus === 'CLOSED'
-        ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
-        : '<span class="badge badge-secondary px-3 py-2">—</span>';
-
-    const coverPhoto = `/api/postal-office/${officeId}/cover-photo`;
-
-    document.getElementById('popupOfficeName').textContent = data.name || 'Post Office Profile';
-
-    document.getElementById('officeProfileModalBody').innerHTML = `
-        <!-- Cover Photo Banner -->
-        <div style="height:180px;overflow:hidden;position:relative;background:#1a3a7a;">
-            <img src="${coverPhoto}" onerror="this.style.display='none'"
-                 style="width:100%;height:100%;object-fit:cover;opacity:0.7;">
-            <div style="position:absolute;bottom:12px;left:20px;">
-                <h4 class="text-white font-weight-bold mb-1" style="text-shadow:0 1px 4px rgba(0,0,0,0.5);">
-                    ${data.name || 'N/A'}
-                </h4>
-                <div style="display:flex;gap:6px;">
-                    ${connBadge}
-                    ${officeBadge}
-                </div>
-            </div>
-        </div>
-
-        <!-- Body -->
-        <div class="p-4">
-            <div class="row">
-
-                <!-- Left: Basic Info -->
-                <div class="col-md-4 mb-3">
-                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-info-circle mr-1"></i>Basic Information
-                    </h6>
-                    ${infoRow('fas fa-map-marker-alt', 'Area', area)}
-                    ${infoRow('fas fa-envelope', 'ZIP Code', data.zipCode)}
-                    ${infoRow('fas fa-map', 'Address', data.address)}
-                    ${infoRow('fas fa-user-tie', 'Postmaster', data.postmaster)}
-                    ${infoRow('fas fa-tag', 'Classification', data.classification)}
-                    ${infoRow('fas fa-concierge-bell', 'Services Provided', data.serviceProvided)}
-                </div>
-
-                <!-- Middle: Connectivity -->
-                <div class="col-md-4 mb-3">
-                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-wifi mr-1"></i>Connectivity
-                    </h6>
-                    ${infoRow('fas fa-building', 'ISP', data.internetServiceProvider)}
-                    ${infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection)}
-                    ${infoRow('fas fa-tachometer-alt', 'Speed', data.speed)}
-                    ${infoRow('fas fa-network-wired', 'Static IP', data.staticIpAddress)}
-                    ${infoRow('fas fa-comment-alt', 'Remarks', data.remarks)}
-                </div>
-
-                <!-- Right: Staff & Contact -->
-                <div class="col-md-4 mb-3">
-                    <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3">
-                        <i class="fas fa-users mr-1"></i>Staff & Contact
-                    </h6>
-                    ${infoRow('fas fa-users', 'Employees', data.noOfEmployees)}
-                    ${infoRow('fas fa-cash-register', 'Tellers', data.noOfPostalTellers)}
-                    ${infoRow('fas fa-mail-bulk', 'Letter Carriers', data.noOfLetterCarriers)}
-                    ${infoRow('fas fa-phone', 'Office Contact', data.postalOfficeContactPerson)}
-                    ${infoRow('fas fa-phone-alt', 'Contact Number', data.postalOfficeContactNumber)}
-                </div>
-
-            </div>
-        </div>
-    `;
-}
-
-function infoRow(icon, label, value) {
-    const val = (value !== null && value !== undefined && value !== '') ? value : '—';
-    return `
-        <div class="mb-2 d-flex align-items-start" style="font-size:13px;">
-            <i class="${icon} text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i>
-            <div>
-                <span class="text-muted" style="font-size:11px;display:block;">${label}</span>
-                <strong>${val}</strong>
-            </div>
-        </div>`;
+    window.location.href = '/profile/' + officeId;
 }
 
 // ═══════════════════════════════════════════════════════════════

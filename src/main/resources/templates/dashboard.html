@@ -171,7 +171,7 @@
         <div th:if="${isSystemAdmin}" class="card shadow-sm mb-3">
         
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                     <table id="systemAdminTable" class="table table-hover table-striped mb-0" style="width:100%">
                         <thead class="thead-dark">
                             <tr>
@@ -251,7 +251,7 @@
         <!-- Data Table (Area Admin / User view) — hidden for System Admin who has the full table above -->
         <div th:if="${not isSystemAdmin}" class="card shadow-sm mb-4">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-hover table-striped mb-0" id="officeTable">
                         <thead class="thead-light">
                             <tr>
