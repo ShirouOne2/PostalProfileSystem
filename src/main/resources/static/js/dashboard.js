@@ -1,4 +1,40 @@
-/* Dashboard JavaScript */
+/**
+ * Dashboard — Stats Cards + Filter Panel + System Admin Table
+ *
+ * System Admin columns: # | Name | Area | Province | City | Connection | Office | Actions
+ * Area Admin columns: # | Name | Province | City | Connectivity | Office Status | Actions (Area hidden)
+ * User columns: # | Name | Province | City | Connectivity | Office Status | Actions (Area hidden)
+ *
+ * Edit modal handled by edit-modal.js — do NOT bind .btn-edit here.
+ */
+
+let dashboardTable;
+let map;
+let markers = [];
+let markerClusterGroup;
+
+// Detect which table layout is rendered (set by Thymeleaf th:if="${isSystemAdmin}")
+const IS_ADMIN = document.body?.dataset?.isSystemAdmin === 'true' || 
+    (document.getElementById('systemAdminTable')
+    ?.querySelector('thead th:nth-child(3)')
+    ?.textContent.trim().toLowerCase().includes('area') ?? false);
+
+// Also check if user is Area Admin by looking for the isAreaAdmin data attribute
+const IS_AREA_ADMIN = document.body?.dataset?.isAreaAdmin === 'true' || false;
+const IS_PRIVILEGED_USER = IS_ADMIN || IS_AREA_ADMIN;
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Initialize Stats Cards ─────────────────────────────────────────────
+    initializeStatsCards();
+
+    // ── Initialize Filter Panel ───────────────────────────────────────────
+    initializeFilterPanel();
+
+    // ── Initialize System Admin Table (if visible) ───────────────────────
+    if (IS_ADMIN && document.getElementById('systemAdminTable')) {
+        initializeSystemAdminTable();
+    }
 
 (function () {
     'use strict';
@@ -84,8 +120,37 @@
             chevron.classList.toggle('fa-chevron-down', hidden);
         });
 
-        document.getElementById('dashApplyFilters')?.addEventListener('click', applyFilters);
-        document.getElementById('dashClearFilters')?.addEventListener('click', clearFilters);
+function applyTableFilters() {
+    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    if (!$.fn.DataTable.isDataTable(tableId)) return;
+    const table = $(tableId).DataTable();
+    
+    const searchValue = document.getElementById('tableSearchInput')?.value || '';
+    const areaValue = document.getElementById('filterArea')?.value || '';
+    const connectivityValue = document.getElementById('filterConnectivity')?.value || '';
+    const officeStatusValue = document.getElementById('filterOfficeStatus')?.value || '';
+
+    // Apply search
+    table.search(searchValue);
+
+    if (IS_ADMIN) {
+        // Admin: # | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
+        table.column(2).search(areaValue ? areaValue : '');
+        table.column(5).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
+        table.column(6).search(officeStatusValue ? officeStatusValue : '');
+    } else {
+        // Non-admin filtering logic
+        if (IS_AREA_ADMIN) {
+            // Area Admin: #(0) | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
+            table.column(2).search(areaValue ? areaValue : '');
+            table.column(5).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
+            table.column(6).search(officeStatusValue ? officeStatusValue : '');
+        } else {
+            // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
+            table.column(4).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
+            table.column(5).search(officeStatusValue ? officeStatusValue : '');
+        }
+    }
 
         /* Clear search × */
         document.getElementById('dashClearSearchBtn')?.addEventListener('click', function () {
@@ -177,12 +242,11 @@
             return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
         }},
         { targets: 2, orderable: true },   // Area
-        { targets: 3, orderable: true },   // Region
-        { targets: 4, orderable: true },   // City
+        { targets: 3, orderable: true },   // Province
+        { targets: 4, orderable: true },   // City/Municipality
         { targets: 5, width: '120px', orderable: true, className: 'dt-center' },  // Connection
-        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office
-        { targets: 7, orderable: false },  // Remarks
-        { targets: 8, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office Status
+        { targets: 7, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
     ];
 
     dashboardTable = $('#systemAdminTable').DataTable({
@@ -195,7 +259,7 @@
         serverSide: false,
 
         columnDefs: adminColumnDefs,
-        order: [[2, 'asc'], [1, 'asc']], // Sort by Area then Name
+        order: [[2, ''], [1, '']], // Sort by Area then Name
 
         language: {
             search: '',
@@ -234,20 +298,47 @@
         return tag;
     }
 
-    const userColumnDefs = [
-        { targets: 0, width: '60px', orderable: false, className: 'dt-center' }, // #
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
-            if (!data) return 'N/A';
-            var trNode = meta.settings.aoData[meta.row].nTr;
-            var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
-            return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
-        }},   // Office Name
-        { targets: 2, orderable: true },   // Area
-        { targets: 3, orderable: true, className: 'dt-center' }, // Connectivity
-        { targets: 4, orderable: true, className: 'dt-center' }, // Office Status
-        { targets: 5, orderable: false }, // Remarks
-        { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
-    ];
+    // Dynamic column definitions based on user role
+    let userColumnDefs;
+    
+    if (IS_AREA_ADMIN) {
+        // Area Admin: 8 columns including Area
+        userColumnDefs = [
+            { targets: 0, width: '60px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
+                return meta.row + meta.settings._iDisplayStart + 1;
+            }}, // #
+            { targets: 1, orderable: true, render: function(data, type, row, meta) {
+                if (!data) return 'N/A';
+                var trNode = meta.settings.aoData[meta.row].nTr;
+                var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+                return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
+            }},   // Name
+            { targets: 2, orderable: true },   // Area
+            { targets: 3, orderable: true },   // Province
+            { targets: 4, orderable: true },   // City/Municipality
+            { targets: 5, orderable: true, className: 'dt-center' }, // Connectivity
+            { targets: 6, orderable: true, className: 'dt-center' }, // Office Status
+            { targets: 7, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        ];
+    } else {
+        // Regular User: 7 columns (no Area column)
+        userColumnDefs = [
+            { targets: 0, width: '60px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
+                return meta.row + meta.settings._iDisplayStart + 1;
+            }}, // #
+            { targets: 1, orderable: true, render: function(data, type, row, meta) {
+                if (!data) return 'N/A';
+                var trNode = meta.settings.aoData[meta.row].nTr;
+                var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
+                return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
+            }},   // Name
+            { targets: 2, orderable: true },   // Province
+            { targets: 3, orderable: true },   // City/Municipality
+            { targets: 4, orderable: true, className: 'dt-center' }, // Connectivity
+            { targets: 5, orderable: true, className: 'dt-center' }, // Office Status
+            { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        ];
+    }
 
     dashboardTable = $('#officeTable').DataTable({
         pageLength: 25,
@@ -259,7 +350,7 @@
         serverSide: false,
 
         columnDefs: userColumnDefs,
-        order: [[1, 'asc']], // Sort by Name
+        order: [[1, '']], // Sort by Name
 
         language: {
             search: '',
@@ -374,23 +465,22 @@
 });
 
 // ── Edit Button Handler for Dashboard ─────────────────────────────────────
-// Dashboard should use table row data instead of API call
-// since dashboard already has complete data loaded from server
+// Fetch office data via API using the office ID stored on the button
 $(document).on('click', '.btn-edit', function () {
     var id = $(this).data('office-id');
     if (!id) return;
-    
-    // Get data from table row instead of API call
-    var tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
-    var table = $(tableId).DataTable();
-    var rowData = table.row($(this).closest('tr')).data();
-    
-    if (rowData && typeof window.openModal === 'function') {
-        window.openModal(rowData); 
-    } else {
-        console.error('Edit modal functions not loaded or no row data available');
-        Swal.fire('Error', 'Edit modal not properly loaded', 'error');
-    }
+
+    $.getJSON('/api/postal-office/' + id)
+        .done(function (d) {
+            if (typeof window.openModal === 'function') {
+                window.openModal(d);
+            } else {
+                Swal.fire('Error', 'Edit modal not properly loaded', 'error');
+            }
+        })
+        .fail(function (xhr) {
+            Swal.fire('Error', (xhr.responseJSON || {}).message || 'Failed to load office data.', 'error');
+        });
 });
 
 function exportTableData() {
@@ -449,5 +539,5 @@ window.addEventListener('beforeunload', function () {
             document.getElementById('dashArchiveReasonInput').value = '';
         });
     }
-
-})();
+    document.getElementById('editOfficeModal')?.remove();
+});

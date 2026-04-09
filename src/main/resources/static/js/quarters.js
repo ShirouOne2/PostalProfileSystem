@@ -5,7 +5,6 @@
 $(document).ready(function () {
 
     createMapModal();
-    createEditModal();
     initializeTable();
     initializeFilters();
     initializeYearSelector();
@@ -225,10 +224,9 @@ function applyFiltersWithSearch() {
 
     window.location.href = url;
 }
-
-/* =====================================================
+   /* =====================================================
    TABLE INITIALIZATION
-   Columns: # | Name | Address | Province | Connection Status | Speed | Action
+   Columns: # | Name | Area | Province | City/Municipality | Connection Status | Office Status | Speed | Action
 ===================================================== */
 function initializeTable() {
     if (!$('#postOfficeTable').length) return;
@@ -251,122 +249,193 @@ function initializeTable() {
     if (statusFilter)  params.push('status='  + encodeURIComponent(statusFilter));
     if (params.length) ajaxUrl += '?' + params.join('&');
 
-    const table = $('#postOfficeTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: ajaxUrl,
-            dataSrc: '',
-            timeout: 30000,
-            error: function(xhr) {
-                let msg = 'Failed to load post office data.';
-                if (xhr.status === 0)   msg = 'Network error. Please check your connection.';
-                if (xhr.status === 500) msg = 'Server error. Please try again later.';
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error', title: 'Data Loading Error', html: '<p>' + msg + '</p>',
-                        confirmButtonText: 'Retry', showCancelButton: true, cancelButtonText: 'Refresh Page'
-                    }).then(function(result) {
-                        if (result.isConfirmed) table.ajax.reload();
-                        else if (result.dismiss === Swal.DismissReason.cancel) window.location.reload();
-                    });
+    try {
+        const table = $('#postOfficeTable').DataTable({
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: ajaxUrl,
+                dataSrc: '',
+                timeout: 30000,
+                error: function(xhr) {
+                    let msg = 'Failed to load post office data.';
+                    if (xhr.status === 0)   msg = 'Network error. Please check your connection.';
+                    if (xhr.status === 500) msg = 'Server error. Please try again later.';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error', 
+                            title: 'Data Loading Error', 
+                            html: '<p>' + msg + '</p>',
+                            confirmButtonText: 'Retry', 
+                            showCancelButton: true, 
+                            cancelButtonText: 'Refresh Page'
+                        }).then(function(result) {
+                            if (result.isConfirmed) table.ajax.reload();
+                            else if (result.dismiss === Swal.DismissReason.cancel) window.location.reload();
+                        });
+                    }
+                }
+            },
+
+            columnDefs: [
+                {
+                    targets: 0,
+                    data: null,
+                    render: function(d, t, r, meta) { 
+                        try {
+                            return meta.row + meta.settings._iDisplayStart + 1; 
+                        } catch(e) {
+                            return '';
+                        }
+                    },
+                    orderable: false,
+                    width: '40px',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 1,
+                    data: 'name',
+                    defaultContent: 'N/A',
+                    render: function(data, type, row) {
+                        if (type !== 'display') return data || '';
+                        if (!data) return 'N/A';
+                        const safe = String(data).replace(/'/g, "\\'");
+                        return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + row.id + '\', \'' + safe + '\')">' + data + '</a>';
+                    }
+                },
+                {
+                    targets: 2,
+                    data: 'area',
+                    defaultContent: 'N/A',
+                    render: function(d) { return d || 'N/A'; }
+                },
+                {
+                    targets: 3,
+                    data: 'province',
+                    defaultContent: 'N/A',
+                    render: function(d) { return d || 'N/A'; }
+                },
+                {
+                    targets: 4,
+                    data: 'city',
+                    defaultContent: 'N/A',
+                    render: function(d) { return d || 'N/A'; }
+                },
+                {
+                    targets: 5,
+                    data: 'status',
+                    width: '140px',
+                    className: 'dt-center',
+                    render: function(data, type, row) {
+                        if (type !== 'display') return data ? 'Active' : 'Inactive';
+                        let badge = data
+                            ? '<span class="badge badge-success">Active</span>'
+                            : '<span class="badge badge-danger">Inactive</span>';
+                        if (row.newThisQuarter) {
+                            badge += ' <span class="badge badge-info ml-1">New</span>';
+                        }
+                        return badge;
+                    }
+                },
+                {
+                    targets: 6,
+                    data: 'officeStatus',
+                    width: '120px',
+                    className: 'dt-center',
+                    render: function(data, type, row) {
+                        if (type !== 'display') {
+                            return data || 'N/A';
+                        }
+                        
+                        if (!data) {
+                            return '<span class="badge badge-secondary">N/A</span>';
+                        }
+                        
+                        let badge = '';
+                        switch(data.toUpperCase()) {
+                            case 'OPEN':
+                                badge = '<span class="badge badge-info">Open</span>';
+                                break;
+                            case 'CLOSED':
+                                badge = '<span class="badge badge-warning">Closed</span>';
+                                break;
+                            default:
+                                badge = '<span class="badge badge-secondary">' + data + '</span>';
+                        }
+                        return badge;
+                    }
+                },
+                {
+                    targets: 7,
+                    data: 'speed',
+                    defaultContent: 'N/A',
+                    render: function(d) { return d || 'N/A'; }
+                },
+                {
+                    targets: 8,
+                    data: null,
+                    orderable: false,
+                    width: '90px',
+                    className: 'dt-center',
+                    render: function(d, t, row) {
+                        try {
+                            const isSystemAdmin = $('body').data('is-system-admin') === true;
+                            const isAreaAdmin   = $('body').data('is-area-admin')   === true;
+                            let btns = '<button class="btn btn-sm btn-warning edit-btn" data-id="' + row.id + '" title="Edit"><i class="fas fa-edit"></i></button>';
+                            if (isSystemAdmin || isAreaAdmin) {
+                                btns += ' <button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;" data-id="' + row.id + '" data-name="' + (row.name || 'Office').replace(/"/g, '&quot;') + '" title="Archive"><i class="fas fa-archive"></i></button>';
+                            }
+                            return btns;
+                        } catch(e) {
+                            return '';
+                        }
+                    }
+                }
+            ],
+
+            searching: true,
+            search: { search: '' },
+
+            pageLength: 10,
+            responsive: true,
+            order: [[2, ''], [1, '']],
+
+            dom: '<"d-flex align-items-center justify-content-between mb-2"<"dt-info" i><"dt-length" l>>rt<"dt-footer d-flex align-items-center justify-content-between mt-2"p>',
+
+            initComplete: function () { 
+                try {
+                    updateTableSummary(this.api()); 
+                } catch(e) {
+                    console.error('Table init error:', e);
                 }
             }
-        },
+        });
 
-        // 8 columns matching thead: # | Name | Area | Address | Province | Connection | Speed | Action
-        columns: [
-            {
-                data: null,
-                render: function(d, t, r, meta) { return meta.row + 1; },
-                orderable: false,
-                width: '40px',
-                className: 'dt-center'
-            },
-            {
-                data: 'name',
-                defaultContent: 'N/A',
-                render: function(data, type, row) {
-                    if (type !== 'display') return data || '';
-                    if (!data) return 'N/A';
-                    const safe = String(data).replace(/'/g, "\\'");
-                    return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + row.id + '\', \'' + safe + '\')">' + data + '</a>';
-                }
-            },
-            {
-                data: 'area',
-                defaultContent: 'N/A',
-                render: function(d) { return d || 'N/A'; }
-            },
-            {
-                data: 'address',
-                defaultContent: 'N/A',
-                render: function(d) { return d || 'N/A'; }
-            },
-            {
-                data: 'province',
-                defaultContent: 'N/A',
-                render: function(d) { return d || 'N/A'; }
-            },
-            {
-                data: 'status',
-                width: '140px',
-                className: 'dt-center',
-                render: function(data, type, row) {
-                    if (type !== 'display') return data ? 'Active' : 'Inactive';
-                    let badge = data
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-danger">Inactive</span>';
-                    if (row.newThisQuarter) {
-                        badge += ' <span class="badge badge-info ml-1">New</span>';
-                    }
-                    return badge;
-                }
-            },
-            {
-                data: 'speed',
-                defaultContent: 'N/A',
-                render: function(d) { return d || 'N/A'; }
-            },
-            {
-                data: null,
-                orderable: false,
-                width: '90px',
-                className: 'dt-center',
-                render: function(d, t, row) {
-                    const isSystemAdmin = $('body').data('is-system-admin') === true;
-                    const isAreaAdmin   = $('body').data('is-area-admin')   === true;
-                    let btns = '<button class="btn btn-sm btn-warning edit-btn" data-id="' + row.id + '" title="Edit"><i class="fas fa-edit"></i></button>';
-                    if (isSystemAdmin || isAreaAdmin) {
-                        btns += ' <button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;" data-id="' + row.id + '" data-name="' + (row.name || 'Office').replace(/"/g, '&quot;') + '" title="Archive"><i class="fas fa-archive"></i></button>';
-                    }
-                    return btns;
-                }
+        table.on('draw', function () { 
+            try {
+                updateTableSummary(table); 
+            } catch(e) {
+                console.error('Table draw error:', e);
             }
-        ],
+        });
 
-        // Enable searching so the search bar works
-        searching: true,
-        search: { search: '' },
-
-        pageLength: 10,
-        responsive: true,
-        order: [[2, 'asc'], [1, 'asc']],
-
-        // Hide DataTables' own search box — we use #searchBar
-        dom: '<"d-flex align-items-center justify-content-between mb-2"<"dt-info" i><"dt-length" l>>rt<"dt-footer d-flex align-items-center justify-content-between mt-2"p>',
-
-        initComplete: function () { updateTableSummary(this.api()); }
-    });
-
-    table.on('draw', function () { updateTableSummary(table); });
-
-    $('#postOfficeTable').on('click', '.edit-btn', function () {
-        editOffice($(this).data('id'));
-    });
-    $('#postOfficeTable').on('click', '.btn-archive-quarter', function () {
-        archiveOfficeFromQuarters($(this).data('id'), $(this).data('name'));
-    });
+        $('#postOfficeTable').on('click', '.edit-btn', function () {
+            editOffice($(this).data('id'));
+        });
+        $('#postOfficeTable').on('click', '.btn-archive-quarter', function () {
+            archiveOfficeFromQuarters($(this).data('id'), $(this).data('name'));
+        });
+    } catch(error) {
+        console.error('DataTables initialization error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error', 
+                title: 'Table Error', 
+                text: 'Failed to initialize data table. Please refresh the page.',
+                confirmButtonColor: '#002868'
+            });
+        }
+    }
 }
 
 function updateTableSummary(api) {
@@ -450,17 +519,25 @@ function printQuartersReport() {
 
     let rowsHtml = '';
     rows.each(function (row, idx) {
-        const st = row.status
+        const connStatus = row.status
             ? '<span style="color:#155724;font-weight:600;">Active</span>'
             : '<span style="color:#721c24;font-weight:600;">Inactive</span>';
-        rowsHtml += '<tr><td>' + (idx + 1) + '</td><td>' + (row.name || 'N/A') + '</td><td>' + (row.area || 'N/A') + '</td><td>' + (row.address || 'N/A') + '</td><td>' + (row.province || 'N/A') + '</td><td>' + st + '</td><td>' + (row.speed || 'N/A') + '</td></tr>';
+        
+        const officeStatus = row.officeStatus || 'N/A';
+        const officeStatusBadge = officeStatus === 'OPEN' 
+            ? '<span style="color:#17a2b8;font-weight:600;">Open</span>'
+            : officeStatus === 'CLOSED'
+            ? '<span style="color:#ffc107;font-weight:600;">Closed</span>'
+            : '<span style="color:#6c757d;font-weight:600;">' + officeStatus + '</span>';
+        
+        rowsHtml += '<tr><td>' + (idx + 1) + '</td><td>' + (row.name || 'N/A') + '</td><td>' + (row.area || 'N/A') + '</td><td>' + (row.province || 'N/A') + '</td><td>' + (row.city || 'N/A') + '</td><td>' + connStatus + '</td><td>' + officeStatusBadge + '</td><td>' + (row.speed || 'N/A') + '</td></tr>';
     });
 
     const pw = window.open('', '_blank', 'width=1100,height=750');
     pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Connectivity Report</title><style>body{font-family:\'Segoe UI\',Arial,sans-serif;font-size:12px;color:#222;padding:24px;}h2{color:#002868;}table{width:100%;border-collapse:collapse;margin-top:12px;}thead tr{background:#002868;color:#fff;}thead th{padding:8px 10px;font-size:11px;font-weight:600;text-align:left;text-transform:uppercase;}tbody tr{border-bottom:1px solid #e8eaf0;}tbody tr:nth-child(even){background:#f7f9fc;}tbody td{padding:7px 10px;font-size:11px;}@media print{body{padding:10px;}}</style></head><body>');
     pw.document.write('<h2>PHLPost — Connectivity Report</h2>');
     pw.document.write('<p><strong>Year:</strong> ' + year + ' &nbsp;|&nbsp; <strong>Quarter:</strong> ' + quarter + ' &nbsp;|&nbsp; <strong>Area:</strong> ' + area + ' &nbsp;|&nbsp; <strong>Status:</strong> ' + status + ' &nbsp;|&nbsp; <strong>Total Records:</strong> ' + rows.length + ' &nbsp;|&nbsp; <strong>Printed:</strong> ' + new Date().toLocaleString('en-PH') + '</p>');
-    pw.document.write('<table><thead><tr><th>#</th><th>Post Office</th><th>Area</th><th>Address</th><th>Province</th><th>Connection Status</th><th>Speed</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>');
+    pw.document.write('<table><thead><tr><th>#</th><th>Post Office</th><th>Area</th><th>Province</th><th>City/Municipality</th><th>Connection Status</th><th>Office Status</th><th>Speed</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>');
     pw.document.write('<script>window.onload=function(){window.print();}<\/script></body></html>');
     pw.document.close();
 }
@@ -503,76 +580,8 @@ function initializeMap() {
 }
 
 /* =====================================================
-   EDIT MODAL
+   EDIT MODAL - Uses HTML template with restricted sections
 ===================================================== */
-function createEditModal() {
-    if ($('#editOfficeModal').length) return;
-    $('body').append(`
-        <div class="modal fade" id="editOfficeModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning text-white">
-                        <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Post Office</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editOfficeForm">
-                            <input type="hidden" id="editOfficeId">
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>Office Name <span class="text-danger">*</span></label><input type="text" class="form-control" id="editName" required></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Postmaster</label><input type="text" class="form-control" id="editPostmaster"></div></div>
-                            </div>
-                            <div class="form-group"><label>Address</label><textarea class="form-control" id="editAddress" rows="2"></textarea></div>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>Zip Code</label><input type="text" class="form-control" id="editZipCode"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Status</label>
-                                    <select class="form-control" id="editStatus">
-                                        <option value="true">Active</option>
-                                        <option value="false">Inactive</option>
-                                    </select>
-                                </div></div>
-                            </div>
-                            <h6 class="mt-3 mb-2 text-primary">Internet Service Provider</h6>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>ISP</label><input type="text" class="form-control" id="editISP"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Speed</label><input type="text" class="form-control" id="editSpeed"></div></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>Connection Type</label><input type="text" class="form-control" id="editTypeOfConnection"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Static IP Address</label><input type="text" class="form-control" id="editStaticIP"></div></div>
-                            </div>
-                            <h6 class="mt-3 mb-2 text-primary">Staff Information</h6>
-                            <div class="row">
-                                <div class="col-md-4"><div class="form-group"><label>No. of Employees</label><input type="number" class="form-control" id="editNoOfEmployees" min="0"></div></div>
-                                <div class="col-md-4"><div class="form-group"><label>No. of Tellers</label><input type="number" class="form-control" id="editNoOfTellers" min="0"></div></div>
-                                <div class="col-md-4"><div class="form-group"><label>No. of Carriers</label><input type="number" class="form-control" id="editNoOfCarriers" min="0"></div></div>
-                            </div>
-                            <h6 class="mt-3 mb-2 text-primary">Contact Information</h6>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>Office Contact Person</label><input type="text" class="form-control" id="editContactPerson"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Office Contact Number</label><input type="text" class="form-control" id="editContactNumber"></div></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>ISP Contact Person</label><input type="text" class="form-control" id="editISPContactPerson"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>ISP Contact Number</label><input type="text" class="form-control" id="editISPContactNumber"></div></div>
-                            </div>
-                            <h6 class="mt-3 mb-2 text-primary">Remarks</h6>
-                            <div class="form-group"><label>Remarks / Notes</label><textarea class="form-control" id="editRemarks" rows="3"></textarea></div>
-                            <h6 class="mt-3 mb-2 text-primary">Location Coordinates</h6>
-                            <div class="row">
-                                <div class="col-md-6"><div class="form-group"><label>Latitude</label><input type="number" class="form-control" id="editLatitude" step="0.000001"></div></div>
-                                <div class="col-md-6"><div class="form-group"><label>Longitude</label><input type="number" class="form-control" id="editLongitude" step="0.000001"></div></div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
-                        <button type="button" class="btn btn-warning" onclick="saveOfficeChanges()"><i class="fas fa-save"></i> Save Changes</button>
-                    </div>
-                </div>
-            </div>
-        </div>`);
-}
 
 /* =====================================================
    OFFICE ACTIONS
@@ -600,25 +609,13 @@ function editOffice(id) {
         success: function(o) {
             Swal.close();
             $('#editOfficeId').val(o.id);
-            $('#editName').val(o.name || '');
-            $('#editPostmaster').val(o.postmaster || '');
-            $('#editAddress').val(o.address || '');
-            $('#editZipCode').val(o.zipCode || '');
             $('#editStatus').val(o.connectionStatus ? 'true' : 'false');
+            $('#editOfficeStatus').val(o.officeStatus || '');
+            $('#editClassification').val(o.classification || '');
+            $('#editServiceProvided').val(o.serviceProvided || '');
             $('#editISP').val(o.internetServiceProvider || '');
-            $('#editSpeed').val(o.speed || '');
             $('#editTypeOfConnection').val(o.typeOfConnection || '');
-            $('#editStaticIP').val(o.staticIpAddress || '');
-            $('#editNoOfEmployees').val(o.noOfEmployees || '');
-            $('#editNoOfTellers').val(o.noOfPostalTellers || '');
-            $('#editNoOfCarriers').val(o.noOfLetterCarriers || '');
-            $('#editContactPerson').val(o.postalOfficeContactPerson || '');
-            $('#editContactNumber').val(o.postalOfficeContactNumber || '');
-            $('#editISPContactPerson').val(o.ispContactPerson || '');
-            $('#editISPContactNumber').val(o.ispContactNumber || '');
-            $('#editLatitude').val(o.latitude || '');
-            $('#editLongitude').val(o.longitude || '');
-            $('#editRemarks').val(o.remarks || '');
+            $('#editIPAddressType').val(o.ipAddressType || '');
             $('#editOfficeModal').modal('show');
         },
         error: function(xhr) { Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Failed to load office data' }); }
@@ -627,23 +624,14 @@ function editOffice(id) {
 
 function saveOfficeChanges() {
     const id = $('#editOfficeId').val();
-    if (!$('#editName').val()) { Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Office name is required' }); return; }
     const data = {
-        name: $('#editName').val(), postmaster: $('#editPostmaster').val() || null,
-        address: $('#editAddress').val() || null, zipCode: $('#editZipCode').val() || null,
         connectionStatus: $('#editStatus').val() === 'true',
-        internetServiceProvider: $('#editISP').val() || null, speed: $('#editSpeed').val() || null,
-        typeOfConnection: $('#editTypeOfConnection').val() || null, staticIpAddress: $('#editStaticIP').val() || null,
-        noOfEmployees:      $('#editNoOfEmployees').val() ? parseInt($('#editNoOfEmployees').val()) : null,
-        noOfPostalTellers:  $('#editNoOfTellers').val()   ? parseInt($('#editNoOfTellers').val())   : null,
-        noOfLetterCarriers: $('#editNoOfCarriers').val()  ? parseInt($('#editNoOfCarriers').val())  : null,
-        postalOfficeContactPerson: $('#editContactPerson').val()    || null,
-        postalOfficeContactNumber: $('#editContactNumber').val()    || null,
-        ispContactPerson:          $('#editISPContactPerson').val() || null,
-        ispContactNumber:          $('#editISPContactNumber').val() || null,
-        latitude:  $('#editLatitude').val()  ? parseFloat($('#editLatitude').val())  : null,
-        longitude: $('#editLongitude').val() ? parseFloat($('#editLongitude').val()) : null,
-        remarks: $('#editRemarks').val() || null
+        officeStatus: $('#editOfficeStatus').val() || null,
+        classification: $('#editClassification').val() || null,
+        serviceProvided: $('#editServiceProvided').val() || null,
+        internetServiceProvider: $('#editISP').val() || null,
+        typeOfConnection: $('#editTypeOfConnection').val() || null,
+        ipAddressType: $('#editIPAddressType').val() || null
     };
     Swal.fire({ title: 'Saving Changes...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
     $.ajax({

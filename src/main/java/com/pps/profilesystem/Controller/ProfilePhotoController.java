@@ -59,19 +59,14 @@ public class ProfilePhotoController {
     }
 
     /* ── Upload cover photo ──────────────────────────────────── */
-    @PostMapping("/{id}/cover-photo")
-    @Transactional
-    public ResponseEntity<?> uploadCoverPhoto(@PathVariable Integer id,
-                                              @RequestParam("file") MultipartFile file,
-                                              @RequestParam(value = "slot", defaultValue = "1") Integer slot) {
-        return handleUpload(id, file, "cover", slot);
-    }
 
-    /* ── Serve cover photo ───────────────────────────────────── */
-    @GetMapping("/{id}/cover-photo")
-    @Transactional(readOnly = true)
-    public ResponseEntity<Resource> serveCoverPhoto(@PathVariable Integer id) {
-        return handleServe(id, "cover", 1); // default to slot 1
+    /* ── Upload specific cover photo slot ───────────────────── */
+    @PostMapping("/{id}/cover-photo/{slot}")
+    @Transactional
+    public ResponseEntity<?> uploadCoverPhotoSlot(@PathVariable Integer id,
+                                                  @PathVariable Integer slot,
+                                                  @RequestParam("file") MultipartFile file) {
+        return handleUpload(id, file, "cover", slot);
     }
 
     /* ── Serve specific cover photo slot ─────────────────────── */
@@ -79,6 +74,44 @@ public class ProfilePhotoController {
     @Transactional(readOnly = true)
     public ResponseEntity<Resource> serveCoverPhotoSlot(@PathVariable Integer id, @PathVariable Integer slot) {
         return handleServe(id, "cover", slot);
+    }
+
+    /* ---- Get all photos for an office ---- */
+    @GetMapping("/{id}/photos")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getOfficePhotos(@PathVariable Integer id) {
+        Optional<PostalOffice> opt = postalOfficeRepository.findById(id);
+        if (opt.isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Office not found");
+            return ResponseEntity.status(404).body(error);
+        }
+
+        PostalOffice office = opt.get();
+        java.util.List<Map<String, Object>> photos = new java.util.ArrayList<>();
+
+        // Add profile photo if exists
+        if (office.getProfilePicture() != null && !office.getProfilePicture().isBlank()) {
+            Map<String, Object> photo = new HashMap<>();
+            photo.put("type", "profile");
+            photo.put("slot", 0);
+            photo.put("url", "/api/postal-office/" + id + "/profile-photo");
+            photo.put("filename", office.getProfilePicture());
+            photos.add(photo);
+        }
+
+        // Add cover photo if exists
+        if (office.getCoverPhoto() != null && !office.getCoverPhoto().isBlank()) {
+            Map<String, Object> photo = new HashMap<>();
+            photo.put("type", "cover");
+            photo.put("slot", 1);
+            photo.put("url", "/api/postal-office/" + id + "/cover-photo");
+            photo.put("filename", office.getCoverPhoto());
+            photos.add(photo);
+        }
+
+        return ResponseEntity.ok(photos);
     }
 
     /* ── Shared upload logic ─────────────────────────────────── */
