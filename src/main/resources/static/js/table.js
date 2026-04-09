@@ -1,16 +1,7 @@
-/**
- * Post Office Inventory — DataTable + Filter Panel + Map
- *
- * System Admin  columns: # | Name | Area | Region | City | Connection | Office | Remarks | Actions
- * Area/User     columns: # | Postal Office | Connection Status | Speed | Remarks | Actions
- *
- * Edit modal handled by edit-modal.js — do NOT bind .btn-edit here.
- */
+/* Table Page JavaScript - Map and Search Functionality */
 
-let table;
-let map;
-let markers = [];
-let markerClusterGroup;
+(function() {
+    'use strict';
 
 // Detect which table layout is rendered (set by Thymeleaf th:if="${isSystemAdmin}")
 const IS_ADMIN = document.getElementById('myTable')
@@ -98,232 +89,153 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         dom: '<"dt-length-wrap"l>rt<"dt-footer d-flex align-items-center justify-content-between mt-3"ip>',
-
-        responsive: true,
-        stateSave:  true,
-
-        drawCallback: function () {
-            attachButtonListeners();
-            updateSummary(this.api());
-        }
-    });
-
-    // Hide DataTables default search
-    document.querySelector('.dataTables_filter')?.style.setProperty('display', 'none', 'important');
-
-    // Populate Area dropdown from table data
-    populateAreaDropdown();
-
-    // Wire filters
-    initFilters();
-
-    // ── Restore saved filter state if returning from profile ─────────────────
-    const savedRaw = sessionStorage.getItem('tableFilterState');
-    if (savedRaw && sessionStorage.getItem('tableFilterSource') === 'table') {
-        sessionStorage.removeItem('tableFilterState');
-        sessionStorage.removeItem('tableFilterSource');
-
-        try {
-            const state = JSON.parse(savedRaw);
-
-            // Restore filter inputs
-            if (state.search)     setVal('tableSearchInput',    state.search);
-            if (state.area)       setVal('filterArea',          state.area);
-            if (state.connStatus) setVal('filterConnStatus',    state.connStatus);
-            if (state.offStatus)  setVal('filterOfficeStatus',  state.offStatus);
-
-            // Re-apply filters
-            setTimeout(function () {
-                applyFilters();
-                highlightSelects();
-
-                // Restore scroll after filters applied + table redrawn
-                if (state.scrollY) {
-                    setTimeout(function () {
-                        window.scrollTo({ top: state.scrollY, behavior: 'instant' });
-                    }, 300);
-                }
-            }, 100);
-        } catch (e) {
-            console.warn('[Table] Could not restore state:', e);
-        }
-    }
-
-    attachButtonListeners();
-    updateSummary(table);
-
-    console.log('[Table] Initialized.');
-});
-
-// ═══════════════════════════════════════════════════════════════
-//  MAP INITIALIZATION
-// ═══════════════════════════════════════════════════════════════
-function initializeMap() {
-    // Early exit if Leaflet not available
-    if (typeof L === 'undefined') {
-        console.error('Leaflet is not loaded!');
-        return;
-    }
-
-    console.log('Leaflet loaded successfully, version:', L.version);
-
-    // Performance optimizations
-    const areaColors = {
-        1: '#FF6B6B', 2: '#4ECDC4', 3: '#45B7D1', 4: '#FFA07A',
-        5: '#98D8C8', 6: '#F7DC6F', 7: '#BB8FCE', 8: '#F8B739',
-        9: '#85C1E2', default: '#95A5A6'
+    let map;
+    let markers = [];
+    let currentFilter = {
+        area: '',
+        status: '',
+        search: ''
     };
 
-    function getAreaColor(areaId) {
-        return areaColors[areaId] || areaColors.default;
-    }
+    // Area colors for map markers
+    const areaColors = {
+        1: '#FF6B6B',
+        2: '#4ECDC4', 
+        3: '#45B7D1',
+        4: '#FFA07A',
+        5: '#98D8C8',
+        6: '#F7DC6F',
+        7: '#BB8FCE',
+        8: '#F8B739',
+        9: '#85C1E2'
+    };
 
-    // Initialize map with performance optimizations
-    map = L.map('map', {
-        center: [12.8797, 121.7740],
-        zoom: 5,
-        minZoom: 2,
-        maxZoom: 18,
-        maxBounds: [[4.0, 116.0], [21.5, 127.0]],
-        maxBoundsViscosity: 1.0,
-        preferCanvas: true, // Better performance for many markers
-        updateWhenIdle: true,
-        updateWhenZooming: false
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        setupEventListeners();
+        loadOffices();
     });
 
-    // Use lighter tile layer for better performance
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18,
-        updateWhenIdle: true
-    }).addTo(map);
+    function initMap() {
+        // Initialize Leaflet map centered on Philippines
+        map = L.map('map').setView([12.8797, 121.7740], 6);
 
-    markers = [];
-    markerClusterGroup = L.layerGroup().addTo(map);
-
-    // Optimized status bar
-    let statusTimeout;
-    function setMapStatus(msg, type) {
-        if (statusTimeout) clearTimeout(statusTimeout);
-        
-        let el = document.getElementById('map-status-bar');
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'map-status-bar';
-            el.style.cssText = 'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);' +
-                'z-index:1000;background:rgba(0,0,0,0.65);color:#fff;font-size:12px;' +
-                'padding:4px 12px;border-radius:20px;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;';
-            const mapEl = document.getElementById('map');
-            if (mapEl) mapEl.style.position = 'relative', mapEl.appendChild(el);
-        }
-        el.textContent = msg;
-        el.style.opacity = '1';
-        
-        if (type === 'done') {
-            statusTimeout = setTimeout(() => { el.style.opacity = '0'; }, 2000);
-        }
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
     }
 
-    setMapStatus('Loading map data…');
+    function setupEventListeners() {
+        // Search input
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('mapSearchSuggestions');
 
-    // Add debouncing for better performance
-    let fetchTimeout;
-    function loadPostOffices() {
-        if (fetchTimeout) clearTimeout(fetchTimeout);
+        searchInput.addEventListener('input', debounce(function() {
+            const query = this.value.trim();
+            if (query.length > 0) {
+                showSearchSuggestions(query);
+            } else {
+                hideSuggestions();
+            }
+        }, 300));
+
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length > 0) {
+                showSearchSuggestions(this.value.trim());
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchInput') && !e.target.closest('#mapSearchSuggestions')) {
+                hideSuggestions();
+            }
+        });
+
+        // Filter controls
+        document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
+        document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
+        document.getElementById('areaFilter')?.addEventListener('change', applyFilters);
+        document.getElementById('statusFilter')?.addEventListener('change', applyFilters);
+    }
+
+    function loadOffices() {
+        console.log('[Table.js] Loading offices...');
         
-        fetchTimeout = setTimeout(() => {
-            fetch('/api/post-offices')
-                .then(response => {
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Loaded', data.length, 'post offices from map API');
-                    console.log('Sample data:', data.slice(0, 3));
-                    console.log('Available fields:', data.length > 0 ? Object.keys(data[0]) : 'No data');
-                    processMapData(data);
-                })
-                .catch(error => {
-                    console.error('Error loading post offices:', error);
-                    setMapStatus('Failed to load data');
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Failed to Load Map Data',
-                            html: `<p>${error.message}</p>`,
-                            confirmButtonText: 'Retry',
-                            showCancelButton: true,
-                            cancelButtonText: 'Close'
-                        }).then(result => { 
-                            if (result.isConfirmed) loadPostOffices(); 
-                        });
-                    }
+        // Fetch office data from API
+        fetch('/api/post-offices')
+            .then(response => {
+                console.log('[Table.js] Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('[Table.js] Successfully loaded', data.length, 'offices');
+                displayOfficesOnMap(data);
+                populateAreaFilter(data);
+            })
+            .catch(error => {
+                console.error('[Table.js] Error loading offices:', error);
+                console.error('[Table.js] Error details:', {
+                    message: error.message,
+                    stack: error.stack
                 });
-        }, 100); // Small delay to prevent rapid calls
+                
+                // Show more specific error message
+                let errorMessage = 'Failed to load post office data';
+                if (error.message.includes('404')) {
+                    errorMessage = 'Post office API endpoint not found (404)';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Server error when loading post offices (500)';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error - check server connection';
+                }
+                
+                Swal.fire('Error', errorMessage, 'error');
+            });
     }
 
-    function processMapData(data) {
-        // Clear existing data
-        markerClusterGroup.clearLayers();
-        markers.length = 0;
-        const bounds = [];
-        let skippedCount = 0;
+    function displayOfficesOnMap(offices) {
+        // Clear existing markers
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
 
-        // Process all data at once for faster loading
-        for (let i = 0; i < data.length; i++) {
-            const office = data[i];
+        // Filter offices based on current filters
+        const filteredOffices = offices.filter(office => {
+            const matchesArea = !currentFilter.area || office.area === currentFilter.area;
+            const matchesStatus = !currentFilter.status || 
+                (currentFilter.status === 'true' && office.connectionStatus) ||
+                (currentFilter.status === 'false' && !office.connectionStatus);
+            const matchesSearch = !currentFilter.search || 
+                office.name.toLowerCase().includes(currentFilter.search.toLowerCase());
             
-            // All offices are shown on the map — filtering is done via the area/status filter controls
-            
-            const lat = parseFloat(office.lat ?? office.latitude);
-            const lng = parseFloat(office.lng ?? office.longitude);
+            return matchesArea && matchesStatus && matchesSearch;
+        });
 
-            if (isNaN(lat) || isNaN(lng)) {
-                skippedCount++;
-                continue;
-            }
-
-            if (lat < 4.0 || lat > 21.5 || lng < 116.0 || lng > 127.0) {
-                skippedCount++;
-                continue;
-            }
-
-            const marker = L.circleMarker([lat, lng], {
-                radius: 8,
-                fillColor: getAreaColor(office.areaId),
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
-
-            const statusLabel  = office.connectionStatus ? 'Active' : 'Inactive';
-            const badgeBg      = office.connectionStatus ? '#d4edda' : '#f8d7da';
-            const badgeColor   = office.connectionStatus ? '#155724' : '#721c24';
-            const nameRaw          = office.name || 'N/A';
-            const addressRaw       = office.address || 'Address not available';
-            const areaRaw          = office.areaId ? 'Area ' + office.areaId : 'N/A';
-            const postmasterRaw    = office.postmaster || 'Not assigned';
-            const employeesRaw     = (!office.noOfEmployees) ? 'Not available' : office.noOfEmployees;
-            const contactPersonRaw = office.postalOfficeContactPerson || 'Not available';
-            const contactNumberRaw = office.postalOfficeContactNumber || 'Not available';
-            const officeId         = office.id || '';
-
-            const coverPhotoSrc = office.coverPhotoUrl || '/images/no-image.png';
-
-            const popupContent = `
-                <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.4;max-width:240px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-size:13px;font-weight:600;color:#002868;">PHLPost Station</span>
-                        <span style="padding:2px 8px;border-radius:999px;background:${badgeBg};color:${badgeColor};font-size:11px;">${statusLabel}</span>
-                    </div>
-                    <div style="color:#1f2a44;font-weight:600;margin-bottom:4px;">${nameRaw}</div>
-                    <div style="color:#4d5a73;margin-bottom:6px;">${addressRaw}</div>
-                    <div style="color:#002868;font-weight:600;margin-bottom:4px;">${areaRaw}</div>
-                    <div style="background:#f7f9ff;border:1px solid rgba(0,40,104,0.08);border-radius:8px;padding:6px 8px;margin-bottom:6px;">
-                        <div style="margin-bottom:4px;">
-                            <span style="color:#7a869a;">Postmaster</span><br>
-                            <strong style="color:#002868;">${postmasterRaw}</strong>
+        // Add markers for filtered offices
+        filteredOffices.forEach(office => {
+            if (office.latitude && office.longitude) {
+                const marker = L.marker([office.latitude, office.longitude])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h6 style="margin: 0 0 8px 0; color: #002868;">${office.name}</h6>
+                            <p style="margin: 4px 0; font-size: 12px;">
+                                <strong>Area:</strong> ${office.area || 'N/A'}<br>
+                                <strong>Status:</strong> 
+                                <span class="badge ${office.connectionStatus ? 'badge-success' : 'badge-danger'}">
+                                    ${office.connectionStatus ? 'Connected' : 'Disconnected'}
+                                </span><br>
+                                <strong>Office:</strong> ${office.officeStatus || 'N/A'}
+                            </p>
+                            <button class="btn btn-sm btn-primary" onclick="viewOfficeDetails(${office.id})">
+                                <i class="fas fa-eye mr-1"></i>View Details
+                            </button>
                         </div>
                         <div style="margin-bottom:4px;">
                             <span style="color:#7a869a;">Employees</span><br>
@@ -355,25 +267,36 @@ function initializeMap() {
                 status:   office.connectionStatus ? 'true' : 'false',
                 isActive: office.connectionStatus
             };
+                    `);
 
-            markerClusterGroup.addLayer(marker);
-            markers.push(marker);
-            bounds.push([lat, lng]);
-        }
+                // Set marker color based on area
+                const areaId = parseInt(office.area?.replace('Area ', '')) || 1;
+                const color = areaColors[areaId] || '#FF6B6B';
+                
+                marker.setIcon(L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                }));
 
-        // Fit bounds after all markers are added
-        if (bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [20, 20] });
+                markers.push(marker);
+            }
+        });
+
+        // Fit map to show all markers
+        if (markers.length > 0) {
+            const group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.1));
         }
-        setMapStatus(`Showing ${data.length - skippedCount} offices${skippedCount > 0 ? ` (${skippedCount} skipped)` : ''}`, 'done');
     }
 
-    // Initialize map filters
-    initMapFilters();
+    function populateAreaFilter(offices) {
+        const areaFilter = document.getElementById('areaFilter');
+        if (!areaFilter) return;
 
-    // Load initial data
-    loadPostOffices();
-}
+        // Clear existing options
+        areaFilter.innerHTML = '<option value="">All Areas</option>';
 
 // ═══════════════════════════════════════════════════════════════
 //  MAP FILTERS
@@ -569,11 +492,6 @@ function initMapFilters() {
                         opacity: 1,
                         fillOpacity: 0.9
                     });
-                    
-                    // Restore original style after 2 seconds
-                    setTimeout(() => {
-                        targetMarker.setStyle(originalStyle);
-                    }, 2000);
                 }
             });
 
@@ -685,13 +603,21 @@ function filterMapMarkers() {
         } else {
             if (markerClusterGroup.hasLayer(marker)) {
                 markerClusterGroup.removeLayer(marker);
+    function focusOnOffice(office) {
+        if (office.latitude && office.longitude) {
+            map.setView([office.latitude, office.longitude], 12);
+            
+            // Find and open the marker popup
+            const marker = markers.find(m => {
+                const pos = m.getLatLng();
+                return Math.abs(pos.lat - office.latitude) < 0.0001 && 
+                       Math.abs(pos.lng - office.longitude) < 0.0001;
+            });
+            
+            if (marker) {
+                marker.openPopup();
             }
         }
-    });
-
-    // Pan/zoom map to fit visible markers
-    if (visibleBounds.length > 0) {
-        map.fitBounds(visibleBounds, { padding: [30, 30], maxZoom: 13 });
     }
 
     updateLegendVisibility(areasWithMatches);
@@ -1047,227 +973,57 @@ function exportToExcel() {
             text: 'There is no data to export.'
         });
         return;
-    }
-
-    // Prepare CSV content
-    let csvContent = '';
-    
-    // Add headers based on user role
-    if (IS_ADMIN) {
-        csvContent = 'No.,Post Office Name,Area,Region,City/Municipality,Connection Status,Office Status,Remarks\n';
-    } else {
-        csvContent = 'No.,Postal Office,Connection Status,Speed,Remarks\n';
-    }
-    
-    // Add data rows
-    data.forEach((row, index) => {
-        const rowData = [];
+    function applyFilters() {
+        currentFilter.area = document.getElementById('areaFilter')?.value || '';
+        currentFilter.status = document.getElementById('statusFilter')?.value || '';
+        currentFilter.search = document.getElementById('searchInput')?.value.trim() || '';
         
-        if (IS_ADMIN) {
-            rowData.push(
-                index + 1,
-                `"${row[1] || ''}"`,  // Post Office Name
-                `"${row[2] || ''}"`,  // Area
-                `"${row[3] || ''}"`,  // Region
-                `"${row[4] || ''}"`,  // City/Municipality
-                `"${row[5] || ''}"`,  // Connection Status
-                `"${row[6] || ''}"`,  // Office Status
-                `"${row[7] || ''}"`   // Remarks
-            );
-        } else {
-            rowData.push(
-                index + 1,
-                `"${row[1] || ''}"`,  // Postal Office
-                `"${row[2] || ''}"`,  // Connection Status
-                `"${row[3] || ''}"`,  // Speed
-                `"${row[4] || ''}"`   // Remarks
-            );
-        }
+        loadOffices(); // Reload with filters
+    }
+
+    function clearFilters() {
+        document.getElementById('areaFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('searchInput').value = '';
         
-        csvContent += rowData.join(',') + '\n';
-    });
-
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-    const filename = `postal_offices_connectivity_report_${timestamp}.csv`;
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    Swal.close();
-    
-    Swal.fire({
-        icon: 'success',
-        title: 'Export Successful!',
-        text: `Report exported as ${filename}`,
-        timer: 2000,
-        showConfirmButton: false
-    });
-}
-
-function printReport() {
-    if (!table) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Table Not Ready',
-            text: 'Please wait for the table to load completely.'
-        });
-        return;
+        currentFilter = { area: '', status: '', search: '' };
+        loadOffices(); // Reload without filters
     }
 
-    // Get current filtered data
-    const data = table.rows({ filter: 'applied' }).data().toArray();
-    
-    if (data.length === 0) {
-        Swal.fire({
-            icon: 'info',
-            title: 'No Data',
-            text: 'There is no data to print.'
-        });
-        return;
+    function viewOfficeDetails(officeId) {
+        window.location.href = `/profile/${officeId}`;
     }
 
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    
-    // Generate HTML content for printing
-    let printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Postal Offices Connectivity Report</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { color: #002868; text-align: center; margin-bottom: 30px; }
-                .summary { margin-bottom: 20px; }
-                .summary-item { display: inline-block; margin-right: 30px; margin-bottom: 10px; }
-                .summary-label { font-weight: bold; color: #666; }
-                .summary-value { font-size: 18px; font-weight: bold; color: #002868; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #002868; color: white; font-weight: bold; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .active { color: #28a745; font-weight: bold; }
-                .inactive { color: #dc3545; font-weight: bold; }
-                .open { color: #007bff; font-weight: bold; }
-                .closed { color: #fd7e14; font-weight: bold; }
-                .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
-                @media print {
-                    .no-print { display: none; }
-                    body { margin: 10px; }
-                    h1 { font-size: 20px; }
-                    table { font-size: 12px; }
+    // Debug function to check API status
+    function debugApiStatus() {
+        console.log('[Table.js] Debugging API status...');
+        fetch('/api/post-offices/debug')
+            .then(response => response.json())
+            .then(data => {
+                console.log('[Table.js] Debug info:', data);
+                if (data.offices_with_coordinates_count === 0) {
+                    console.warn('[Table.js] No offices with coordinates found in database');
                 }
-            </style>
-        </head>
-        <body>
-            <h1>PHLPost - Postal Offices Connectivity Report</h1>
-            
-            <div class="summary">
-                <div class="summary-item">
-                    <span class="summary-label">Total Offices:</span>
-                    <span class="summary-value">${data.length}</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Generated:</span>
-                    <span class="summary-value">${new Date().toLocaleString()}</span>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-    `;
-
-    // Add table headers based on user role
-    if (IS_ADMIN) {
-        printContent += `
-                        <th>No.</th>
-                        <th>Post Office Name</th>
-                        <th>Area</th>
-                        <th>Region</th>
-                        <th>City/Municipality</th>
-                        <th>Connection Status</th>
-                        <th>Office Status</th>
-                        <th>Remarks</th>
-        `;
-    } else {
-        printContent += `
-                        <th>No.</th>
-                        <th>Postal Office</th>
-                        <th>Connection Status</th>
-                        <th>Speed</th>
-                        <th>Remarks</th>
-        `;
+            })
+            .catch(error => {
+                console.error('[Table.js] Debug API call failed:', error);
+            });
     }
 
-    printContent += `
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+    // Call debug function on page load
+    setTimeout(debugApiStatus, 1000);
 
-    // Add data rows
-    data.forEach((row, index) => {
-        printContent += '<tr>';
-        
-        if (IS_ADMIN) {
-            printContent += `
-                        <td>${index + 1}</td>
-                        <td>${row[1] || ''}</td>
-                        <td>${row[2] || ''}</td>
-                        <td>${row[3] || ''}</td>
-                        <td>${row[4] || ''}</td>
-                        <td class="${row[5]?.includes('Active') ? 'active' : 'inactive'}">${row[5] || ''}</td>
-                        <td class="${row[6]?.includes('Open') ? 'open' : row[6]?.includes('Closed') ? 'closed' : ''}">${row[6] || ''}</td>
-                        <td>${row[7] || ''}</td>
-            `;
-        } else {
-            printContent += `
-                        <td>${index + 1}</td>
-                        <td>${row[1] || ''}</td>
-                        <td class="${row[2]?.includes('Active') ? 'active' : 'inactive'}">${row[2] || ''}</td>
-                        <td>${row[3] || ''}</td>
-                        <td>${row[4] || ''}</td>
-            `;
-        }
-        
-        printContent += '</tr>';
-    });
+    // Utility function for debouncing
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-    printContent += `
-                </tbody>
-            </table>
-            
-            <div class="footer">
-                <p>Generated by PHLPost Postal Profile System on ${new Date().toLocaleString()}</p>
-            </div>
-        </body>
-        </html>
-    `;
-
-    // Write content to print window
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load, then print
-    printWindow.onload = function() {
-        printWindow.print();
-        printWindow.close();
-    };
-}
-
-// ── Cleanup ───────────────────────────────────────────────────────────────────
-window.addEventListener('beforeunload', function () {
-    if (table && $.fn.DataTable.isDataTable('#myTable')) table.destroy();
-    document.getElementById('editOfficeModal')?.remove();
-});
+})();
