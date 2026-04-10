@@ -278,10 +278,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ─── Field value getters ─────────────────────────────────────────────────
-    const getStr   = id => { const e = document.getElementById(id); if (!e) return null; return e.value?.trim() || null; };
-    const getInt   = id => { const e = document.getElementById(id); return e?.value ? parseInt(e.value) : null; };
-    const getFloat = id => { const e = document.getElementById(id); return e?.value ? parseFloat(e.value) : null; };
-    const getBool  = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
     // Speed: user enters number only, we store as "N Mbps" string
     const getSpeed = () => {
@@ -291,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return isNaN(num) ? null : num + ' Mbps';
     };
 
-    // ─── Submit to API ───────────────────────────────────────────────────────
+    // Submit to API 
     function submitForm() {
         const btn = form.querySelector('button[type="submit"]');
         btn.disabled = true;
@@ -302,13 +298,16 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                // ── Basic Info ────────────────────────────────────────────
+                // Basic Info
                 name:                           getStr('officeName'),
+                officeCode:                     getStr('officeCode'),
                 postmaster:                     getStr('postmaster'),
-                postmasterContactNumber:        getStr('postmasterContactNumber'),
+                actingPostmaster:              getStr('actingPostmaster'),
+                officeEmail:                    getStr('officeEmail'),
+                address:                        getStr('address'),
                 zipCode:                        getStr('zipCode'),
 
-                // ── Location ──────────────────────────────────────────────
+                // Location
                 areaId:                         getInt('areaId'),
                 regionId:                       getInt('regionId'),
                 provinceId:                     getInt('provinceId'),
@@ -317,28 +316,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 latitude:                       getFloat('latitude'),
                 longitude:                      getFloat('longitude'),
 
-                // ── Connectivity ──────────────────────────────────────────
-                connectionStatus:               getBool('connectionStatus'),
+                // Office Status & Dates
                 officeStatus:                   getStr('officeStatus'),
+                isActive:                       getStr('isActive'),
+                isConnected:                    getStr('isConnected'),
+                dateOpen:                       getStr('dateOpen'),
+                dateClosed:                     getStr('dateClosed'),
+                frequencyOfDelivery:            getStr('frequencyOfDelivery'),
+
+                // Connectivity
+                connectionStatus:               getBool('connectionStatus'),
                 internetServiceProvider:        getStr('internetServiceProvider'),
                 classification:                 getStr('classification'),
                 ownedOrShared:                  getStr('ownedOrShared'),
                 typeOfConnection:               getStr('typeOfConnection'),
                 speed:                          getSpeed(),
-                staticIpAddress:                getStr('staticIpAddress'),
+                ipAddressType:                  getStr('ipAddressType'),
                 ispContactPerson:               getStr('ispContactPerson'),
                 ispContactNumber:               getStr('ispContactNumber'),
+
+                // Plan & Billing (for connectivity table)
                 planName:                       getStr('planName'),
                 planPrice:                      getFloat('planPrice'),
                 accountNumber:                  getStr('accountNumber'),
                 dateConnected:                  getStr('dateConnected'),
                 dateDisconnected:               getStr('dateDisconnected'),
+                isWired:                        getBool('isWired'),
+                isFree:                         getBool('isFree'),
+                planContract:                   getStr('planContract'),
 
-                // ── Contact ───────────────────────────────────────────────
+                // Contact
                 postalOfficeContactPerson:      getStr('postalOfficeContactPerson'),
                 postalOfficeContactNumber:      getStr('postalOfficeContactNumber'),
 
-                // ── Additional ────────────────────────────────────────────
+                // Additional
                 noOfEmployees:                  getInt('noOfEmployees'),
                 noOfPostalTellers:              getInt('noOfPostalTellers'),
                 noOfLetterCarriers:             getInt('noOfLetterCarriers'),
@@ -352,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var officeId = data.id;
 
                 // Check if any photos were selected
-                var hasPhotos = ['insertProfilePhoto','insertCover1','insertCover2','insertCover3']
+                var hasPhotos = ['coverPhoto','profilePicture']
                     .some(id => { var el = document.getElementById(id); return el && el.files && el.files[0]; });
 
                 if (hasPhotos && officeId) {
@@ -375,28 +386,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(err => {
             Swal.fire('Error', err.message || 'Something went wrong.', 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Save Record';
-        });
-    }
-
-    // ─── Cascading dropdowns ─────────────────────────────────────────────────
-    function resetSelect(sel, placeholder, disabled) {
-        if (!sel) return;
-        sel.innerHTML = `<option value="">${placeholder}</option>`;
-        sel.disabled = disabled;
-        if (touched.has(sel.id)) clearMark(sel);
-    }
-    function loadingSelect(sel) {
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Loading...</option>';
-        sel.disabled = true;
-    }
-
-    document.getElementById('regionId')?.addEventListener('change', function () {
-        const provSel = document.getElementById('provinceId');
-        const citySel = document.getElementById('cityMunId');
-        const baraSel = document.getElementById('barangayId');
         resetSelect(provSel, '-- Select Province --', true);
         resetSelect(citySel, '-- Select City/Municipality --', true);
         resetSelect(baraSel, '-- Select Barangay --', true);

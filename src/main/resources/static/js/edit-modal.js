@@ -190,7 +190,10 @@ function saveOfficeChanges() {
 
     var payload = {
         name:                      name,
+        officeCode:                ($('#editOfficeCode').val()       || '').trim(),
         postmaster:                ($('#editPostmaster').val()        || '').trim(),
+        actingPostmaster:          ($('#editActingPostmaster').val()   || '').trim(),
+        officeEmail:               ($('#editOfficeEmail').val()        || '').trim(),
         classification:             $('#editClassification').val()    || null,
         serviceProvided:            $('#editServiceProvided').val()   || null,
         address:                   ($('#editAddress').val()           || '').trim(),
@@ -199,10 +202,15 @@ function saveOfficeChanges() {
         longitude:                  parseFloat($('#editLongitude').val()) || null,
         connectionStatus:           $('#editStatus').val() === 'true',
         officeStatus:               $('#editOfficeStatus').val()      || null,
+        isActive:                  $('#editIsActive').val()            || null,
+        isConnected:               $('#editIsConnected').val()         || null,
+        dateOpen:                  $('#editDateOpen').val()            || null,
+        dateClosed:                $('#editDateClosed').val()          || null,
+        frequencyOfDelivery:       $('#editFrequencyOfDelivery').val() || null,
         internetServiceProvider:   ($('#editISP').val()               || '').trim(),
         typeOfConnection:          ($('#editTypeOfConnection').val()  || '').trim(),
         speed:                     ($('#editSpeed').val()             || '').trim(),
-        staticIpAddress:           ($('#editStaticIP').val()          || '').trim(),
+        staticIpAddress:           ($('#editIPAddressType').val()     || '').trim(),
         noOfEmployees:              parseInt($('#editNoOfEmployees').val()) || 0,
         noOfPostalTellers:          parseInt($('#editNoOfTellers').val())   || 0,
         noOfLetterCarriers:         parseInt($('#editNoOfCarriers').val())  || 0,
@@ -256,7 +264,10 @@ function _fillModal(d) {
     $('#editOfficeId').val(d.id || '');
 
     _setField('#editName',       d.name);
+    _setField('#editOfficeCode', d.officeCode);
     _setField('#editPostmaster', d.postmaster);
+    $('#editActingPostmaster').val(d.actingPostmaster || '');
+    _setField('#editOfficeEmail', d.officeEmail);
     $('#editClassification').val(d.classification  || '');
     $('#editServiceProvided').val(d.serviceProvided || '');
 
@@ -269,10 +280,16 @@ function _fillModal(d) {
         (d.connectionStatus === true || d.connectionStatus === 'true') ? 'true' : 'false'
     );
     $('#editOfficeStatus').val(d.officeStatus || '');
+    $('#editIsActive').val(d.isActive || '');
+    $('#editIsConnected').val(d.isConnected || '');
+    _setField('#editDateOpen', d.dateOpen);
+    _setField('#editDateClosed', d.dateClosed);
+    $('#editFrequencyOfDelivery').val(d.frequencyOfDelivery || '');
+    
     $('#editISP').val(d.internetServiceProvider || '');
     $('#editTypeOfConnection').val(d.typeOfConnection || '');
     _setField('#editSpeed',    d.speed);
-    _setField('#editStaticIP', d.staticIpAddress);
+    $('#editIPAddressType').val(d.staticIpAddress || '');
 
     $('#editNoOfEmployees').val(d.noOfEmployees     != null ? d.noOfEmployees     : '').attr('placeholder', d.noOfEmployees     != null ? '' : 'N/A');
     $('#editNoOfTellers').val(d.noOfPostalTellers   != null ? d.noOfPostalTellers  : '').attr('placeholder', d.noOfPostalTellers  != null ? '' : 'N/A');

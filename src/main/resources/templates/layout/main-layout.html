@@ -433,13 +433,21 @@
             '<div id="popup-tab-basic">' +
             '<div class="row">' +
             '<div class="col-md-6">' +
+            infoRow('fas fa-hashtag', 'Office Code', data.officeCode) +
             infoRow('fas fa-map-marker-alt', 'Area', area) +
             infoRow('fas fa-envelope', 'ZIP Code', data.zipCode) +
             infoRow('fas fa-tag', 'Classification', data.classification) +
+            infoRow('fas fa-calendar-check', 'Date Opened', data.dateOpen) +
+            infoRow('fas fa-calendar-times', 'Date Closed', data.dateClosed) +
             '</div>' +
             '<div class="col-md-6">' +
             infoRow('fas fa-user-tie', 'Postmaster', data.postmaster) +
+            infoRow('fas fa-user-check', 'Acting Postmaster', data.actingPostmaster === 'yes' ? 'Yes' : 'No') +
+            infoRow('fas fa-at', 'Office Email', data.officeEmail) +
+            infoRow('fas fa-truck', 'Delivery Frequency', data.frequencyOfDelivery) +
             infoRow('fas fa-concierge-bell', 'Services', data.serviceProvided) +
+            infoRow('fas fa-check-circle', 'Active Status', data.isActive) +
+            infoRow('fas fa-wifi', 'Internet Connected', data.isConnected) +
             infoRow('fas fa-sticky-note', 'Remarks', data.remarks) +
             '</div></div></div>' +
 
@@ -447,12 +455,12 @@
             '<div id="popup-tab-connectivity" style="display:none;">' +
             '<div class="row">' +
             '<div class="col-md-6">' +
-            infoRow('fas fa-building', 'ISP', data.internetServiceProvider) +
-            infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection) +
+            infoRow('fas fa-building', 'ISP', data.internetServiceProvider || data.isp) +
+            infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection || data.connectionType) +
             infoRow('fas fa-tachometer-alt', 'Speed', data.speed) +
             '</div>' +
             '<div class="col-md-6">' +
-            infoRow('fas fa-network-wired', 'Static IP', data.staticIpAddress) +
+            infoRow('fas fa-network-wired', 'Static IP', data.ipAddressType || data.staticIpAddress) +
             infoRow('fas fa-door-open', 'Office Status', data.officeStatus) +
             '</div></div></div>' +
 

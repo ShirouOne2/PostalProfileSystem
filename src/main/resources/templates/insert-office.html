@@ -56,6 +56,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="address">Complete Address</label>
+                                        <textarea class="form-control" id="address" name="address" rows="2"
+                                                  placeholder="Enter complete street address, building name, or landmark"></textarea>
+                                        <small class="form-text text-muted">Complete physical address of the post office</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer text-right">
                             <button type="button" class="btn btn-primary btn-next">
@@ -224,6 +234,31 @@
                                     </div>
                                 </div>
                            
+                            </div>
+                            <h6 class="text-muted mb-3 mt-4"><i class="fas fa-network-wired mr-1"></i> ISP Contact Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ispContactPerson">ISP Contact Person</label>
+                                        <input type="text" class="form-control" id="ispContactPerson"
+                                               name="ispContactPerson"
+                                               placeholder="Full name of ISP contact person"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="ispContactNumber">ISP Contact Number</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" id="ispContactNumber"
+                                                   name="ispContactNumber"
+                                                   placeholder="e.g., +63-2-1234-5678">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-footer d-flex justify-content-between">
@@ -475,7 +510,65 @@
                                             <i class="fas fa-hashtag text-primary mr-1"></i>Account Number
                                         </label>
                                         <input type="text" class="form-control" id="accountNumber"
-                                               name="accountNumber" placeholder="e.g., 123-456-789">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Connectivity Options -->
+                            <hr class="my-3">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-cog mr-1"></i> Additional Connectivity Options
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="isWired">
+                                            <i class="fas fa-ethernet text-primary mr-1"></i>
+                                            Connection Type
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Physical connection type - Wired (cable/DSL/fiber) or Wireless (WiFi/cellular)."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
+                                        </label>
+                                        <select class="form-control" id="isWired" name="isWired">
+                                            <option value="">Select Type</option>
+                                            <option value="true">Wired</option>
+                                            <option value="false">Wireless</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="isFree">
+                                            <i class="fas fa-gift text-primary mr-1"></i>
+                                            Free Connection
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Whether this internet connection is provided free of charge."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
+                                        </label>
+                                        <select class="form-control" id="isFree" name="isFree">
+                                            <option value="">Select</option>
+                                            <option value="false">Paid</option>
+                                            <option value="true">Free</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="planContract">
+                                            <i class="fas fa-file-contract text-primary mr-1"></i>
+                                            Plan Contract
+                                            <span data-toggle="tooltip" data-placement="top"
+                                                  title="Contract details or agreement terms for internet plan."
+                                                  style="cursor:help;">
+                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+                                            </span>
+                                        </label>
+                                        <input type="text" class="form-control" id="planContract" name="planContract"
+                                               placeholder="e.g., 24-month contract" style="text-transform:uppercase;">
                                     </div>
                                 </div>
                             </div>
@@ -536,6 +629,63 @@
                             <h6 class="mb-0"><i class="fas fa-clipboard-list text-primary"></i> Additional Information</h6>
                         </div>
                         <div class="card-body">
+                            <!-- Office Status & Dates -->
+                            <h6 class="text-muted mb-3"><i class="fas fa-calendar-alt mr-1"></i> Office Status & Dates</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="isActive">Office Active Status</label>
+                                        <select class="form-control" id="isActive" name="isActive">
+                                            <option value="Yes" selected>Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                        <small class="form-text text-muted">Is this office currently active?</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="isConnected">Internet Connected</label>
+                                        <select class="form-control" id="isConnected" name="isConnected">
+                                            <option value="No" selected>No</option>
+                                            <option value="Yes">Yes</option>
+                                        </select>
+                                        <small class="form-text text-muted">Has internet connection?</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="dateOpen">Date Opened</label>
+                                        <input type="date" class="form-control" id="dateOpen" name="dateOpen">
+                                        <small class="form-text text-muted">When office opened</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="dateClosed">Date Closed</label>
+                                        <input type="date" class="form-control" id="dateClosed" name="dateClosed">
+                                        <small class="form-text text-muted">When office closed (if applicable)</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delivery Frequency -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="frequencyOfDelivery">Delivery Frequency</label>
+                                        <select class="form-control" id="frequencyOfDelivery" name="frequencyOfDelivery">
+                                            <option value="">-- Select Frequency --</option>
+                                            <option value="Daily">Daily</option>
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="Weekly">Weekly</option>
+                                        </select>
+                                        <small class="form-text text-muted">How often mail is delivered</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
                             <h6 class="text-muted mb-3"><i class="fas fa-users mr-1"></i> Staff Information</h6>
                             <div class="row">
                                 <div class="col-md-4">
@@ -570,6 +720,45 @@
                                 </label>
                                 <textarea class="form-control" id="remarks" name="remarks" rows="3"
                                           placeholder="Any comments, notes, or additional information about this office..."></textarea>
+                            </div>
+
+                            <!-- Photo Upload -->
+                            <h6 class="text-muted mb-3 mt-4"><i class="fas fa-camera mr-1"></i> Office Photos</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="coverPhoto">
+                                            <i class="fas fa-image text-primary mr-1"></i>
+                                            Cover Photo
+                                            <small class="text-muted font-weight-normal ml-1">(Optional)</small>
+                                        </label>
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="coverPhoto" 
+                                                   name="coverPhoto" accept="image/*">
+                                            <label class="custom-file-label" for="coverPhoto">
+                                                Choose cover photo...
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted">Main photo displayed in office listings</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="profilePicture">
+                                            <i class="fas fa-user-circle text-primary mr-1"></i>
+                                            Profile Picture
+                                            <small class="text-muted font-weight-normal ml-1">(Optional)</small>
+                                        </label>
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="profilePicture" 
+                                                   name="profilePicture" accept="image/*">
+                                            <label class="custom-file-label" for="profilePicture">
+                                                Choose profile picture...
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted">Office representative photo</small>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Summary Box -->
