@@ -105,7 +105,11 @@ public class MapController {
     @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getPostalOfficeProfile(@PathVariable Integer id) {
         try {
-            Optional<com.pps.profilesystem.Entity.PostalOffice> officeOpt = postalOfficeRepository.findById(id);
+            // Use eager-fetch query so ALL lazy associations are loaded within
+            // the transaction — prevents LazyInitializationException when
+            // convertToProfileDTO accesses region/province/city/barangay
+            Optional<com.pps.profilesystem.Entity.PostalOffice> officeOpt =
+                postalOfficeRepository.findByIdWithAllAssociations(id);
             if (officeOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
@@ -235,6 +239,8 @@ public class MapController {
         dto.put("zipCode",                     office.getZipCode());
         dto.put("postmaster",                  office.getPostmaster());
         dto.put("noOfEmployees",               office.getNoOfEmployees());
+        dto.put("noOfPostalTellers",           office.getNoOfPostalTellers());
+        dto.put("noOfLetterCarriers",          office.getNoOfLetterCarriers());
         dto.put("postalOfficeContactPerson",   office.getPostalOfficeContactPerson());
         dto.put("postalOfficeContactNumber",   office.getPostalOfficeContactNumber());
         dto.put("latitude",                    office.getLatitude());
@@ -244,16 +250,25 @@ public class MapController {
         dto.put("speed",                       office.getSpeed());
         dto.put("officeStatus",                office.getOfficeStatus());
         dto.put("remarks",                     office.getRemarks());
+        
+        // Additional fields needed for popup
+        dto.put("classification",              office.getClassification());
+        dto.put("serviceProvided",             office.getServiceProvided());
+        dto.put("internetServiceProvider",    office.getInternetServiceProvider());
+        dto.put("typeOfConnection",           office.getTypeOfConnection());
+        dto.put("staticIpAddress",             office.getStaticIpAddress());
+        dto.put("ispContactPerson",            office.getIspContactPerson());
+        dto.put("ispContactNumber",            office.getIspContactNumber());
 
         // area is eagerly fetched via JOIN FETCH — safe to access
         dto.put("area",   office.getArea() != null ? office.getArea().getAreaName() : null);
         dto.put("areaId", office.getArea() != null ? office.getArea().getId()       : null);
 
-        // For profile modal, we can include more details since it's a single record
-        dto.put("region",           office.getRegion());
-        dto.put("province",         office.getProvince());
-        dto.put("cityMunicipality", office.getCityMunicipality());
-        dto.put("barangay",         office.getBarangay());
+        // For profile modal — extract string values only (lazy proxies must NOT be passed to Jackson)
+        try { dto.put("region",           office.getRegion()            != null ? office.getRegion().getName()            : null); } catch (Exception e) { dto.put("region", null); }
+        try { dto.put("province",         office.getProvince()          != null ? office.getProvince().getName()          : null); } catch (Exception e) { dto.put("province", null); }
+        try { dto.put("cityMunicipality", office.getCityMunicipality()  != null ? office.getCityMunicipality().getName()  : null); } catch (Exception e) { dto.put("cityMunicipality", null); }
+        try { dto.put("barangay",         office.getBarangay()          != null ? office.getBarangay().getName()          : null); } catch (Exception e) { dto.put("barangay", null); }
 
         dto.put("profilePhotoUrl",
             office.getProfilePicture() != null && !office.getProfilePicture().isBlank()

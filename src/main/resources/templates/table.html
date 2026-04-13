@@ -44,13 +44,11 @@
                         </small>
                         <!-- System Admin sees all areas, others see only their assigned area -->
                         <div class="row" style="row-gap:4px;">
-                            <div class="col-2">
+                            <div class="col-3">
                                 <div class="d-flex flex-column" style="gap:5px;">
                                     <span th:if="${isSystemAdmin}" data-area="1" style="font-size:12px;"><span style="background:#FF6B6B;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 1</span>
                                     <span th:if="${isSystemAdmin}" data-area="2" style="font-size:12px;"><span style="background:#4ECDC4;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 2</span>
                                     <span th:if="${isSystemAdmin}" data-area="3" style="font-size:12px;"><span style="background:#45B7D1;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 3</span>
-                                    <span th:if="${isSystemAdmin}" data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
-                                    <span th:if="${isSystemAdmin}" data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
                                     <!-- Non-system admins see only their assigned area -->
                                     <span th:unless="${isSystemAdmin}" th:if="${userAreaId != null}" th:data-area="${userAreaId}" style="font-size:12px;">
                                         <span th:style="'background:' + ${userAreaId == 1 ? '#FF6B6B' : userAreaId == 2 ? '#4ECDC4' : userAreaId == 3 ? '#45B7D1' : userAreaId == 4 ? '#FFA07A' : userAreaId == 5 ? '#98D8C8' : userAreaId == 6 ? '#F7DC6F' : userAreaId == 7 ? '#BB8FCE' : userAreaId == 8 ? '#F8B739' : '#85C1E2'} + ';width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;'"></span>
@@ -58,13 +56,22 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-3">
                                 <div class="d-flex flex-column" style="gap:5px;">
+                                    <span th:if="${isSystemAdmin}" data-area="4" style="font-size:12px;"><span style="background:#FFA07A;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 4</span>
+                                    <span th:if="${isSystemAdmin}" data-area="5" style="font-size:12px;"><span style="background:#98D8C8;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 5</span>
                                     <span th:if="${isSystemAdmin}" data-area="6" style="font-size:12px;"><span style="background:#F7DC6F;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 6</span>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="d-flex flex-column" style="gap:5px;">
                                     <span th:if="${isSystemAdmin}" data-area="7" style="font-size:12px;"><span style="background:#BB8FCE;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 7</span>
                                     <span th:if="${isSystemAdmin}" data-area="8" style="font-size:12px;"><span style="background:#F8B739;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 8</span>
                                     <span th:if="${isSystemAdmin}" data-area="9" style="font-size:12px;"><span style="background:#85C1E2;width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Area 9</span>
                                 </div>
+                            </div>
+                            <div class="col-3">
+                                <!-- Empty column for balance -->
                             </div>
                         </div>
                     </div>
@@ -99,36 +106,6 @@
                                       color:#b0b7c3;font-size:13px;pointer-events:none;z-index:1;"></i>
                         </div>
 
-                    <!-- Area filter -->
-                    <div>
-                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
-                               style="font-size:10px;letter-spacing:.5px;">
-                            <i class="fas fa-map mr-1"></i>Area
-                        </label>
-                        <!-- System Admin gets id="areaFilterAdmin" -->
-                        <select th:if="${isSystemAdmin}" id="areaFilterAdmin" class="form-control"
-                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
-                            <option value="">All Areas</option>
-                            <option value="1">Area 1</option>
-                            <option value="2">Area 2</option>
-                            <option value="3">Area 3</option>
-                            <option value="4">Area 4</option>
-                            <option value="5">Area 5</option>
-                            <option value="6">Area 6</option>
-                            <option value="7">Area 7</option>
-                            <option value="8">Area 8</option>
-                            <option value="9">Area 9</option>
-                        </select>
-                        <!-- Area Admin / User gets id="areaFilter" -->
-                        <select th:unless="${isSystemAdmin}" id="areaFilter" class="form-control"
-                                style="border-radius:8px;border:1px solid #d1d3e2;font-size:13px;">
-                            <option value="">All Areas</option>
-                            <option th:if="${userAreaId != null}" th:value="${userAreaId}" selected>
-                                Area <span th:text="${userAreaId}"></span>
-                            </option>
-                        </select>
-                    </div>
-
                     <!-- Connectivity Status filter -->
                     <div>
                         <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
@@ -143,6 +120,8 @@
                         </select>
                     </div>
 
+                  
+
                     <!-- Apply / Clear -->
                     <div class="d-flex mt-auto" style="gap:8px;">
                         <button id="applyFilters" class="btn btn-primary font-weight-bold flex-fill"
@@ -154,8 +133,63 @@
                             <i class="fas fa-times mr-1"></i>Clear
                         </button>
                     </div>
-
                 </div>
+
+
+                  <!-- Areas (Select Multiple) -->
+                    <div th:if="${isSystemAdmin}">
+                        <label class="d-block mb-1 font-weight-bold text-muted text-uppercase"
+                               style="font-size:10px;letter-spacing:.5px;">
+                            <i class="fas fa-map mr-1"></i>Areas (Select Multiple)
+                        </label>
+                        <!-- System Admin gets checkboxes -->
+                        <div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="selectAllAreas">
+                                <label class="form-check-label" for="selectAllAreas">
+                                    Select All / Deselect All
+                                </label>
+                            </div>
+                            <div class="d-flex flex-wrap" style="gap:8px;">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area1" value="1">
+                                    <label class="form-check-label" for="area1">Area 1</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area2" value="2">
+                                    <label class="form-check-label" for="area2">Area 2</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area3" value="3">
+                                    <label class="form-check-label" for="area3">Area 3</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area4" value="4">
+                                    <label class="form-check-label" for="area4">Area 4</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area5" value="5">
+                                    <label class="form-check-label" for="area5">Area 5</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area6" value="6">
+                                    <label class="form-check-label" for="area6">Area 6</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area7" value="7">
+                                    <label class="form-check-label" for="area7">Area 7</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area8" value="8">
+                                    <label class="form-check-label" for="area8">Area 8</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input area-checkbox" id="area9" value="9">
+                                    <label class="form-check-label" for="area9">Area 9</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
             </div>
         </div><!-- /col-md-4 -->
 

@@ -11,12 +11,26 @@
                 <i class="fas fa-bars fa-lg text-primary"></i>
             </button>
 
-            <!-- Logo -->
-            <a class="navbar-brand d-flex align-items-center" th:href="@{/table}">
-                <img th:src="@{/assets/images/phlpostlogo.png}"
-                     alt="PHLPost Logo"
-                     style="height: 45px;">
-            </a>
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="navbar-brand">
+                <ol class="breadcrumb mb-0 bg-transparent p-0">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/table}" class="text-primary text-decoration-none">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" 
+                        th:text="${activePage == 'dashboard' ? 'Dashboard' : 
+                                activePage == 'table' ? 'Postal Office Locator' :
+                                activePage == 'quarters' ? 'Connectivity' :
+                                activePage == 'report' ? 'Report' :
+                                activePage == 'insert' ? 'Add New Office' :
+                                activePage == 'users' ? 'User Management' :
+                                activePage == 'archive' ? 'Archive' : 'Page'}">
+                        Page
+                    </li>
+                </ol>
+            </nav>
 
             <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">

@@ -87,6 +87,13 @@ public class PostalOfficeEditRestController {
                     d.put("ispContactNumber",           o.getIspContactNumber());
                     d.put("remarks",                    o.getRemarks());
 
+                    // Cover photo URL for popup
+                    if (o.getCoverPhoto() != null && !o.getCoverPhoto().isBlank()) {
+                        d.put("coverPhotoUrl", "/api/postal-office/" + id + "/cover-photo/1");
+                    } else {
+                        d.put("coverPhotoUrl", null);
+                    }
+
                     return ResponseEntity.ok(d);
                 })
                 .orElse(ResponseEntity.notFound().build());

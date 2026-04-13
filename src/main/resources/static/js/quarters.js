@@ -294,6 +294,12 @@ function initializeTable() {
                 },
                 {
                     targets: 1,
+                    data: 'area',
+                    defaultContent: 'N/A',
+                    render: function(d) { return d || 'N/A'; }
+                },
+                {
+                    targets: 2,
                     data: 'name',
                     defaultContent: 'N/A',
                     render: function(data, type, row) {
@@ -304,12 +310,6 @@ function initializeTable() {
                     }
                 },
                 {
-                    targets: 2,
-                    data: 'area',
-                    defaultContent: 'N/A',
-                    render: function(d) { return d || 'N/A'; }
-                },
-                {
                     targets: 3,
                     data: 'province',
                     defaultContent: 'N/A',
@@ -317,7 +317,7 @@ function initializeTable() {
                 },
                 {
                     targets: 4,
-                    data: 'city',
+                    data: 'cityMunicipality',
                     defaultContent: 'N/A',
                     render: function(d) { return d || 'N/A'; }
                 },
@@ -663,59 +663,9 @@ function performArchive(id, officeName, reason) {
     });
 }
 
-function openOfficeProfilePopup(officeId, officeName) {
-    // Remove any existing popup first
-    $('#officeProfileModal').remove();
-
-    // Build modal with loading state
-    $('body').append(`
-        <div class="modal fade" id="officeProfileModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-                <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-                    <div class="modal-header" style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;padding:16px 20px;">
-                        <h5 class="modal-title font-weight-bold">
-                            <i class="fas fa-building mr-2"></i>
-                            <span id="popupOfficeName">${officeName || 'Post Office Profile'}</span>
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
-                    </div>
-                    <div class="modal-body p-0" id="officeProfileModalBody">
-                        <div class="text-center py-5">
-                            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                            <p class="text-muted mt-3">Loading profile...</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="background:#f8f9fa;">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <i class="fas fa-times mr-1"></i>Close
-                        </button>
-                        <button type="button" class="btn btn-primary" id="popupViewFullBtn"
-                                onclick="window.open('/profile/' + officeId + '?source=quarters', '_blank')">
-                            <i class="fas fa-external-link-alt mr-1"></i>View Full Profile
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `);
-
-    $('#officeProfileModal').modal('show');
-    $('#officeProfileModal').on('hidden.bs.modal', function () { $(this).remove(); });
-
-    // Fetch full profile data
-    fetch(`/api/postal-office/${officeId}`)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(data => renderOfficePopup(data, officeId))
-        .catch(() => {
-            document.getElementById('officeProfileModalBody').innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
-                    <p class="text-muted">Failed to load profile data.</p>
-                    <button class="btn btn-primary btn-sm" onclick="window.open('/profile/' + ${officeId} + '?source=quarters', '_blank')">
-                        <i class="fas fa-external-link-alt mr-1"></i>Open Full Profile
-                    </button>
-                </div>`;
-        });
+function infoRow(icon, label, value) {
+    const val = (value !== null && value !== undefined && value !== '') ? value : '—';
+    return '<div class="mb-2 d-flex align-items-start" style="font-size:13px;"><i class="' + icon + ' text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i><div><span class="text-muted" style="font-size:11px;display:block;">' + label + '</span><strong>' + val + '</strong></div></div>';
 }
 
 function renderOfficePopup(data, officeId) {
@@ -727,9 +677,9 @@ function renderOfficePopup(data, officeId) {
         ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
         : data.officeStatus === 'CLOSED'
         ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
-        : '<span class="badge badge-secondary px-3 py-2">—</span>';
+        : '';
 
-    const coverPhoto = `/api/postal-office/${officeId}/cover-photo`;
+    const coverPhoto = `/api/postal-office/${officeId}/cover-photo/1`;
 
     document.getElementById('popupOfficeName').textContent = data.name || 'Post Office Profile';
 
@@ -793,11 +743,6 @@ function renderOfficePopup(data, officeId) {
             </div>
         </div>
     `;
-}
-
-function infoRow(icon, label, value) {
-    const val = (value !== null && value !== undefined && value !== '') ? value : '—';
-    return '<div class="mb-2 d-flex align-items-start" style="font-size:13px;"><i class="' + icon + ' text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i><div><span class="text-muted" style="font-size:11px;display:block;">' + label + '</span><strong>' + val + '</strong></div></div>';
 }
 
 window.addEventListener('beforeunload', function () {

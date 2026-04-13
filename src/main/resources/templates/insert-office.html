@@ -26,9 +26,9 @@
                     <button type="button" class="wizard-step-indicator" data-step="5">5. Additional Info</button>
                 </div>
 
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 1: Basic Info                                         -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- STEP 1: Basic Info                                          -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step active" id="step-1">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
@@ -66,18 +66,58 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="classification">
+                                            <i class="fas fa-tag text-primary mr-1"></i>
+                                            Classification
+                                        </label>
+                                        <select class="form-control" id="classification" name="classification">
+                                            <option value="">-- Select Classification --</option>
+                                            <option value="Regular">Regular</option>
+                                            <option value="Extension">Extension</option>
+                                            <option value="Delivery">Delivery</option>
+                                            <option value="Non-Delivery">Non-Delivery</option>
+                                            <option value="Acceptance with Delivery">Acceptance with Delivery</option>
+                                            <option value="Acceptance">Acceptance</option>
+                                            <option value="Mother">Mother</option>
+                                            <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
+                                            <option value="Post Shop">Post Shop</option>
+                                            <option value="Campus">Campus</option>
+                                            <option value="Mall Based">Mall Based</option>
+                                            <option value="Postal Station - LGU">Postal Station - LGU</option>
+                                            <option value="Barangay Based">Barangay Based</option>
+                                            <option value="Private">Private</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="serviceProvided">
+                                            <i class="fas fa-concierge-bell text-primary mr-1"></i>Services Provided
+                                        </label>
+                                        <select class="form-control" id="serviceProvided" name="serviceProvided">
+                                            <option value="">-- Select Service --</option>
+                                            <option value="Delivery">Delivery</option>
+                                            <option value="Acceptance">Acceptance</option>
+                                            <option value="Acceptance and Delivery">Acceptance and Delivery</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /card-body -->
                         <div class="card-footer text-right">
                             <button type="button" class="btn btn-primary btn-next">
                                 Next <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /card -->
+                </div><!-- /step-1 -->
 
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 2: Location                                           -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- STEP 2: Location                                            -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-2">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
@@ -176,7 +216,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div><!-- /card-body -->
                         <div class="card-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary btn-prev">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -185,12 +225,12 @@
                                 Next <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /card -->
+                </div><!-- /step-2 -->
 
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 3: Contact                                            -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- STEP 3: Contact                                             -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-3">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
@@ -222,7 +262,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <h6 class="text-muted mb-3 mt-4"><i class="fas fa-user-tie mr-1"></i> Postmaster Information</h6>
                             <div class="row">
                                 <div class="col-md-6">
@@ -233,34 +273,8 @@
                                         <small class="form-text text-muted">Officer in charge</small>
                                     </div>
                                 </div>
-                           
                             </div>
-                            <h6 class="text-muted mb-3 mt-4"><i class="fas fa-network-wired mr-1"></i> ISP Contact Information</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="ispContactPerson">ISP Contact Person</label>
-                                        <input type="text" class="form-control" id="ispContactPerson"
-                                               name="ispContactPerson"
-                                               placeholder="Full name of ISP contact person"
-                                               style="text-transform:uppercase;">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="ispContactNumber">ISP Contact Number</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" id="ispContactNumber"
-                                                   name="ispContactNumber"
-                                                   placeholder="e.g., +63-2-1234-5678">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </div><!-- /card-body -->
                         <div class="card-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary btn-prev">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -269,12 +283,12 @@
                                 Next <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /card -->
+                </div><!-- /step-3 -->
 
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 4: Connectivity                                       -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- STEP 4: Connectivity                                        -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-4">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
@@ -282,10 +296,8 @@
                         </div>
                         <div class="card-body">
 
-                            <!-- STATUS DROPDOWNS -->
+                            <!-- Status Dropdowns -->
                             <div class="row mb-4">
-
-                                <!-- Connection Status -->
                                 <div class="col-md-6 mb-3">
                                     <div class="form-group">
                                         <label for="connectionStatusSelect">
@@ -295,97 +307,62 @@
                                         <select class="form-control" id="connectionStatusSelect"
                                                 onchange="syncConnectionStatus(this)">
                                             <option value="">-- Select Status --</option>
-                                            <option value="inactive">Inactive </option>
-                                            <option value="active">Active </option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="active">Active</option>
                                         </select>
-                                        <!-- Hidden checkbox read by getBool('connectionStatus') -->
                                         <input type="checkbox" id="connectionStatus" name="connectionStatus"
                                                value="true" style="display:none;">
                                     </div>
                                 </div>
-
-                                <!-- Office Status -->
                                 <div class="col-md-6 mb-3">
                                     <div class="form-group">
                                         <label for="officeStatus">
                                             <i class="fas fa-door-open mr-1 text-info"></i>
-                                            Office Status <small class="text-muted"></small>
+                                            Office Status
+                                            <i class="fas fa-info-circle text-muted ml-1" 
+                                               style="font-size:12px;cursor:pointer;"
+                                               data-toggle="tooltip" 
+                                               data-placement="top" 
+                                               title="Select whether the post office is currently Open or Closed"></i>
                                         </label>
                                         <select class="form-control" id="officeStatus" name="officeStatus">
                                             <option value="">-- Select Office Status --</option>
-                                            <option value="OPEN" selected="selected">OPEN </option>
+                                            <option value="OPEN" selected>OPEN</option>
                                             <option value="CLOSED">CLOSED</option>
                                         </select>
                                     </div>
                                 </div>
-
                             </div>
-                            <!-- /STATUS DROPDOWNS -->
 
-                            <!-- ISP + Classification + Owned/Shared -->
+                            <!-- ISP + Owned/Shared -->
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="internetServiceProvider">
                                             <i class="fas fa-network-wired text-primary mr-1"></i>
                                             Internet Service Provider
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="The company providing internet service to this post office (e.g. PLDT, Globe, Converge)."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-info-circle text-muted ml-1" 
+                                               style="font-size:12px;cursor:pointer;"
+                                               data-toggle="tooltip" 
+                                               data-placement="top" 
+                                               title="Select your Internet Service Provider from the available options"></i>
                                         </label>
                                         <select class="form-control" id="internetServiceProvider"
-                                                name="internetServiceProvider">
-                                            <option value="">-- Select Classification --</option>
-                                            <option value="Regular">Regular</option>
-                                            <option value="Extension">Extension</option>
-                                            <option value="Delivery">Delivery</option>
-                                            <option value="Non-Delivery">Non-Delivery</option>
-                                            <option value="Acceptance with Delivery">Acceptance with Delivery</option>
-                                            <option value="Acceptance">Acceptance</option>
-                                            <option value="Mother">Mother</option>
-                                            <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
-                                            <option value="Post Shop">Post Shop</option>
-                                            <option value="Campus">Campus</option>
-                                            <option value="Mall Based">Mall Based</option>
-                                            <option value="Postal Station - LGU">Postal Station - LGU</option>
-                                            <option value="Barangay Based">Barangay Based</option>
-                                            <option value="Private">Private</option>
+                                               name="internetServiceProvider">
+                                            <option value="">Select ISP...</option>
+                                            <option value="PLDT">PLDT</option>
+                                            <option value="Globe">Globe</option>
+                                            <option value="Converge">Converge</option>
+                                            <option value="Sky Cable">Sky Cable</option>
+                                            <option value="Bayantel">Bayantel</option>
+                                            <option value="Eastern Telecom">Eastern Telecom</option>
+                                            <option value="Smart">Smart</option>
+                                            <option value="DITO">DITO</option>
+                                            <option value="Other">Other</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="classification">
-                                            <i class="fas fa-tag text-primary mr-1"></i>
-                                            Classification
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Type of postal office classification based on operations and services."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
-                                        </label>
-                                        <select class="form-control" id="classification" name="classification">
-                                            <option value="" selected>-- Select Classification --</option>
-                                            <option value="Regular">Regular</option>
-                                            <option value="Extension">Extension</option>
-                                            <option value="Delivery">Delivery</option>
-                                            <option value="Non-Delivery">Non-Delivery</option>
-                                            <option value="Acceptance with Delivery">Acceptance with Delivery</option>
-                                            <option value="Acceptance">Acceptance</option>
-                                            <option value="Mother">Mother</option>
-                                            <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
-                                            <option value="Post Shop">Post Shop</option>
-                                            <option value="Campus">Campus</option>
-                                            <option value="Mall Based">Mall Based</option>
-                                            <option value="Postal Station - LGU">Postal Station - LGU</option>
-                                            <option value="Barangay Based">Barangay Based</option>
-                                            <option value="Private">Private</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="ownedOrShared">
                                             <i class="fas fa-share-alt text-primary mr-1"></i>
@@ -400,18 +377,18 @@
                                 </div>
                             </div>
 
-                            <!-- Type + Speed + Static IP -->
+                            <!-- Type + Speed + IP -->
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="typeOfConnection">
                                             <i class="fas fa-plug text-primary mr-1"></i>
                                             Type of Connection
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="The physical medium used for internet connectivity (e.g. Fiber — fastest and most reliable; DSL — uses phone line; Wireless — radio signal; Satellite — for remote areas)."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-info-circle text-muted ml-1" 
+                                               style="font-size:12px;cursor:pointer;"
+                                               data-toggle="tooltip" 
+                                               data-placement="top" 
+                                               title="Select the type of internet connection used by this office"></i>
                                         </label>
                                         <select class="form-control" id="typeOfConnection" name="typeOfConnection">
                                             <option value="">-- Select Type --</option>
@@ -428,6 +405,11 @@
                                         <label for="speed">
                                             <i class="fas fa-tachometer-alt text-primary mr-1"></i>
                                             Connection Speed (Mbps)
+                                            <i class="fas fa-info-circle text-muted ml-1" 
+                                               style="font-size:12px;cursor:pointer;"
+                                               data-toggle="tooltip" 
+                                               data-placement="top" 
+                                               title="Enter the internet connection speed in Megabits per second (Mbps)"></i>
                                         </label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="speed" name="speed"
@@ -436,7 +418,6 @@
                                                 <span class="input-group-text">Mbps</span>
                                             </div>
                                         </div>
-                                        <small class="form-text text-muted">Enter number only</small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -444,14 +425,13 @@
                                         <label for="ipAddressType">
                                             <i class="fas fa-server text-primary mr-1"></i>
                                             IP Address Type
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Dynamic IP changes each time you connect, Static IP stays the same."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-info-circle text-muted ml-1" 
+                                               style="font-size:12px;cursor:pointer;"
+                                               data-toggle="tooltip" 
+                                               data-placement="top" 
+                                               title="Select whether the IP address is Dynamic, Static, or Unknown"></i>
                                         </label>
-                                        <select class="form-control" id="ipAddressType"
-                                               name="ipAddressType">
+                                        <select class="form-control" id="ipAddressType" name="ipAddressType">
                                             <option value="">Select IP Address Type</option>
                                             <option value="dynamic">Dynamic IP</option>
                                             <option value="static">Static IP</option>
@@ -459,20 +439,6 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Services Provided -->
-                            <hr class="my-3">
-                            <div class="form-group">
-                                <label for="serviceProvided">
-                                    <i class="fas fa-concierge-bell text-primary mr-1"></i>Services Provided
-                                </label>
-                                <select class="form-control" id="serviceProvided" name="serviceProvided">
-                                    <option value="">-- Select Service --</option>
-                                    <option value="Delivery">Delivery</option>
-                                    <option value="Acceptance">Acceptance</option>
-                                    <option value="Acceptance and Delivery">Acceptance and Delivery</option>
-                                </select>
                             </div>
 
                             <!-- Plan & Billing -->
@@ -510,6 +476,7 @@
                                             <i class="fas fa-hashtag text-primary mr-1"></i>Account Number
                                         </label>
                                         <input type="text" class="form-control" id="accountNumber"
+                                               name="accountNumber" placeholder="e.g., 123-456-789">
                                     </div>
                                 </div>
                             </div>
@@ -523,13 +490,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="isWired">
-                                            <i class="fas fa-ethernet text-primary mr-1"></i>
-                                            Connection Type
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Physical connection type - Wired (cable/DSL/fiber) or Wireless (WiFi/cellular)."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-ethernet text-primary mr-1"></i>Connection Type
                                         </label>
                                         <select class="form-control" id="isWired" name="isWired">
                                             <option value="">Select Type</option>
@@ -541,13 +502,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="isFree">
-                                            <i class="fas fa-gift text-primary mr-1"></i>
-                                            Free Connection
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Whether this internet connection is provided free of charge."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-gift text-primary mr-1"></i>Free Connection
                                         </label>
                                         <select class="form-control" id="isFree" name="isFree">
                                             <option value="">Select</option>
@@ -559,13 +514,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="planContract">
-                                            <i class="fas fa-file-contract text-primary mr-1"></i>
-                                            Plan Contract
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Contract details or agreement terms for internet plan."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
+                                            <i class="fas fa-file-contract text-primary mr-1"></i>Plan Contract
                                         </label>
                                         <input type="text" class="form-control" id="planContract" name="planContract"
                                                placeholder="e.g., 24-month contract" style="text-transform:uppercase;">
@@ -580,11 +529,6 @@
                                     <div class="form-group">
                                         <label for="dateConnected">
                                             <i class="fas fa-calendar-check text-success mr-1"></i>Date Connected
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Date when internet connection was established (automatically set when status changes to Active)."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
                                         </label>
                                         <input type="date" class="form-control" id="dateConnected"
                                                name="dateConnected" disabled>
@@ -595,11 +539,6 @@
                                     <div class="form-group">
                                         <label for="dateDisconnected">
                                             <i class="fas fa-calendar-times text-danger mr-1"></i>Date Disconnected
-                                            <span data-toggle="tooltip" data-placement="top"
-                                                  title="Date when internet connection was terminated (automatically set when status changes to Inactive)."
-                                                  style="cursor:help;">
-                                                <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-                                            </span>
                                         </label>
                                         <input type="date" class="form-control" id="dateDisconnected"
                                                name="dateDisconnected">
@@ -608,7 +547,7 @@
                                 </div>
                             </div>
 
-                        </div>
+                        </div><!-- /card-body -->
                         <div class="card-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary btn-prev">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -617,73 +556,21 @@
                                 Next <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /card -->
+                </div><!-- /step-4 -->
 
-                <!-- ══════════════════════════════════════════════════════════ -->
-                <!-- STEP 5: Additional Info                                    -->
-                <!-- ══════════════════════════════════════════════════════════ -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- STEP 5: Additional Info                                     -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <div class="wizard-step" id="step-5">
                     <div class="card mb-4">
                         <div class="card-header bg-light">
                             <h6 class="mb-0"><i class="fas fa-clipboard-list text-primary"></i> Additional Information</h6>
                         </div>
                         <div class="card-body">
-                            <!-- Office Status & Dates -->
-                            <h6 class="text-muted mb-3"><i class="fas fa-calendar-alt mr-1"></i> Office Status & Dates</h6>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="isActive">Office Active Status</label>
-                                        <select class="form-control" id="isActive" name="isActive">
-                                            <option value="Yes" selected>Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                        <small class="form-text text-muted">Is this office currently active?</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="isConnected">Internet Connected</label>
-                                        <select class="form-control" id="isConnected" name="isConnected">
-                                            <option value="No" selected>No</option>
-                                            <option value="Yes">Yes</option>
-                                        </select>
-                                        <small class="form-text text-muted">Has internet connection?</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="dateOpen">Date Opened</label>
-                                        <input type="date" class="form-control" id="dateOpen" name="dateOpen">
-                                        <small class="form-text text-muted">When office opened</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="dateClosed">Date Closed</label>
-                                        <input type="date" class="form-control" id="dateClosed" name="dateClosed">
-                                        <small class="form-text text-muted">When office closed (if applicable)</small>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Delivery Frequency -->
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="frequencyOfDelivery">Delivery Frequency</label>
-                                        <select class="form-control" id="frequencyOfDelivery" name="frequencyOfDelivery">
-                                            <option value="">-- Select Frequency --</option>
-                                            <option value="Daily">Daily</option>
-                                            <option value="Scheduled">Scheduled</option>
-                                            <option value="Weekly">Weekly</option>
-                                        </select>
-                                        <small class="form-text text-muted">How often mail is delivered</small>
-                                    </div>
-                                </div>
-                            </div>
-
+                          
+                            
                             <hr>
 
                             <h6 class="text-muted mb-3"><i class="fas fa-users mr-1"></i> Staff Information</h6>
@@ -711,7 +598,6 @@
                                 </div>
                             </div>
 
-                            <!-- Remarks -->
                             <div class="form-group">
                                 <label for="remarks">
                                     <i class="fas fa-sticky-note text-primary mr-1"></i>
@@ -733,13 +619,12 @@
                                             <small class="text-muted font-weight-normal ml-1">(Optional)</small>
                                         </label>
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="coverPhoto" 
+                                            <input type="file" class="custom-file-input" id="coverPhoto"
                                                    name="coverPhoto" accept="image/*">
                                             <label class="custom-file-label" for="coverPhoto">
                                                 Choose cover photo...
                                             </label>
                                         </div>
-                                        <small class="form-text text-muted">Main photo displayed in office listings</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -750,13 +635,12 @@
                                             <small class="text-muted font-weight-normal ml-1">(Optional)</small>
                                         </label>
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="profilePicture" 
+                                            <input type="file" class="custom-file-input" id="profilePicture"
                                                    name="profilePicture" accept="image/*">
                                             <label class="custom-file-label" for="profilePicture">
                                                 Choose profile picture...
                                             </label>
                                         </div>
-                                        <small class="form-text text-muted">Office representative photo</small>
                                     </div>
                                 </div>
                             </div>
@@ -800,7 +684,7 @@
                                 </div>
                             </div>
 
-                        </div>
+                        </div><!-- /card-body -->
                         <div class="card-footer d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary btn-prev">
                                 <i class="fas fa-arrow-left"></i> Previous
@@ -809,20 +693,17 @@
                                 <i class="fas fa-save"></i> Save Record
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /card -->
+                </div><!-- /step-5 -->
 
             </form>
-        </div>
-    </div>
-</div>
+        </div><!-- /card-body -->
+    </div><!-- /card -->
+</div><!-- /container-fluid -->
 
-<!-- ── Styles ─────────────────────────────────────────────── -->
 <link rel="stylesheet" href="/css/insert-office-status-cards.css">
-
 <link rel="stylesheet" href="/css/insert-office-wizard.css">
 <script src="/js/insert-office-wizard.js"></script>
-<!-- Tooltip init handled by main-layout.html script #23 -->
 
 </div>
 </html>

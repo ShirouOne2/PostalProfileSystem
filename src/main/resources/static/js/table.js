@@ -117,6 +117,53 @@ document.addEventListener('DOMContentLoaded', function () {
     // Wire filters
     initFilters();
 
+    function populateAreaDropdown() {
+        // Area dropdown options are already hardcoded in the HTML template
+        // This function exists to prevent ReferenceError but doesn't need to do anything
+        // since the options are populated via Thymeleaf in the template
+    }
+
+    function initFilters() {
+        // Attach event listeners to the Apply and Clear filter buttons
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        document.getElementById('clearFilters').addEventListener('click', clearFilters);
+        
+        // Attach event listener to Select All checkbox
+        const selectAllCheckbox = document.getElementById('selectAllAreas');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                document.querySelectorAll('.area-checkbox').forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                // Auto-apply filters when select all changes
+                applyFilters();
+            });
+        }
+        
+        // Attach event listeners to area checkboxes for real-time filtering
+        document.querySelectorAll('.area-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Update Select All checkbox state
+                updateSelectAllCheckbox();
+                // Auto-apply filters when checkboxes change
+                applyFilters();
+            });
+        });
+    }
+    
+    // Function to update Select All checkbox state based on individual checkboxes
+    function updateSelectAllCheckbox() {
+        const selectAllCheckbox = document.getElementById('selectAllAreas');
+        const areaCheckboxes = document.querySelectorAll('.area-checkbox');
+        
+        if (selectAllCheckbox && areaCheckboxes.length > 0) {
+            const checkedCount = document.querySelectorAll('.area-checkbox:checked').length;
+            selectAllCheckbox.checked = checkedCount === areaCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < areaCheckboxes.length;
+        }
+    }
+
     // ── Restore saved filter state if returning from profile ─────────────────
     const savedRaw = sessionStorage.getItem('tableFilterState');
     if (savedRaw && sessionStorage.getItem('tableFilterSource') === 'table') {
@@ -127,10 +174,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const state = JSON.parse(savedRaw);
 
             // Restore filter inputs
-            if (state.search)     setVal('tableSearchInput',    state.search);
-            if (state.area)       setVal('filterArea',          state.area);
-            if (state.connStatus) setVal('filterConnStatus',    state.connStatus);
-            if (state.offStatus)  setVal('filterOfficeStatus',  state.offStatus);
+            if (state.search)       setVal('tableSearchInput',    state.search);
+            if (state.area)         setVal('filterArea',          state.area);
+            if (state.connectivity) setVal('filterConnectivity',  state.connectivity);
+            if (state.officeStatus) setVal('filterOfficeStatus',  state.officeStatus);
 
             // Re-apply filters
             setTimeout(function () {
@@ -379,9 +426,10 @@ function initializeMap() {
 //  MAP FILTERS
 // ═══════════════════════════════════════════════════════════════
 function initMapFilters() {
-    // Create suggest box if it doesn't exist
-    const searchInput = document.getElementById('searchInput');
+    // Try both possible search input IDs (table.html uses searchInput, dashboard.html uses tableSearchInput)
+    const searchInput = document.getElementById('searchInput') || document.getElementById('tableSearchInput');
     let suggestBox = document.getElementById('mapSearchSuggestions');
+    
     if (!suggestBox && searchInput) {
         suggestBox = document.createElement('div');
         suggestBox.id = 'mapSearchSuggestions';
@@ -390,6 +438,19 @@ function initMapFilters() {
             'display:block;background:#f8f9fc;border:1px solid #e3e6f0;border-radius:8px;' +
             'max-height:150px;overflow-y:auto;padding:12px;';
         searchInput.parentElement.appendChild(suggestBox);
+    }
+
+    // Wire live search as you type
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const term = this.value.trim();
+            if (term) {
+                filterOffices(term);
+            } else {
+                showAllOffices();
+            }
+            filterMapMarkers(); // update map markers live
+        });
     }
 
     function showAllOffices() {
@@ -579,98 +640,47 @@ function initMapFilters() {
 
             suggestBox.appendChild(item);
         });
+
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const term = this.value.trim();
-            if (term) {
-                filterOffices(term);
-            } else {
-                showAllOffices();
-            }
-            filterMapMarkers();
-        });
+    // Show all offices when page loads
+    setTimeout(() => {
+        showAllOffices();
+    }, 1000);
+}
 
-        // Show all offices when page loads
-        setTimeout(() => {
-            showAllOffices();
-        }, 1000);
-    }
+// Area filter event listeners
+document.getElementById('areaFilterAdmin')?.addEventListener('change', filterMapMarkers);
+document.getElementById('areaFilter')?.addEventListener('change', filterMapMarkers);
 
-    // ── End autocomplete ──────────────────────────────────────────────────────
-
-    // Search input (filter map on input — already handled above, keep for clarity)
-    document.getElementById('searchInput')?.addEventListener('input', function() {
-        // filterMapMarkers already called in autocomplete handler above
-    });
-
-    // Area filter — listen to both IDs since IS_ADMIN may not be resolved
-    // at the time initMapFilters() runs (it depends on a DOM query).
-    document.getElementById('areaFilterAdmin')?.addEventListener('change', filterMapMarkers);
-    document.getElementById('areaFilter')?.addEventListener('change', filterMapMarkers);
-
-    // Status filter
-    document.getElementById('statusFilter')?.addEventListener('change', function() {
-        filterMapMarkers();
-    });
-
-    // Apply filters button
-    document.getElementById('applyFilters')?.addEventListener('click', function() {
-        filterMapMarkers();
-    });
-
-    // Clear filters button
-    document.getElementById('clearFilters')?.addEventListener('click', function() {
-        const si = document.getElementById('searchInput');
-        const sg = document.getElementById('mapSearchSuggestions');
-        if (si) si.value = '';
-        if (sg) {
-            sg.style.display = 'none';
-            sg.innerHTML = '';
-        }
-        const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
-        if (areaFilterElement) areaFilterElement.value = '';
-        document.getElementById('statusFilter').value = '';
-
-        // Restore all markers
-        const allBounds = [];
-        markers.forEach(function(marker) {
-            if (!markerClusterGroup.hasLayer(marker)) markerClusterGroup.addLayer(marker);
-            marker.setStyle({ fillOpacity: 0.85, opacity: 1 });
-            allBounds.push(marker.getLatLng());
-        });
-        if (allBounds.length) map.fitBounds(allBounds, { padding: [20, 20] });
-
-        updateLegendVisibility(new Set());
-        // No profile display action taken
-    });
+function viewArchive() {
+    window.location.href = '/archive';
 }
 
 function filterMapMarkers() {
     if (!map || !markers.length) return;
 
-    const searchTerm   = (document.getElementById('searchInput')?.value  || '').toLowerCase().trim();
-    // Read from whichever area dropdown is present in the DOM (admin or non-admin)
-    const areaAdminEl  = document.getElementById('areaFilterAdmin');
-    const areaEl       = document.getElementById('areaFilter');
-    const areaFilter   = ((areaAdminEl?.value || areaEl?.value) || '').trim();
+    // Try both possible search input IDs
+    const searchInput = document.getElementById('searchInput') || document.getElementById('tableSearchInput');
+    const searchTerm   = (searchInput?.value  || '').toLowerCase().trim();
+    
+    // Get selected area checkboxes
+    const selectedAreas = [];
+    document.querySelectorAll('.area-checkbox:checked').forEach(checkbox => {
+        selectedAreas.push(checkbox.value);
+    });
+    
     const statusFilter = (document.getElementById('statusFilter')?.value || '').trim();
-
-    console.log('=== MAP FILTER DEBUG ===');
-    console.log('Filter values:', { searchTerm, areaFilter, statusFilter });
-    console.log('Total markers:', markers.length);
 
     const areasWithMatches = new Set();
     const visibleBounds    = [];
-    let matchCount = 0;
 
     markers.forEach(function(marker, index) {
         const d = marker._officeData;
         if (!d) return;
 
         const matchesSearch = !searchTerm   || d.name.includes(searchTerm);
-        const matchesArea   = !areaFilter   || d.areaId === areaFilter;
+        const matchesArea   = selectedAreas.length > 0 ? selectedAreas.includes(d.areaId) : true; // If no checkboxes selected, show all areas
         const matchesStatus = !statusFilter || d.status === statusFilter;
 
         const isMatch = matchesSearch && matchesArea && matchesStatus;
@@ -697,146 +707,67 @@ function filterMapMarkers() {
     updateLegendVisibility(areasWithMatches);
 }
 
-function updateLegendVisibility(areasWithMatches) {
-    const hasActiveFilters =
-        document.getElementById('searchInput')?.value  ||
-        document.getElementById('areaFilterAdmin')?.value ||
-        document.getElementById('areaFilter')?.value   ||
-        document.getElementById('statusFilter')?.value;
-
-    // Legend items have data-area="1" .. data-area="9"
-    const legendItems = document.querySelectorAll('#mapLegend [data-area]');
-
-    legendItems.forEach(function(item) {
-        const areaNum = item.getAttribute('data-area');
-
-        if (!hasActiveFilters) {
-            // No filters active - show all legends normally
-            item.style.opacity    = '1';
-            item.style.fontWeight = '';
-        } else if (areasWithMatches.has(areaNum)) {
-            // This area has matching markers - show prominently
-            item.style.opacity    = '1';
-            item.style.fontWeight = '700';
-        } else {
-            // This area has no matching markers - dim it
-            item.style.opacity    = '0.2';
-            item.style.fontWeight = '';
-        }
-    });
-
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  AREA DROPDOWN
-// ═══════════════════════════════════════════════════════════════
-function populateAreaDropdown() {
-    // Thymeleaf already rendered the dropdowns with correct values server-side.
-    // Do NOT overwrite them — just leave them as-is.
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  FILTER INIT
-// ═══════════════════════════════════════════════════════════════
-function initFilters() {
-
-    // Toggle panel
-    document.getElementById('toggleFilterBody')?.addEventListener('click', function () {
-        const body    = document.getElementById('filterBody');
-        const chevron = document.getElementById('filterChevron');
-        const hidden  = body.classList.toggle('d-none');
-        chevron.classList.toggle('fa-chevron-up',  !hidden);
-        chevron.classList.toggle('fa-chevron-down',  hidden);
-    });
-
-    document.getElementById('applyFilters')?.addEventListener('click', applyFilters);
-    document.getElementById('clearFilters')?.addEventListener('click', clearFilters);
-
-    // Clear search ×
-    document.getElementById('clearSearchBtn')?.addEventListener('click', function () {
-        document.getElementById('searchInput').value = '';
-        applyFilters();
-    });
-
-    // Live search debounced
-    let timer;
-    document.getElementById('searchInput')?.addEventListener('input', function () {
-        clearTimeout(timer);
-        timer = setTimeout(applyFilters, 300);
-    });
-    document.getElementById('searchInput')?.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
-    });
-
-    // Instant on dropdown change - use correct IDs from HTML
-    ['areaFilterAdmin', 'areaFilter', 'statusFilter'].forEach(id => {
-        document.getElementById(id)?.addEventListener('change', applyFilters);
-    });
-
-    // Export Excel and Print Report buttons
-    document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
-    document.getElementById('printReportBtn')?.addEventListener('click', printReport);
-    document.getElementById('viewArchiveBtn')?.addEventListener('click', viewArchive);
-}
-
-// ── View Archive Function ─────────────────────────────────────────────────────
-function viewArchive() {
-    window.location.href = '/archive';
-}
-
-// ── Apply filters ─────────────────────────────────────────────────────────────
 function applyFilters() {
     if (!table) return;
 
-    const search = (document.getElementById('searchInput')?.value || '').trim();
-    
-    // Get area filter based on user role
-    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
-    const area = (areaFilterElement?.value || '').trim();
-    
-    const status = (document.getElementById('statusFilter')?.value || '').trim();
+    // Try both possible search input IDs (table.html uses searchInput, dashboard.html uses tableSearchInput)
+    const searchInput  = document.getElementById('searchInput') || document.getElementById('tableSearchInput');
+    const search       = (searchInput?.value  || '').trim();
+    const connectivity = (document.getElementById('statusFilter')?.value || '').trim();
+    const connText     = connectivity === 'true' ? 'Active' : connectivity === 'false' ? 'Inactive' : '';
 
     if (IS_ADMIN) {
-        // Admin layout: # | Name | Area(2) | Region(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
-        table.column(2).search(area ? '^' + escRx(area) + '$' : '', true, false);
-        table.column(5).search(status ? (status === 'true' ? 'Active' : 'Inactive') : '', true, false);
+        // Admin DataTable column layout (adminColumnDefs):
+        // col 0:# | col 1:Name | col 2:Area | col 3:Region | col 4:City | col 5:Conn | col 6:Office | col 7:Remarks | col 8:Actions
+        // Area filter comes from the area checkboxes (same ones used by the map).
+        const selectedAreaIds = [];
+        document.querySelectorAll('.area-checkbox:checked').forEach(cb => selectedAreaIds.push(cb.value));
+        const areaRegex = selectedAreaIds.length
+            ? selectedAreaIds.map(id => 'Area\\s+' + id + '\\b').join('|')
+            : '';
+        table.column(2).search(areaRegex, true, false);   // Area column
+        table.column(5).search(connText, false, false);   // Connection Status column
     } else {
-        // User layout: # | Name(1) | Conn(2) | Speed(3) | Remarks(4) | Actions(5)
-        table.column(2).search(status ? (status === 'true' ? 'Active' : 'Inactive') : '', true, false);
+        // User DataTable column layout (userColumnDefs):
+        // col 0:# | col 1:Name | col 2:Conn | col 3:Speed | col 4:Remarks | col 5:Actions
+        table.column(2).search(connText, false, false);   // Connection Status column
     }
 
     table.search(search).draw();
-
-    // Also filter the map markers
     filterMapMarkers();
-
-    // Skip renderTags and highlightSelects since those elements don't exist in table.html
 }
 
-// ── Clear filters ─────────────────────────────────────────────────────────────
+// Clear filters
 function clearFilters() {
     if (!table) return;
 
-    document.getElementById('searchInput').value = '';
-    
-    // Clear area filter based on user role
-    const areaFilterElement = document.getElementById('areaFilterAdmin') || document.getElementById('areaFilter');
-    if (areaFilterElement) areaFilterElement.value = '';
-    
-    document.getElementById('statusFilter').value = '';
+    // Clear search input (try both possible IDs)
+    const searchInput = document.getElementById('searchInput') || document.getElementById('tableSearchInput');
+    if (searchInput) searchInput.value = '';
 
-    if (IS_ADMIN) {
-        // Admin layout: clear area and connection columns
-        table.column(2).search('');  // Area column
-        table.column(5).search('');  // Connection column
-    } else {
-        // User layout: clear connection column
-        table.column(2).search('');  // Connection column
-    }
+    // Clear connectivity/status filter (id="statusFilter" in table.html)
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) statusFilter.value = '';
 
+    // Uncheck all area checkboxes
+    document.querySelectorAll('.area-checkbox').forEach(cb => cb.checked = false);
+    const selectAll = document.getElementById('selectAllAreas');
+    if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+
+    // Clear all DataTable column searches and global search
+    table.columns().search('');
     table.search('').draw();
 
-    // Skip renderTags and highlightSelects since those elements don't exist in table.html
+    // Restore all map markers
+    const allBounds = [];
+    markers.forEach(function(marker) {
+        if (!markerClusterGroup.hasLayer(marker)) markerClusterGroup.addLayer(marker);
+        marker.setStyle({ fillOpacity: 0.85, opacity: 1 });
+        allBounds.push(marker.getLatLng());
+    });
+    if (allBounds.length) map.fitBounds(allBounds, { padding: [20, 20] });
+
+    updateLegendVisibility(new Set());
 }
 
 // ── Render active filter pill tags ────────────────────────────────────────────
@@ -1011,7 +942,30 @@ function saveTableStateAndView(officeId) {
 
 // ── Unified Office Profile Popup ──────────────────────────────────────────────
 function openOfficeProfilePopup(officeId, officeName) {
-    window.location.href = '/profile/' + officeId;
+    if (!officeId) return;
+
+    // Detect current page and set appropriate source parameter
+    var currentPath = window.location.pathname;
+    var sourceParam = 'table'; // default for table page
+    if (currentPath.includes('/dashboard')) {
+        sourceParam = 'dashboard';
+        // Store dashboard return URL
+        sessionStorage.setItem('dashboardReturnUrl', currentPath + window.location.search);
+    } else if (currentPath.includes('/quarters')) {
+        sourceParam = 'quarters';
+        // Store quarters return URL
+        sessionStorage.setItem('quartersReturnUrl', currentPath + window.location.search);
+    } else if (currentPath.includes('/table')) {
+        sourceParam = 'table';
+        // Store table return URL
+        sessionStorage.setItem('tableReturnUrl', currentPath + window.location.search);
+    } else if (currentPath.includes('/report')) {
+        sourceParam = 'report';
+        // Store report return URL
+        sessionStorage.setItem('reportReturnUrl', currentPath + window.location.search);
+    }
+    
+    window.location.href = '/profile/' + officeId + '?source=' + sourceParam;
 }
 
 // ═══════════════════════════════════════════════════════════════

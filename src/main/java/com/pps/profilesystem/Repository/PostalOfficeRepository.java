@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import java.util.Optional;
 /**
  * PostalOfficeRepository
  *
@@ -56,6 +56,21 @@ public interface PostalOfficeRepository extends JpaRepository<PostalOffice, Inte
     @Query(value = "SELECT * FROM postal_offices WHERE id NOT IN (SELECT postal_office_id FROM archived_offices)",
            nativeQuery = true)
     List<PostalOffice> findByIsArchivedFalse();
+
+    /**
+     * Single-record fetch with ALL associations eagerly loaded.
+     * Used by the profile popup API so lazy fields don't throw
+     * LazyInitializationException when Jackson serializes the response.
+     */
+    @Query("SELECT po FROM PostalOffice po " +
+           "LEFT JOIN FETCH po.activeConnectivity " +
+           "LEFT JOIN FETCH po.area " +
+           "LEFT JOIN FETCH po.region " +
+           "LEFT JOIN FETCH po.province " +
+           "LEFT JOIN FETCH po.cityMunicipality " +
+           "LEFT JOIN FETCH po.barangay " +
+           "WHERE po.id = :id")
+    Optional<PostalOffice> findByIdWithAllAssociations(@Param("id") Integer id);
 
     @Query("SELECT DISTINCT po FROM PostalOffice po " +
            "LEFT JOIN FETCH po.activeConnectivity " +
