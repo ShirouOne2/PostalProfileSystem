@@ -357,6 +357,7 @@ function initializeMap() {
             const officeId         = office.id || '';
 
             const coverPhotoSrc = office.coverPhotoUrl || '/images/no-image.png';
+            console.log('Office ID:', office.id, 'CoverPhotoUrl:', office.coverPhotoUrl, 'Final src:', coverPhotoSrc);
 
             const popupContent = `
                 <div style="font-family:'Segoe UI',sans-serif;font-size:12px;line-height:1.4;max-width:240px;">
@@ -762,12 +763,45 @@ function clearFilters() {
     const allBounds = [];
     markers.forEach(function(marker) {
         if (!markerClusterGroup.hasLayer(marker)) markerClusterGroup.addLayer(marker);
-        marker.setStyle({ fillOpacity: 0.85, opacity: 1 });
+        // Reset marker to original style (remove yellow highlight)
+        const areaColors = {
+            '1': '#FF6B6B', '2': '#4ECDC4', '3': '#45B7D1',
+            '4': '#FFA07A', '5': '#98D8C8', '6': '#F7DC6F',
+            '7': '#BB8FCE', '8': '#F8B739', '9': '#85C1E2'
+        };
+        const areaColor = areaColors[marker._officeData?.areaId] || '#85C1E2';
+        marker.setStyle({ 
+            fillOpacity: 0.85, 
+            opacity: 1,
+            radius: 8,
+            weight: 2,
+            fillColor: areaColor,
+            color: '#fff',
+            fillOpacity: 0.7
+        });
         allBounds.push(marker.getLatLng());
     });
     if (allBounds.length) map.fitBounds(allBounds, { padding: [20, 20] });
 
+    // Close any open popups
+    if (map) map.closePopup();
+
     updateLegendVisibility(new Set());
+}
+
+// ── Update legend visibility based on filtered areas ─────────────────────────────
+function updateLegendVisibility(areasWithMatches) {
+    const legendItems = document.querySelectorAll('#mapLegend [data-area]');
+    legendItems.forEach(function(item) {
+        const areaId = item.getAttribute('data-area');
+        if (areasWithMatches.has(areaId)) {
+            item.style.opacity = '1';
+            item.style.visibility = 'visible';
+        } else {
+            item.style.opacity = '0.3';
+            item.style.visibility = 'hidden';
+        }
+    });
 }
 
 // ── Render active filter pill tags ────────────────────────────────────────────

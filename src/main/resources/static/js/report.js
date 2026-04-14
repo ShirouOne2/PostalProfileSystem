@@ -251,6 +251,20 @@ function initializePrint() {
             '<tbody>' + tableRows + '</tbody>' +
             '</table>' +
 
+            // Newly Connected Offices Table
+            '<h3>Newly Connected Offices</h3>' +
+            '<table>' +
+            '<thead><tr><th>Year</th><th>Quarter</th><th>Office Name</th><th>Area</th></tr></thead>' +
+            '<tbody>' + buildNewlyConnectedTable() + '</tbody>' +
+            '</table>' +
+
+            // Newly Disconnected Offices Table
+            '<h3>Newly Disconnected Offices</h3>' +
+            '<table>' +
+            '<thead><tr><th>Year</th><th>Quarter</th><th>Office Name</th><th>Area</th></tr></thead>' +
+            '<tbody>' + buildNewlyDisconnectedTable() + '</tbody>' +
+            '</table>' +
+
             '<div class="footer">PHLPost Profile System &mdash; Connectivity Report &mdash; Confidential &mdash; ' + printDate + '</div>' +
             '</body></html>';
 
@@ -275,6 +289,81 @@ function initializePrint() {
             $btn.prop('disabled', false).html('<i class="fas fa-print mr-1"></i> Print Report');
         }, 600);
     });
+}
+
+/* Helper functions to build office detail tables */
+function buildNewlyConnectedTable() {
+    var rows = '';
+    $('#quarterlyBreakdownTable tbody tr').each(function () {
+        var cells = $(this).find('td');
+        if (cells.length < 4) return;
+        
+        var year = cells.eq(0).text().trim();
+        var quarter = cells.eq(1).text().trim();
+        var newlyConnectedCell = cells.eq(3);
+        
+        // Find the newly connected offices list
+        var officeList = newlyConnectedCell.find('.qb-names-list');
+        if (officeList.length > 0) {
+            officeList.find('.qb-names-item').each(function () {
+                var areaTag = $(this).find('.qb-area-tag').text().trim();
+                // Get the office name from the span that comes after the area tag
+                var officeName = $(this).find('span').not('.qb-area-tag').first().text().trim();
+                
+                if (officeName) {
+                    rows += '<tr>';
+                    rows += '<td>' + year + '</td>';
+                    rows += '<td>' + quarter + '</td>';
+                    rows += '<td>' + officeName + '</td>';
+                    rows += '<td>' + areaTag + '</td>';
+                    rows += '</tr>';
+                }
+            });
+        }
+    });
+    
+    if (!rows) {
+        rows = '<tr><td colspan="4" class="text-center text-muted">No newly connected offices found</td></tr>';
+    }
+    
+    return rows;
+}
+
+function buildNewlyDisconnectedTable() {
+    var rows = '';
+    $('#quarterlyBreakdownTable tbody tr').each(function () {
+        var cells = $(this).find('td');
+        if (cells.length < 6) return;
+        
+        var year = cells.eq(0).text().trim();
+        var quarter = cells.eq(1).text().trim();
+        var newlyDisconnectedCell = cells.eq(5);
+        
+        // Find the newly disconnected offices list
+        var officeList = newlyDisconnectedCell.find('.qb-names-list');
+        if (officeList.length > 0) {
+            officeList.find('.qb-names-item').each(function () {
+                var areaTag = $(this).find('.qb-area-tag').text().trim();
+                // Get the office name from the span that comes after the area tag
+                var officeName = $(this).find('span').not('.qb-area-tag').first().text().trim();
+                
+                if (officeName) {
+                    rows += '<tr>';
+                    rows += '<td>' + year + '</td>';
+                    rows += '<td>' + quarter + '</td>';
+                    rows += '<td>' + officeName + '</td>';
+                    rows += '<td>' + areaTag + '</td>';
+                    rows += '</tr>';
+                }
+            });
+        }
+    });
+    
+    if (!rows) {
+        rows = '<tr><td colspan="4" class="text-center text-muted">No newly disconnected offices found</td></tr>';
+    }
+    
+    return rows;
 }
 
 /* =====================================================

@@ -210,7 +210,7 @@ function saveOfficeChanges() {
         internetServiceProvider:   ($('#editISP').val()               || '').trim(),
         typeOfConnection:          ($('#editTypeOfConnection').val()  || '').trim(),
         speed:                     ($('#editSpeed').val()             || '').trim(),
-        staticIpAddress:           ($('#editIPAddressType').val()     || '').trim(),
+        staticIpAddress:           ($('#editIPAddressType').val() === 'static' ? 'Static' : null),
         noOfEmployees:              parseInt($('#editNoOfEmployees').val()) || 0,
         noOfPostalTellers:          parseInt($('#editNoOfTellers').val())   || 0,
         noOfLetterCarriers:         parseInt($('#editNoOfCarriers').val())  || 0,
@@ -289,7 +289,7 @@ function _fillModal(d) {
     $('#editISP').val(d.internetServiceProvider || '');
     $('#editTypeOfConnection').val(d.typeOfConnection || '');
     _setField('#editSpeed',    d.speed);
-    $('#editIPAddressType').val(d.staticIpAddress || '');
+    $('#editIPAddressType').val(d.staticIpAddress === 'Static' ? 'static' : '');
 
     $('#editNoOfEmployees').val(d.noOfEmployees     != null ? d.noOfEmployees     : '').attr('placeholder', d.noOfEmployees     != null ? '' : 'N/A');
     $('#editNoOfTellers').val(d.noOfPostalTellers   != null ? d.noOfPostalTellers  : '').attr('placeholder', d.noOfPostalTellers  != null ? '' : 'N/A');

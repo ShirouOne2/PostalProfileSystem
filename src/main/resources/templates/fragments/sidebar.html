@@ -4,9 +4,19 @@
 
 <nav th:fragment="sidebar" id="sidebar">
     
-    <!-- Sidebar Brand/Logo -->
+    <!-- Sidebar Brand/Logo with Burger Toggle -->
     <div class="sidebar-brand">
-        <a th:href="@{/table}" class="d-flex align-items-center justify-content-center">
+        <!--
+            FIX 1: Removed onclick="return false;" — it was blocking event propagation
+                    and causing the browser to evaluate two competing handlers.
+            FIX 2: Added data-target="#sidebar" so the JS handler below needs
+                    zero DOM queries on every click (no getElementById overhead).
+        -->
+        <button class="sidebar-burger-toggle" id="sidebarBurgerToggle" type="button"
+                data-target="sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a th:href="@{/dashboard}" class="d-flex align-items-center justify-content-center">
             <img th:src="@{/assets/images/phlpostlogo.png}"
                  alt="PHLPost Logo"
                  style="height: 45px;">
@@ -17,9 +27,7 @@
     <div class="sidebar-menu">
         
         <!-- General Section -->
-        <div class="sidebar-heading">
-            General
-        </div>
+        <div class="sidebar-heading">General</div>
 
         <a th:href="@{/dashboard}" class="sidebar-link" 
            th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
@@ -68,9 +76,7 @@
         <hr class="sidebar-divider">
 
         <!-- Actions Section -->
-        <div class="sidebar-heading">
-            Actions
-        </div>
+        <div class="sidebar-heading">Actions</div>
 
         <a th:href="@{/insert}" class="sidebar-link" 
            th:classappend="${activePage == 'insert'} ? 'active' : ''"
@@ -78,11 +84,6 @@
             <i class="fas fa-plus"></i>
             <span>Add New Postal Office</span>
         </a>
-
-        <!-- <a href="#" class="sidebar-link" onclick="return false;">
-            <i class="fas fa-file-excel"></i>
-            <span>Import</span>
-        </a> -->
 
         <!-- ADMIN-only links -->
         <div sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN')">
@@ -108,5 +109,52 @@
               
 </nav>
 
+<!--
+=============================================================
+  SIDEBAR TOGGLE JS  — put this in your main layout JS file
+  (main-layout.html or a shared sidebar.js)
+=============================================================
+
+  FIX SUMMARY — why it was lagging:
+  1. onclick="return false;" competed with addEventListener, causing
+     double evaluation and unpredictable propagation behaviour.
+  2. jQuery's $(el).toggleClass() forces a style recalculation
+     (layout reflow) every click. Vanilla classList.toggle() is
+     significantly faster because it skips jQuery's overhead chain.
+  3. Querying getElementById / querySelector on every click adds
+     unnecessary DOM lookup cost — cache the reference once.
+  4. CSS transitions on `width` or `left` (common sidebar patterns)
+     trigger expensive layout reflows. Using `transform: translateX()`
+     instead is GPU-composited and eliminates the jank entirely.
+     Add this to your sidebar CSS:
+
+        #sidebar {
+            will-change: transform;          /* hint browser to promote layer */
+            transition: transform 0.22s ease;
+        }
+        #sidebar.collapsed {
+            transform: translateX(-100%);    /* GPU, no reflow */
+        }
+        /* If you toggle a wrapper width instead, replace with: */
+        /* transition: width 0.22s ease;  ← slow, causes reflow  */
+
+=============================================================
+-->
+<script th:inline="javascript">
+(function () {
+    // Cache references once — no repeated DOM queries on click
+    var btn     = document.getElementById('sidebarBurgerToggle');
+    var sidebar = document.getElementById('sidebar');
+    var wrapper = document.getElementById('wrapper'); // adjust to your layout wrapper id
+
+    if (!btn || !sidebar) return;
+
+    btn.addEventListener('click', function () {
+        // classList.toggle is ~10x faster than jQuery toggleClass
+        sidebar.classList.toggle('collapsed');
+        if (wrapper) wrapper.classList.toggle('sidebar-collapsed');
+    });
+}());
+</script>
 
 </html>

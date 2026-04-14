@@ -357,7 +357,7 @@ function initializeTable() {
                                 badge = '<span class="badge badge-info">Open</span>';
                                 break;
                             case 'CLOSED':
-                                badge = '<span class="badge badge-warning">Closed</span>';
+                                badge = '<span class="badge badge-danger">Closed</span>';
                                 break;
                             default:
                                 badge = '<span class="badge badge-secondary">' + data + '</span>';
@@ -615,7 +615,7 @@ function editOffice(id) {
             $('#editServiceProvided').val(o.serviceProvided || '');
             $('#editISP').val(o.internetServiceProvider || '');
             $('#editTypeOfConnection').val(o.typeOfConnection || '');
-            $('#editIPAddressType').val(o.ipAddressType || '');
+            $('#editIPAddressType').val(o.staticIpAddress === 'Static' ? 'static' : '');
             $('#editOfficeModal').modal('show');
         },
         error: function(xhr) { Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Failed to load office data' }); }
@@ -631,14 +631,14 @@ function saveOfficeChanges() {
         serviceProvided: $('#editServiceProvided').val() || null,
         internetServiceProvider: $('#editISP').val() || null,
         typeOfConnection: $('#editTypeOfConnection').val() || null,
-        ipAddressType: $('#editIPAddressType').val() || null
+        staticIpAddress: $('#editIPAddressType').val() === 'static' ? 'Static' : null
     };
     Swal.fire({ title: 'Saving Changes...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
     $.ajax({
         url: '/api/postal-office/' + id, method: 'PUT', contentType: 'application/json', data: JSON.stringify(data),
         success: function() {
             $('#editOfficeModal').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'Post office updated successfully', timer: 2000, showConfirmButton: false })
+            Swal.fire({ icon: 'success', title: 'Saved!', text: 'Changes have been saved successfully', timer: 1800, showConfirmButton: false })
                 .then(() => location.reload());
         },
         error: function(xhr) { Swal.fire({ icon: 'error', title: 'Update Failed', text: xhr.responseJSON?.message || 'Failed to update post office' }); }
@@ -676,7 +676,7 @@ function renderOfficePopup(data, officeId) {
     const officeBadge = data.officeStatus === 'OPEN'
         ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
         : data.officeStatus === 'CLOSED'
-        ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
+        ? '<span class="badge badge-danger px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
         : '';
 
     const coverPhoto = `/api/postal-office/${officeId}/cover-photo/1`;
@@ -687,7 +687,7 @@ function renderOfficePopup(data, officeId) {
         <!-- Cover Photo Banner -->
         <div style="height:180px;overflow:hidden;position:relative;background:#1a3a7a;">
             <img src="${coverPhoto}" onerror="this.style.display='none'"
-                 style="width:100%;height:100%;object-fit:cover;opacity:0.7;">
+                 style="width:100%;height:100%;object-fit:contain;opacity:0.7;">
             <div style="position:absolute;bottom:12px;left:20px;">
                 <h4 class="text-white font-weight-bold mb-1" style="text-shadow:0 1px 4px rgba(0,0,0,0.5);">
                     ${data.name || 'N/A'}

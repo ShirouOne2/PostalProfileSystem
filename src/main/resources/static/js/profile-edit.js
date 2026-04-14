@@ -118,7 +118,7 @@ function uploadPhoto(input, type) {
     var formData = new FormData();
     formData.append('file', file);
 
-    var endpoint = '/api/postal-office/' + id + '/' + (type === 'cover' ? 'cover-photo' : 'profile-photo');
+    var endpoint = '/api/postal-office/' + id + '/' + (type === 'cover' ? 'cover-photo/1' : 'profile-photo');
 
     Swal.fire({
         title: 'Uploading...',

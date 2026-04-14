@@ -226,7 +226,7 @@ public class MapController {
 
         dto.put("coverPhotoUrl",
             office.getCoverPhoto() != null && !office.getCoverPhoto().isBlank()
-                ? "/api/postal-office/" + office.getId() + "/cover-photo" : null);
+                ? "/api/postal-office/" + office.getId() + "/cover-photo/1" : null);
 
         return dto;
     }
@@ -276,7 +276,7 @@ public class MapController {
 
         dto.put("coverPhotoUrl",
             office.getCoverPhoto() != null && !office.getCoverPhoto().isBlank()
-                ? "/api/postal-office/" + office.getId() + "/cover-photo" : null);
+                ? "/api/postal-office/" + office.getId() + "/cover-photo/1" : null);
 
         return dto;
     }
