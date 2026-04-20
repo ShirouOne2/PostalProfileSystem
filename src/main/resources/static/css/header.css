@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     padding: 0.5rem 1rem;
-    font-weight: 700;
+    font-weight: normal;
     color: #2B5BA6 !important;
     text-decoration: none;
     transition: opacity 0.15s ease;
@@ -69,7 +69,7 @@
     line-height: 1.4;
     background: #dc3545;
     color: #fff;
-    font-weight: 700;
+    font-weight: normal;
     transition: transform 0.15s ease, opacity 0.15s ease;
     will-change: transform, opacity;
 }
@@ -94,11 +94,12 @@
 .text-right.mr-2.d-none.d-md-block {
     text-align: right;
     margin-right: 0.5rem;
+    font-family: Helvetica, sans-serif;
 }
 
 .text-right.mr-2.d-none.d-md-block div:first-child {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: normal;
     color: #333;
     line-height: 1.2;
 }
@@ -119,9 +120,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: normal;
     font-size: 14px;
     text-transform: uppercase;
+    font-family: Helvetica, sans-serif;
 }
 
 /* Dropdown Menu */

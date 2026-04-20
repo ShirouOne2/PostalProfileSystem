@@ -70,7 +70,7 @@
                                      border-radius:10px;min-width:18px;
                                      text-align:center;line-height:1.4;
                                      background:#dc3545;color:#fff;
-                                     font-weight:700;">
+                                     font-weight:normal;">
                         </span>
                     </a>
 
@@ -108,7 +108,7 @@
                        aria-haspopup="true" aria-expanded="false">
 
                         <div class="text-right mr-2 d-none d-md-block">
-                            <div style="font-size:13px;font-weight:700;color:#333;"
+                            <div style="font-size:13px;font-weight:normal;color:#333;"
                                  th:text="${loggedInUsername ?: 'User'}">User</div>
                             <div style="font-size:11px;color:#777;"
                                  th:text="${loggedInRole ?: 'User'}">User</div>
@@ -116,7 +116,7 @@
 
                         <div class="bg-primary text-white rounded-circle
                                     d-flex align-items-center justify-content-center"
-                             style="width:35px;height:35px;font-weight:bold;border:2px solid #eef2f7;"
+                             style="width:35px;height:35px;font-weight:normal;border:2px solid #eef2f7;"
                              th:text="${loggedInInitial ?: 'U'}">U</div>
                     </a>
 

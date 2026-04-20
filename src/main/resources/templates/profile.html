@@ -157,24 +157,24 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Post Office Name</small>
-                            <div class="font-weight-bold" th:text="${postOffice.postalOffice ?: 'N/A'}">—</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Post Office Name</small>
+                            <div class="" th:text="${postOffice.postalOffice ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postmaster</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postmaster</small>
                             <div th:text="${postOffice.postmaster ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Classification</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Classification</small>
                             <div th:text="${postOffice.classification ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Services Provided</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Services Provided</small>
                             <div th:text="${postOffice.serviceProvided ?: 'N/A'}">—</div>
                         </div>
                     </div>
                     <div th:if="${postOffice.remarks != null and !#strings.isEmpty(postOffice.remarks)}" class="mt-2 pt-2 border-top">
-                        <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Remarks / Notes</small>
+                        <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Remarks / Notes</small>
                         <div th:text="${postOffice.remarks}">—</div>
                     </div>
                 </div>
@@ -190,35 +190,35 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Area</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Area</small>
                             <div th:text="${postOffice.area ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Region</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Region</small>
                             <div th:text="${postOffice.region ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Province</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Province</small>
                             <div th:text="${postOffice.province ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">City / Municipality</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">City / Municipality</small>
                             <div th:text="${postOffice.city ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Barangay</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Barangay</small>
                             <div th:text="${postOffice.barangay ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ZIP Code</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ZIP Code</small>
                             <div th:text="${postOffice.zipCode ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Latitude</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Latitude</small>
                             <div th:text="${postOffice.latitude != null ? postOffice.latitude : 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Longitude</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Longitude</small>
                             <div th:text="${postOffice.longitude != null ? postOffice.longitude : 'N/A'}">—</div>
                         </div>
                     </div>
@@ -235,33 +235,33 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Status</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Status</small>
                             <span class="badge px-3 py-1"
                                   th:classappend="${postOffice.status == 'Active' ? 'badge-success' : 'badge-danger'}"
                                   th:text="${postOffice.status ?: 'N/A'}">—</span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Office Status (Physical)</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Office Status (Physical)</small>
                             <div th:text="${postOffice.officeStatus ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Internet Service Provider</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Internet Service Provider</small>
                             <div th:text="${postOffice.internetServiceProvider ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Type of Connection</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Type of Connection</small>
                             <div th:text="${postOffice.typeOfConnection ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Speed</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Speed</small>
                             <div th:text="${postOffice.speed ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Static IP Address</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Static IP Address</small>
                             <div th:text="${postOffice.staticIpAddress ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Owned or Shared</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Owned or Shared</small>
                             <div th:text="${postOffice.ownedOrShared ?: 'N/A'}">—</div>
                         </div>
                     </div>
@@ -274,15 +274,15 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Name</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Name</small>
                             <div th:text="${postOffice.planName ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Price (₱/month)</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Price (₱/month)</small>
                             <div th:text="${postOffice.planPrice != null ? '₱' + postOffice.planPrice : 'N/A'}">—</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Account Number</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Account Number</small>
                             <div th:text="${postOffice.accountNumber ?: 'N/A'}">—</div>
                         </div>
                     </div>
@@ -299,11 +299,11 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Person</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Person</small>
                             <div th:text="${postOffice.postalOfficeContactPerson ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Number</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Number</small>
                             <div th:text="${postOffice.postalOfficeContactNumber ?: 'N/A'}">—</div>
                         </div>
                     </div>
@@ -320,16 +320,16 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Number of Employees</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfEmployees ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Number of Employees</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfEmployees ?: '0'}">0</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postal Tellers</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfPostalTellers ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postal Tellers</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfPostalTellers ?: '0'}">0</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Letter Carriers</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfLetterCarriers ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Letter Carriers</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfLetterCarriers ?: '0'}">0</div>
                         </div>
                     </div>
                 </div>
@@ -349,7 +349,7 @@
                         </div>
                         <div class="modal-body">
                             <p class="text-muted mb-3">
-                                You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
+                                You are about to archive <span th:text="${postOffice.postalOffice}"></span>.
                                 This office will be hidden from all views but can be restored later.
                             </p>
                             <div class="form-group">

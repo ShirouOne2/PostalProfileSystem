@@ -7,7 +7,8 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: normal;
     background: #f8f9fc;
     overflow-x: hidden;
 }
@@ -168,7 +169,7 @@ body.sidebar-is-collapsed .main-content {
 /* Office name links in tables */
 .office-name-link {
     color: #002868;
-    font-weight: 600;
+    font-weight: normal;
     text-decoration: none;
     cursor: pointer;
     border-bottom: 1px dashed transparent;

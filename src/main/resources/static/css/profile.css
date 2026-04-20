@@ -160,7 +160,7 @@ body {
 .cover-upload-overlay span {
     color: #fff;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: normal;
     background: rgba(0,0,0,0.5);
     padding: 8px 16px;
     border-radius: 20px;
@@ -184,7 +184,7 @@ body {
 .profile-upload-overlay span {
     color: #fff;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: normal;
     text-align: center;
 }
 
@@ -225,7 +225,7 @@ body {
 
 .profile-name {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: normal;
     color: #2c3e50;
     margin-bottom: 10px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -248,7 +248,7 @@ body {
     border: none;
     border-bottom: 3px solid transparent;
     color: #6c757d;
-    font-weight: 600;
+    font-weight: normal;
     font-size: 0.9rem;
     cursor: pointer;
     transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
@@ -289,7 +289,7 @@ body {
 
 .card-header {
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: normal;
     color: #2c3e50;
     margin-bottom: 20px;
     padding-bottom: 15px;
@@ -336,7 +336,7 @@ body {
 
 .info-label {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: normal;
     color: #6c757d;
     margin-bottom: 4px;
     text-transform: uppercase;
@@ -346,12 +346,12 @@ body {
 .info-value {
     font-size: 1rem;
     color: #2c3e50;
-    font-weight: 500;
+    font-weight: normal;
     line-height: 1.4;
 }
 
 /* ── Badges ──────────────────────────────────────────────────── */
-.badge         { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+.badge         { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: normal; }
 .badge-success { background-color: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; }
 .badge-danger  { background-color: #dc3545; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; }
 .badge-warning { background: #ffc107; color: #212529; }

@@ -82,7 +82,7 @@ span.text-muted {
 #staticTable thead th {
     background-color: #f8f9fa !important;
     color: #333333;
-    font-weight: 600;
+    font-weight: normal;
     padding: 12px 15px;
     border-bottom: 2px solid #dee2e6;
     border-top: 1px solid #dee2e6;
@@ -141,7 +141,7 @@ span.text-muted {
     width: 50px;
     text-align: center;
     color: #333333;
-    font-weight: 500;
+    font-weight: normal;
 }
 
 #staticTable thead th:first-child {
@@ -159,7 +159,7 @@ span.text-muted {
     padding: 4px 12px;
     border-radius: 4px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: normal;
     text-transform: capitalize;
 }
 
@@ -264,7 +264,7 @@ span.text-muted {
     background-color: #007bff;
     color: #ffffff !important;
     border-color: #007bff;
-    font-weight: 600;
+    font-weight: normal;
 }
 
 .dataTables_paginate .paginate_button.current:hover {
@@ -294,13 +294,13 @@ span.text-muted {
 /* Previous and Next buttons */
 .dataTables_paginate .paginate_button.previous,
 .dataTables_paginate .paginate_button.next {
-    font-weight: 500;
+    font-weight: normal;
 }
 
 /* First and Last buttons (if using full_numbers) */
 .dataTables_paginate .paginate_button.first,
 .dataTables_paginate .paginate_button.last {
-    font-weight: 500;
+    font-weight: normal;
 }
 
 /* Processing/Loading Indicator */

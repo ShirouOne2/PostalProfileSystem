@@ -20,7 +20,7 @@
                     <div class="filter-panel-header mb-3 d-flex align-items-center justify-content-between">
                         <div>
                             <i class="fas fa-filter text-primary mr-2"></i>
-                            <span class="font-weight-bold text-dark">Filter Options</span>
+                            <span class="text-dark">Filter Options</span>
                         </div>
                         <button class="btn btn-link btn-sm p-0 text-muted" id="toggleFiltersBtn">
                             <i class="fas fa-chevron-up" id="filterChevron"></i>
@@ -136,8 +136,8 @@
                     <div class="card-header"><i class="fas fa-wifi mr-2"></i> With Connectivity</div>
                     <div class="card-body">
                         <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
-                        <p>Total Connected: <strong th:text="${latestQuarter.connected}">0</strong></p>
-                        <p>New This Quarter: <strong th:text="${latestQuarter.newlyConnected}">0</strong></p>
+                        <p>Total Connected: <span th:text="${latestQuarter.connected}">0</span></p>
+                        <p>New This Quarter: <span th:text="${latestQuarter.newlyConnected}">0</span></p>
                     </div>
                 </div>
             </div>
@@ -147,8 +147,8 @@
                     <div class="card-header"><i class="fas fa-wifi mr-2"></i> Without Connectivity</div>
                     <div class="card-body">
                         <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
-                        <p>Total Disconnected: <strong th:text="${latestQuarter.disconnected}">0</strong></p>
-                        <p>New This Quarter: <strong th:text="${latestQuarter.newlyDisconnected}">0</strong></p>
+                        <p>Total Disconnected: <span th:text="${latestQuarter.disconnected}">0</span></p>
+                        <p>New This Quarter: <span th:text="${latestQuarter.newlyDisconnected}">0</span></p>
                     </div>
                 </div>
             </div>
@@ -158,8 +158,8 @@
                     <div class="card-header"><i class="fas fa-building mr-2"></i> Total Offices</div>
                     <div class="card-body">
                         <h5 th:text="${'' + latestQuarter.quarter + ' ' + latestQuarter.year}">Q2 2026</h5>
-                        <p>Total Offices: <strong th:text="${latestQuarter.connected + latestQuarter.disconnected}">0</strong></p>
-                        <p>New This Quarter: <strong th:text="${latestQuarter.newlyConnected + latestQuarter.newlyDisconnected}">0</strong></p>
+                        <p>Total Offices: <span th:text="${latestQuarter.connected + latestQuarter.disconnected}">0</span></p>
+                        <p>New This Quarter: <span th:text="${latestQuarter.newlyConnected + latestQuarter.newlyDisconnected}">0</span></p>
                     </div>
                 </div>
             </div>
@@ -207,7 +207,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title font-weight-bold">
+                    <h5 class="modal-title">
                         <i class="fas fa-archive mr-2"></i>Archive Post Office
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
