@@ -4,6 +4,7 @@ import com.pps.profilesystem.Entity.PostalOffice;
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.UserRepository;
+import com.pps.profilesystem.Service.DashboardStatsService;
 import com.pps.profilesystem.Service.LocationHierarchyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -12,6 +13,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,25 +24,27 @@ import java.util.stream.Collectors;
 /**
  * DashboardController
  *
- * Renders the dashboard page with stats, filters, and system admin table.
- * System admins see the full detailed table, while other users see simplified data.
+ * Displays the main dashboard with statistics and overview
  */
 @Controller
+@RequestMapping("/dashboard")
 public class DashboardController {
 
     @Autowired
-    private PostalOfficeRepository postalOfficeRepository;
+    private DashboardStatsService dashboardStatsService;
 
     @Autowired
     private LocationHierarchyService locationService;
 
     @Autowired
+    private PostalOfficeRepository postalOfficeRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/dashboard")
+    @GetMapping
     @Transactional(readOnly = true)
     public String dashboard(Model model) {
-
         // Get the logged-in user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
@@ -46,16 +53,13 @@ public class DashboardController {
         Integer roleId = currentUser != null ? currentUser.getRole()   : null;
         Integer areaId = currentUser != null ? currentUser.getAreaId() : null;
 
-        // Fetch offices based on role.
-        // Uses findAllNonArchivedForTable() — a dedicated query without the
-        // activeConnectivity JOIN FETCH, which prevents Hibernate from silently
-        // dropping the region/province/city joins due to multi-bag fetch conflicts.
+        // Fetch offices based on role
         List<PostalOffice> offices;
 
         if (roleId != null && (roleId == 1 || roleId == 4)) {
             offices = postalOfficeRepository.findAllNonArchivedForTable();
         } else {
-            offices = postalOfficeRepository.findAllNonArchivedForTable()
+            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
                 .stream()
                 .filter(po -> {
                     if (areaId == null) return false;
@@ -163,6 +167,14 @@ public class DashboardController {
             dto.put("barangayId", null);
         }
 
+        dto.put("officeStatus",     office.getOfficeStatus());
+        dto.put("speed",            office.getSpeed());
+        dto.put("area",             office.getArea()            != null ? office.getArea().getAreaName()         : null);
+        dto.put("region",           office.getRegion()          != null ? office.getRegion().getName()           : null);
+        dto.put("province",         office.getProvince()        != null ? office.getProvince().getName()         : null);
+        dto.put("cityMunicipality", office.getCityMunicipality()!= null ? office.getCityMunicipality().getName() : null);
+        dto.put("barangay",         office.getBarangay()        != null ? office.getBarangay().getName()         : null);
+        dto.put("remarks",          office.getRemarks());
         return dto;
     }
 }
