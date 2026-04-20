@@ -4,25 +4,30 @@
 
 <nav th:fragment="sidebar" id="sidebar">
     
-    <!-- Sidebar Brand/Logo -->
+    <!-- Sidebar Brand/Logo with Burger Toggle -->
     <div class="sidebar-brand">
-        <div class="brand-icon">
-            <i class="fas fa-mail-bulk"></i>
-        </div>
-        <div class="brand-text">
-            POST OFFICE
-        </div>
+        <!--
+            FIX 1: Removed onclick="return false;" — it was blocking event propagation
+                    and causing the browser to evaluate two competing handlers.
+            FIX 2: Added data-target="#sidebar" so the JS handler below needs
+                    zero DOM queries on every click (no getElementById overhead).
+        -->
+        <button class="sidebar-burger-toggle" id="sidebarBurgerToggle" type="button"
+                data-target="sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a th:href="@{/dashboard}" class="d-flex align-items-center justify-content-center">
+            <img th:src="@{/assets/images/phlpostlogo.png}"
+                 alt="PHLPost Logo"
+                 style="height: 45px;">
+        </a>
     </div>
 
     <!-- Sidebar Menu -->
     <div class="sidebar-menu">
         
-        <a th:href="@{/dashboard}" class="sidebar-link" 
-           th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
-           data-page="dashboard">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
+        <!-- General Section -->
+        <div class="sidebar-heading">General</div>
 
         <a th:href="@{/dashboard}" class="sidebar-link" 
            th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
@@ -38,42 +43,39 @@
             <span>Postal Office Locator</span>
         </a>
 
-        <!-- CONNECTIVITY with REPORT submenu -->
-        <div class="sidebar-dropdown"
-             th:classappend="${activePage == 'quarters' or activePage == 'report'} ? 'open' : ''">
+        <a th:href="@{/quarters}" class="sidebar-link" 
+           th:classappend="${activePage == 'quarters'} ? 'active' : ''"
+           data-page="quarters">
+            <i class="fas fa-wifi"></i>
+            <span>Internet Connectivity</span>
+        </a>
 
-            <a href="#" class="sidebar-link sidebar-dropdown-toggle"
-               th:classappend="${activePage == 'quarters' or activePage == 'report'} ? 'active' : ''">
-                <i class="fas fa-wifi"></i>
-                <span>Internet</span>
-                <i class="fas fa-chevron-right dropdown-arrow ms-auto"></i>
-            </a>
+        <!-- Reports Section -->
+        <div class="sidebar-heading">Reports</div>
 
-            <div class="sidebar-submenu">
-                <a th:href="@{/quarters}" class="sidebar-sublink"
-                   th:classappend="${activePage == 'quarters'} ? 'active' : ''"
-                   data-page="quarters">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Connectivity</span>
-                </a>
-                <a th:href="@{/report}" class="sidebar-sublink"
-                   th:classappend="${activePage == 'report'} ? 'active' : ''"
-                   data-page="report"
-                   sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN')">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Report</span>
-                </a>
-            </div>
+        <a th:href="@{/report}" class="sidebar-link" 
+           th:classappend="${activePage == 'report'} ? 'active' : ''"
+           data-page="report"
+           sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN') or hasRole('SRD_OPERATION')">
+            <i class="fas fa-file-alt"></i>
+            <span>Connectivity Report</span>
+        </a>
 
-        </div>
+        <a href="#" class="sidebar-link" style="opacity: 0.6; cursor: not-allowed;">
+            <i class="fas fa-chart-line"></i>
+            <span>GCG</span>
+        </a>
+
+        <a href="#" class="sidebar-link" style="opacity: 0.6; cursor: not-allowed;">
+            <i class="fas fa-balance-scale"></i>
+            <span>COA</span>
+        </a>
 
         <!-- Divider -->
         <hr class="sidebar-divider">
 
         <!-- Actions Section -->
-        <div class="sidebar-heading">
-            Actions
-        </div>
+        <div class="sidebar-heading">Actions</div>
 
         <a th:href="@{/insert}" class="sidebar-link" 
            th:classappend="${activePage == 'insert'} ? 'active' : ''"
@@ -82,27 +84,50 @@
             <span>Add New Postal Office</span>
         </a>
 
-        <!-- <a href="#" class="sidebar-link" onclick="return false;">
-            <i class="fas fa-file-excel"></i>
-            <span>Import</span>
-        </a> -->
-
         <!-- ADMIN-only links -->
-        <div sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN')">
+        <div sec:authorize="hasRole('ADMIN') or hasRole('AREA_ADMIN') or hasRole('SRD_OPERATION')">
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Admin</div>
 
-            <a th:href="@{/users}" class="sidebar-link"
+            <!-- User Management - Hidden -->
+            <!-- <a th:href="@{/users}" class="sidebar-link"
                th:classappend="${activePage == 'users'} ? 'active' : ''"
                data-page="users"
-               sec:authorize="hasRole('ADMIN')">
+               sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
                 <i class="fas fa-users-cog"></i>
                 <span>User Management</span>
+            </a> -->
+
+            <a th:href="@{/notifications}" class="sidebar-link" 
+               th:classappend="${activePage == 'notifications'} ? 'active' : ''"
+               data-page="notifications"
+               sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN','SRD_OPERATION')">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+                <span id="sidebarNotifBadge" class="sidebar-notification-badge"
+                      style="display:none;background:#dc3545;color:#fff;
+                             font-size:10px;padding:2px 6px;border-radius:10px;
+                             margin-left:auto;min-width:18px;text-align:center;
+                             font-weight:700;line-height:1.2;"></span>
+            </a>
+
+            <a th:href="@{/approvals}" class="sidebar-link" 
+               th:classappend="${activePage == 'approvals'} ? 'active' : ''"
+               data-page="approvals"
+               sec:authorize="hasRole('AREA_ADMIN') or hasRole('SRD_OPERATION')">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Approval Requests</span>
+                <span id="approvalBadge" class="sidebar-notification-badge"
+                      style="display:none;background:#ffc107;color:#000;
+                             font-size:10px;padding:2px 6px;border-radius:10px;
+                             margin-left:auto;min-width:18px;text-align:center;
+                             font-weight:700;line-height:1.2;"></span>
             </a>
 
             <a th:href="@{/archive}" class="sidebar-link"
                th:classappend="${activePage == 'archive'} ? 'active' : ''"
-               data-page="archive">
+               data-page="archive"
+               sec:authorize="hasRole('ADMIN')">
                 <i class="fas fa-archive"></i>
                 <span>Archive</span>
             </a>
@@ -111,5 +136,5 @@
               
 </nav>
 
-
+<script th:src="@{/js/sidebar.js}"></script>
 </html>

@@ -14,6 +14,12 @@ import java.util.List;
  *
  * Archive data is now stored in a separate ArchivedOffice entity / archived_offices table.
  * To check if an office is archived, query ArchivedOfficeRepository.existsByPostalOfficeId(id).
+ *
+ * Photos:
+ *   profilePicture  → profile_picture  (col) — profile avatar
+ *   coverPhoto      → cover_photo      (col) — carousel slot 1
+ *   coverPhoto2     → cover_photo_2    (col) — carousel slot 2
+ *   coverPhoto3     → cover_photo_3    (col) — carousel slot 3
  */
 @Entity
 @Table(name = "postal_offices")
@@ -119,17 +125,51 @@ public class PostalOffice {
     private String ispContactNumber;
 
     // --- Photos (stored as file paths on disk) ---
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
+    /** Cover photo carousel slot 1 — was the original single cover_photo column. */
     @Column(name = "cover_photo")
     private String coverPhoto;
 
-    @Column(name = "profile_picture")
-    private String profilePicture;
+    /** Cover photo carousel slot 2 — new column added in V2 migration. */
+    @Column(name = "cover_photo_2")
+    private String coverPhoto2;
+
+    /** Cover photo carousel slot 3 — new column added in V2 migration. */
+    @Column(name = "cover_photo_3")
+    private String coverPhoto3;
 
     // --- Remarks ---
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
     // --- Helper Methods ---
+
+    /**
+     * Returns the cover photo path for the given carousel slot (1, 2, or 3).
+     * Returns null if the slot number is out of range.
+     */
+    public String getCoverPhotoBySlot(int slot) {
+        switch (slot) {
+            case 1: return coverPhoto;
+            case 2: return coverPhoto2;
+            case 3: return coverPhoto3;
+            default: return null;
+        }
+    }
+
+    /**
+     * Sets the cover photo path for the given carousel slot (1, 2, or 3).
+     * No-op if the slot number is out of range.
+     */
+    public void setCoverPhotoBySlot(int slot, String path) {
+        switch (slot) {
+            case 1: this.coverPhoto  = path; break;
+            case 2: this.coverPhoto2 = path; break;
+            case 3: this.coverPhoto3 = path; break;
+        }
+    }
 
     public boolean isConnected() {
         return Boolean.TRUE.equals(connectionStatus) && activeConnectivity != null;
@@ -153,8 +193,6 @@ public class PostalOffice {
      * Stub for backward compatibility.
      * is_archived column has been removed from postal_offices table.
      * Archive status is now determined by presence in archived_offices table.
-     * All existing code that calls getIsArchived() will safely receive false —
-     * the real filtering is handled at the repository/query level.
      *
      * @deprecated Use ArchivedOfficeRepository.existsByPostalOfficeId(id) instead.
      */

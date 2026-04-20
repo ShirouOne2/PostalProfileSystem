@@ -72,7 +72,7 @@ public class QuartersController {
         }
 
         // Apply user area restrictions: non-system-admin users can only see their assigned area
-        if (roleId != null && roleId != 1) {
+        if (roleId != null && roleId != 1 && roleId != 4) {
             // User is not a system admin, restrict to their assigned area
             if (userAreaId != null) {
                 // If no area filter is set, default to user's area
@@ -105,9 +105,9 @@ public class QuartersController {
         model.addAttribute("activePage", "quarters");
 
         Map<String, Boolean> userAccess = new HashMap<>();
-        userAccess.put("can_access_all_areas", roleId != null && roleId == 1);
+        userAccess.put("can_access_all_areas", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("userAccess", userAccess);
-        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        model.addAttribute("isSystemAdmin", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
         model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
         model.addAttribute("userAreaId", userAreaId);

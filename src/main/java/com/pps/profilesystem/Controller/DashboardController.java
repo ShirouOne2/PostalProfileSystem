@@ -56,8 +56,8 @@ public class DashboardController {
         // Fetch offices based on role
         List<PostalOffice> offices;
 
-        if (roleId != null && roleId == 1) {
-            offices = postalOfficeRepository.findAllNonArchivedWithConnectivity();
+        if (roleId != null && (roleId == 1 || roleId == 4)) {
+            offices = postalOfficeRepository.findAllNonArchivedForTable();
         } else {
             offices = postalOfficeRepository.findAllNonArchivedWithConnectivity()
                 .stream()
@@ -68,18 +68,30 @@ public class DashboardController {
                 .collect(Collectors.toList());
         }
 
-        // Add dashboard statistics
-        dashboardStatsService.addDashboardStatsToModel(model);
-        
-        // Add offices data for the table
-        model.addAttribute("offices", offices.stream().map(this::convertToMapDTO).collect(Collectors.toList()));
-        
-        // Add areas for dropdown
-        model.addAttribute("areas", locationService.getAllAreas());
-        
-        // Set active page and role flags
-        model.addAttribute("activePage", "dashboard");
-        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        // Stats — derived from the already-fetched list (no extra DB queries)
+        long totalCount    = offices.size();
+        long activeCount   = offices.stream()
+            .filter(po -> Boolean.TRUE.equals(po.getConnectionStatus())).count();
+        long inactiveCount = totalCount - activeCount;
+        long openCount     = offices.stream()
+            .filter(po -> "OPEN".equalsIgnoreCase(po.getOfficeStatus())).count();
+        long closedCount   = offices.stream()
+            .filter(po -> "CLOSED".equalsIgnoreCase(po.getOfficeStatus())).count();
+
+        model.addAttribute("offices",       offices.stream().map(this::convertToMapDTO).collect(Collectors.toList()));
+        model.addAttribute("totalCount",    totalCount);
+        model.addAttribute("activeCount",   activeCount);
+        model.addAttribute("inactiveCount", inactiveCount);
+        model.addAttribute("openCount",     openCount);
+        model.addAttribute("closedCount",   closedCount);
+        model.addAttribute("areaCount",     postalOfficeRepository.countDistinctAreasNonArchived());
+
+        // For modal dropdowns
+        model.addAttribute("areas",   locationService.getAllAreas());
+        model.addAttribute("regions", locationService.getAllRegions());
+
+        model.addAttribute("activePage",    "dashboard");
+        model.addAttribute("isSystemAdmin", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
         
         // For edit modal JavaScript

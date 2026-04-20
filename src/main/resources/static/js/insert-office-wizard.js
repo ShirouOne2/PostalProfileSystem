@@ -5,7 +5,10 @@ function syncConnectionStatus(select) {
     const dateConn    = document.getElementById('dateConnected');
     const dateDisconn = document.getElementById('dateDisconnected');
     const pad = n => String(n).padStart(2, '0');
-    const nowLocal = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+    const nowLocal = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    };
 
     if (connCheck) connCheck.checked = isActive;
     if (dateConn && dateDisconn) {
@@ -37,9 +40,9 @@ document.addEventListener('DOMContentLoaded', function () {
             { id: 'officeName', label: 'Post Office Name' }
         ],
         1: [
-            { id: 'areaId',     label: 'Area'             },
-            { id: 'regionId',   label: 'Region'             },
-            { id: 'provinceId', label: 'Province'            },
+            { id: 'areaId',     label: 'Area'              },
+            { id: 'regionId',   label: 'Region'            },
+            { id: 'provinceId', label: 'Province'          },
             { id: 'cityMunId',  label: 'City / Municipality' }
         ]
     };
@@ -116,11 +119,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // ─── Full validation ─────────────────────────────────────────────────────
     function validateAll() {
         const all = [
-            { id: 'officeName', label: 'Post Office Name',   step: 1 },
-            { id: 'areaId',     label: 'Area',               step: 2 },
-            { id: 'regionId',   label: 'Region',             step: 2 },
-            { id: 'provinceId', label: 'Province',           step: 2 },
-            { id: 'cityMunId',  label: 'City / Municipality',step: 2 }
+            { id: 'officeName', label: 'Post Office Name',    step: 1 },
+            { id: 'areaId',     label: 'Area',                step: 2 },
+            { id: 'regionId',   label: 'Region',              step: 2 },
+            { id: 'provinceId', label: 'Province',            step: 2 },
+            { id: 'cityMunId',  label: 'City / Municipality', step: 2 }
         ];
 
         let valid = true;
@@ -192,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     );
 
-    // ─── Status Dropdowns (Connection + Office) ──────────────────────────────
+    // ─── Status Dropdowns ────────────────────────────────────────────────────
 
     function nowLocal() {
         const d = new Date(), pad = n => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     }
 
     function initStatusDropdowns() {
@@ -205,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const dateConn    = document.getElementById('dateConnected');
         const dateDisconn = document.getElementById('dateDisconnected');
 
-        // Set initial date state (default = Inactive)
+        // Default state = Inactive
         if (dateConn)    dateConn.disabled    = true;
         if (dateDisconn) {
             dateDisconn.disabled = false;
@@ -233,30 +236,60 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Office Status functionality
         const officeStatusSelect = document.getElementById('officeStatus');
         if (officeStatusSelect) {
-            // Add validation styling when value changes
             officeStatusSelect.addEventListener('change', function () {
                 if (this.value) {
                     this.classList.remove('is-invalid');
                     this.classList.add('is-valid');
                 } else {
                     this.classList.remove('is-valid');
-                    if (touched.has(this.id)) {
-                        this.classList.add('is-invalid');
-                    }
+                    if (touched.has(this.id)) this.classList.add('is-invalid');
                 }
             });
-
-            // Mark as touched when user interacts with it
-            officeStatusSelect.addEventListener('focus', () => {
-                touched.add('officeStatus');
-            }, { once: false });
+            officeStatusSelect.addEventListener('focus', () => touched.add('officeStatus'), { once: false });
         }
     }
 
     initStatusDropdowns();
+
+    // ─── Field value getters ─────────────────────────────────────────────────
+
+    function getStr(id) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const v = el.value?.trim();
+        return (v === '' || v == null) ? null : v;
+    }
+
+    function getInt(id) {
+        const v = getStr(id);
+        if (v == null) return null;
+        const n = parseInt(v, 10);
+        return isNaN(n) ? null : n;
+    }
+
+    function getFloat(id) {
+        const v = getStr(id);
+        if (v == null) return null;
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+    }
+
+    function getBool(id) {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        if (el.type === 'checkbox') return el.checked;
+        return el.value === 'true';
+    }
+
+    // Speed: user enters number only, store as "N Mbps"
+    function getSpeed() {
+        const el = document.getElementById('speed');
+        if (!el || !el.value || el.value.trim() === '') return null;
+        const num = parseFloat(el.value.trim());
+        return isNaN(num) ? null : num + ' Mbps';
+    }
 
     // ─── Form submit ─────────────────────────────────────────────────────────
     form?.addEventListener('submit', function (e) {
@@ -277,21 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(r => { if (r.isConfirmed) submitForm(); });
     });
 
-    // ─── Field value getters ─────────────────────────────────────────────────
-    const getStr   = id => { const e = document.getElementById(id); if (!e) return null; return e.value?.trim() || null; };
-    const getInt   = id => { const e = document.getElementById(id); return e?.value ? parseInt(e.value) : null; };
-    const getFloat = id => { const e = document.getElementById(id); return e?.value ? parseFloat(e.value) : null; };
-    const getBool  = id => { const e = document.getElementById(id); return e ? e.checked : false; };
-
-    // Speed: user enters number only, we store as "N Mbps" string
-    const getSpeed = () => {
-        const e = document.getElementById('speed');
-        if (!e || !e.value || e.value.trim() === '') return null;
-        const num = parseFloat(e.value.trim());
-        return isNaN(num) ? null : num + ' Mbps';
-    };
-
-    // ─── Submit to API ───────────────────────────────────────────────────────
+    // ─── Submit to API ────────────────────────────────────────────────────────
     function submitForm() {
         const btn = form.querySelector('button[type="submit"]');
         btn.disabled = true;
@@ -302,13 +321,13 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                // ── Basic Info ────────────────────────────────────────────
+                // Basic Info
                 name:                           getStr('officeName'),
                 postmaster:                     getStr('postmaster'),
-                postmasterContactNumber:        getStr('postmasterContactNumber'),
+                address:                        getStr('address'),
                 zipCode:                        getStr('zipCode'),
 
-                // ── Location ──────────────────────────────────────────────
+                // Location
                 areaId:                         getInt('areaId'),
                 regionId:                       getInt('regionId'),
                 provinceId:                     getInt('provinceId'),
@@ -317,28 +336,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 latitude:                       getFloat('latitude'),
                 longitude:                      getFloat('longitude'),
 
-                // ── Connectivity ──────────────────────────────────────────
-                connectionStatus:               getBool('connectionStatus'),
+                // Office Status
                 officeStatus:                   getStr('officeStatus'),
+
+                // Connectivity
+                connectionStatus:               getBool('connectionStatus'),
                 internetServiceProvider:        getStr('internetServiceProvider'),
                 classification:                 getStr('classification'),
                 ownedOrShared:                  getStr('ownedOrShared'),
                 typeOfConnection:               getStr('typeOfConnection'),
                 speed:                          getSpeed(),
-                staticIpAddress:                getStr('staticIpAddress'),
+                staticIpAddress:                getStr('ipAddressType') === 'static' ? 'Static' : null,
                 ispContactPerson:               getStr('ispContactPerson'),
                 ispContactNumber:               getStr('ispContactNumber'),
+
+                // Plan & Billing
                 planName:                       getStr('planName'),
                 planPrice:                      getFloat('planPrice'),
                 accountNumber:                  getStr('accountNumber'),
                 dateConnected:                  getStr('dateConnected'),
                 dateDisconnected:               getStr('dateDisconnected'),
+                isWired:                        getBool('isWired'),
+                isFree:                         getBool('isFree'),
+                planContract:                   getStr('planContract'),
 
-                // ── Contact ───────────────────────────────────────────────
+                // Contact
                 postalOfficeContactPerson:      getStr('postalOfficeContactPerson'),
                 postalOfficeContactNumber:      getStr('postalOfficeContactNumber'),
 
-                // ── Additional ────────────────────────────────────────────
+                // Additional
                 noOfEmployees:                  getInt('noOfEmployees'),
                 noOfPostalTellers:              getInt('noOfPostalTellers'),
                 noOfLetterCarriers:             getInt('noOfLetterCarriers'),
@@ -348,12 +374,19 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                var officeId = data.id;
+            // Restore button either way
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save Record';
 
-                // Check if any photos were selected
-                var hasPhotos = ['insertProfilePhoto','insertCover1','insertCover2','insertCover3']
-                    .some(id => { var el = document.getElementById(id); return el && el.files && el.files[0]; });
+            if (data.success) {
+                const officeId = data.id;
+
+                // Check if any photos were selected — match IDs used in the HTML
+                const hasPhotos = ['coverPhoto', 'profilePicture']
+                    .some(id => {
+                        const el = document.getElementById(id);
+                        return el && el.files && el.files[0];
+                    });
 
                 if (hasPhotos && officeId) {
                     Swal.fire({ title: 'Uploading Photos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -362,84 +395,27 @@ document.addEventListener('DOMContentLoaded', function () {
                             icon: 'success', title: 'Saved!',
                             text: 'Post Office and photos added successfully.',
                             timer: 2000, showConfirmButton: false
-                        }).then(() => window.location.href = '/table');
+                        }).then(() => { window.location.href = '/table'; });
                     });
                 } else {
                     Swal.fire({
-                        icon: 'success', title: 'Saved!',
+                        icon: 'success',
+                        title: 'Saved!',
                         text: 'Post Office added successfully.',
-                        timer: 2000, showConfirmButton: false
-                    }).then(() => window.location.href = '/table');
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => { window.location.href = '/table'; });
                 }
-            } else { throw new Error(data.message || 'Save failed'); }
+            } else {
+                Swal.fire('Error', data.message || 'Save failed. Please try again.', 'error');
+            }
         })
         .catch(err => {
-            Swal.fire('Error', err.message || 'Something went wrong.', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save"></i> Save Record';
+            Swal.fire('Error', err.message || 'Something went wrong.', 'error');
         });
     }
-
-    // ─── Cascading dropdowns ─────────────────────────────────────────────────
-    function resetSelect(sel, placeholder, disabled) {
-        if (!sel) return;
-        sel.innerHTML = `<option value="">${placeholder}</option>`;
-        sel.disabled = disabled;
-        if (touched.has(sel.id)) clearMark(sel);
-    }
-    function loadingSelect(sel) {
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Loading...</option>';
-        sel.disabled = true;
-    }
-
-    document.getElementById('regionId')?.addEventListener('change', function () {
-        const provSel = document.getElementById('provinceId');
-        const citySel = document.getElementById('cityMunId');
-        const baraSel = document.getElementById('barangayId');
-        resetSelect(provSel, '-- Select Province --', true);
-        resetSelect(citySel, '-- Select City/Municipality --', true);
-        resetSelect(baraSel, '-- Select Barangay --', true);
-        if (!this.value) return;
-        loadingSelect(provSel);
-        fetch('/api/postal/provinces/by-region/' + this.value)
-            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
-            .then(list => {
-                resetSelect(provSel, '-- Select Province --', false);
-                list.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; provSel.appendChild(o); });
-            })
-            .catch(err => { resetSelect(provSel, '-- Error --', true); Swal.fire('Error', 'Failed to load provinces: ' + err.message, 'error'); });
-    });
-
-    document.getElementById('provinceId')?.addEventListener('change', function () {
-        const citySel = document.getElementById('cityMunId');
-        const baraSel = document.getElementById('barangayId');
-        resetSelect(citySel, '-- Select City/Municipality --', true);
-        resetSelect(baraSel, '-- Select Barangay --', true);
-        if (!this.value) return;
-        loadingSelect(citySel);
-        fetch('/api/postal/cities/by-province/' + this.value)
-            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
-            .then(list => {
-                resetSelect(citySel, '-- Select City/Municipality --', false);
-                list.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; citySel.appendChild(o); });
-            })
-            .catch(err => { resetSelect(citySel, '-- Error --', true); Swal.fire('Error', 'Failed to load cities: ' + err.message, 'error'); });
-    });
-
-    document.getElementById('cityMunId')?.addEventListener('change', function () {
-        const baraSel = document.getElementById('barangayId');
-        resetSelect(baraSel, '-- Select Barangay --', true);
-        if (!this.value) return;
-        loadingSelect(baraSel);
-        fetch('/api/postal/barangays/by-city/' + this.value)
-            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
-            .then(list => {
-                resetSelect(baraSel, '-- Select Barangay (Optional) --', false);
-                list.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = b.name; baraSel.appendChild(o); });
-            })
-            .catch(err => { resetSelect(baraSel, '-- Error --', true); Swal.fire('Error', 'Failed to load barangays: ' + err.message, 'error'); });
-    });
 
     // ─── Summary box (updates when Step 5 becomes active) ────────────────────
     (function () {
@@ -451,11 +427,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateSummary() {
-            // Office name (plain text)
             const nameEl = document.getElementById('summaryName');
             if (nameEl) nameEl.textContent = document.getElementById('officeName')?.value?.trim() || '—';
 
-            // Select / input fields
             const fieldMap = {
                 summaryArea:           'areaId',
                 summaryRegion:         'regionId',
@@ -469,7 +443,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (el) el.textContent = getSelectedText(srcId);
             });
 
-            // Connectivity badge
             const statusEl  = document.getElementById('summaryStatus');
             const connCheck = document.getElementById('connectionStatus');
             if (statusEl) {
@@ -489,7 +462,122 @@ document.addEventListener('DOMContentLoaded', function () {
         );
     })();
 
-    // ─── Init ────────────────────────────────────────────────────────────────
+    // ─── Init ─────────────────────────────────────────────────────────────────
     showStep(0);
     console.log('Wizard ready.');
+
+}); // end DOMContentLoaded
+
+// ─── Location cascade dropdowns ───────────────────────────────────────────────
+
+function resetSelect(element, placeholder, disabled) {
+    if (!element) return;
+    element.innerHTML = `<option value="">${placeholder}</option>`;
+    element.disabled = disabled;
+}
+
+function loadingSelect(element) {
+    if (!element) return;
+    element.innerHTML = '<option value="">Loading...</option>';
+    element.disabled = true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.getElementById('regionId')?.addEventListener('change', function () {
+        const provSel = document.getElementById('provinceId');
+        const citySel = document.getElementById('cityMunId');
+        const baraSel = document.getElementById('barangayId');
+
+        resetSelect(provSel, '-- Select Province --', true);
+        resetSelect(citySel, '-- Select City/Municipality --', true);
+        resetSelect(baraSel, '-- Select Barangay --', true);
+
+        if (!this.value) return;
+
+        loadingSelect(provSel);
+        fetch('/api/postal/provinces/by-region/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(provSel, '-- Select Province --', false);
+                list.forEach(p => {
+                    const o = document.createElement('option');
+                    o.value = p.id; o.textContent = p.name;
+                    provSel.appendChild(o);
+                });
+            })
+            .catch(err => {
+                resetSelect(provSel, '-- Error --', true);
+                Swal.fire('Error', 'Failed to load provinces: ' + err.message, 'error');
+            });
+    });
+
+    document.getElementById('provinceId')?.addEventListener('change', function () {
+        const citySel = document.getElementById('cityMunId');
+        const baraSel = document.getElementById('barangayId');
+        resetSelect(citySel, '-- Select City/Municipality --', true);
+        resetSelect(baraSel, '-- Select Barangay --', true);
+        if (!this.value) return;
+        loadingSelect(citySel);
+        fetch('/api/postal/cities/by-province/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(citySel, '-- Select City/Municipality --', false);
+                list.forEach(c => {
+                    const o = document.createElement('option');
+                    o.value = c.id; o.textContent = c.name;
+                    citySel.appendChild(o);
+                });
+            })
+            .catch(err => {
+                resetSelect(citySel, '-- Error --', true);
+                Swal.fire('Error', 'Failed to load cities: ' + err.message, 'error');
+            });
+    });
+
+    document.getElementById('cityMunId')?.addEventListener('change', function () {
+        const baraSel = document.getElementById('barangayId');
+        resetSelect(baraSel, '-- Select Barangay --', true);
+        if (!this.value) return;
+        loadingSelect(baraSel);
+        fetch('/api/postal/barangays/by-city/' + this.value)
+            .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
+            .then(list => {
+                resetSelect(baraSel, '-- Select Barangay (Optional) --', false);
+                list.forEach(b => {
+                    const o = document.createElement('option');
+                    o.value = b.id; o.textContent = b.name;
+                    baraSel.appendChild(o);
+                });
+            })
+            .catch(err => {
+                resetSelect(baraSel, '-- Error --', true);
+                Swal.fire('Error', 'Failed to load barangays: ' + err.message, 'error');
+            });
+    });
+
 });
+
+// ─── Photo upload after save ──────────────────────────────────────────────────
+// Input IDs must match exactly what's in the HTML:
+//   coverPhoto     → cover-photo slot 1
+//   profilePicture → profile-photo
+
+function uploadInsertPhotos(officeId) {
+    const uploads = [
+        { inputId: 'profilePicture', endpoint: '/api/postal-office/' + officeId + '/profile-photo' },
+        { inputId: 'coverPhoto',     endpoint: '/api/postal-office/' + officeId + '/cover-photo/1'  }
+    ];
+
+    const promises = uploads.map(function (u) {
+        const input = document.getElementById(u.inputId);
+        if (!input || !input.files || !input.files[0]) return Promise.resolve();
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        return fetch(u.endpoint, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .catch(() => { /* silent — photo failure should not block navigation */ });
+    });
+
+    return Promise.all(promises);
+}

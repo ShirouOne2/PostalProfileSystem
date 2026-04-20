@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggles.forEach(toggle => {
         toggle.addEventListener('click', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             const dropdown = this.closest('.sidebar-dropdown');
             const isOpen = dropdown.classList.contains('open');
 
@@ -13,6 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             dropdown.classList.toggle('open', !isOpen);
+        });
+    });
+
+    // Ensure submenu links work properly
+    const sublinks = document.querySelectorAll('.sidebar-sublink');
+    sublinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            // Allow normal navigation for submenu links
+            // Don't prevent default behavior
         });
     });
 });

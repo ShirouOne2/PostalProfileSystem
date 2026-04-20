@@ -7,6 +7,7 @@
     var bellLi       = document.getElementById('notifBellLi');
     var badge        = document.getElementById('notifBadge');
     var notifContent = document.getElementById('notifContent');
+    var sidebarBadge = document.getElementById('sidebarNotifBadge');
 
     // Only admins have #notifBellLi — bail out for everyone else
     if (!bellLi || !notifContent) return;
@@ -54,6 +55,16 @@
             } else {
                 badge.textContent   = '';
                 badge.style.display = 'none';
+            }
+            
+            // Update sidebar badge if it exists
+            if (sidebarBadge) {
+                if (count && count !== '0') {
+                    sidebarBadge.textContent = count;
+                    sidebarBadge.style.display = 'inline-block';
+                } else {
+                    sidebarBadge.style.display = 'none';
+                }
             }
         });
 

@@ -1,7 +1,88 @@
 /* Dashboard Styles */
 
-/* ── Page Header ────────────────────────────────────── */
-.dash-header {
+/* Custom 5-card layout */
+.col-xl-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.col-lg-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+/* Stats Cards Container */
+.stats-cards-row {
+    margin-bottom: 2rem;
+}
+
+/* Individual Stat Card */
+.stat-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.border-left-primary {
+    border-left-color: #4e73df;
+}
+
+.stat-card.border-left-success {
+    border-left-color: #1cc88a;
+}
+
+.stat-card.border-left-danger {
+    border-left-color: #e74a3b;
+}
+
+.stat-card.border-left-info {
+    border-left-color: #36b9cc;
+}
+
+.stat-card.border-left-warning {
+    border-left-color: #f6c23e;
+}
+
+.stat-card-body {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Filter Panel Styling */
+.table-filter-panel {
+    background: #ffffff;
+    border: 1px solid #e3e6f0;
+    border-radius: 10px;
+    padding: 14px 18px 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1rem;
+}
+
+.filter-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;

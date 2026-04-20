@@ -180,10 +180,10 @@ public class ConnectivityNotificationService {
         sb.append("</div>");
 
         // ── Footer ────────────────────────────────────────────────────────────
-        sb.append("<div class='text-center py-2' style='background:#f8f9fa;border-top:1px solid #eee;'>")
-          .append("<small class='text-muted' style='font-size:11px;'>")
-          .append("<i class='fas fa-sync-alt mr-1'></i>Live · SSE auto-refresh</small>")
-          .append("</div>");
+        // sb.append("<div class='text-center py-2' style='background:#f8f9fa;border-top:1px solid #eee;'>")
+        //   .append("<small class='text-muted' style='font-size:11px;'>")
+        //   .append("")
+        //   .append("</div>");
 
         return sb.toString();
     }

@@ -9,50 +9,47 @@
 
     <title th:text="${postOffice.postalOffice + ' - Profile'}">Post Office Profile</title>
 
-    <!-- Profile CSS -->
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 
     <!-- Cover Photo Carousel -->
     <div class="cover-photo-container">
         <div id="coverPhotoCarousel" class="carousel slide">
-            <!-- Carousel Indicators -->
             <ol class="carousel-indicators">
                 <li data-target="#coverPhotoCarousel" data-slide-to="0" class="active"></li>
                 <li data-target="#coverPhotoCarousel" data-slide-to="1"></li>
                 <li data-target="#coverPhotoCarousel" data-slide-to="2"></li>
             </ol>
-            
-            <!-- Carousel Slides -->
+
             <div class="carousel-inner">
-                <!-- Cover Photo 1 -->
+                <!-- Slot 1 — cover_photo column -->
                 <div class="carousel-item active">
                     <div class="cover-photo"
                          th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/1); background-size: cover; background-position: center;'
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/1); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
                     </div>
                     <div class="cover-upload-overlay" data-slot="1">
                         <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 1</span>
                     </div>
                 </div>
-                
-                <!-- Cover Photo 2 -->
+
+                <!-- Slot 2 — cover_photo_2 column -->
                 <div class="carousel-item">
                     <div class="cover-photo"
-                         th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/2); background-size: cover; background-position: center;'
+                         th:style="${office.coverPhoto2 != null and !#strings.isEmpty(office.coverPhoto2)}
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/2); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'">
                     </div>
                     <div class="cover-upload-overlay" data-slot="2">
                         <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 2</span>
                     </div>
                 </div>
-                
-                <!-- Cover Photo 3 -->
+
+                <!-- Slot 3 — cover_photo_3 column -->
                 <div class="carousel-item">
                     <div class="cover-photo"
-                         th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/3); background-size: cover; background-position: center;'
+                         th:style="${office.coverPhoto3 != null and !#strings.isEmpty(office.coverPhoto3)}
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/3); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'">
                     </div>
                     <div class="cover-upload-overlay" data-slot="3">
@@ -60,8 +57,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Carousel Controls -->
+
             <a class="carousel-control-prev" href="#coverPhotoCarousel" role="button" data-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="sr-only">Previous</span>
@@ -71,8 +67,7 @@
                 <span class="sr-only">Next</span>
             </a>
         </div>
-        
-        <!-- Hidden file inputs for each cover photo -->
+
         <input type="file" id="coverPhotoInput1" accept="image/*" style="display:none" data-slot="1">
         <input type="file" id="coverPhotoInput2" accept="image/*" style="display:none" data-slot="2">
         <input type="file" id="coverPhotoInput3" accept="image/*" style="display:none" data-slot="3">
@@ -114,79 +109,46 @@
 
         <!-- Action Buttons -->
         <div class="text-center mb-3">
-            <a th:if="${source == 'quarters'}"
-               href="#"
-               onclick="goBackToQuarters()"
-               class="btn btn-outline-secondary btn-sm mr-1">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-            <a th:if="${source == 'report'}"
-               href="#"
-               onclick="goBackToReport()"
-               class="btn btn-outline-secondary btn-sm mr-1">
-                <i class="fas fa-arrow-left"></i> Back to Report
-            </a>
-            <a th:unless="${source == 'quarters' or source == 'report'}"
-               href="/table"
-               class="btn btn-outline-secondary btn-sm mr-1">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
             <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn">
                 <i class="fas fa-edit"></i> Edit Profile
             </button>
             <button onclick="window.print()" class="btn btn-info btn-sm mr-1">
                 <i class="fas fa-print"></i> Print Profile
             </button>
-            <!-- ✅ ADMIN ONLY: Archive Button -->
             <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn"
-                    sec:authorize="hasRole('ADMIN')">
+                    sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
                 <i class="fas fa-archive"></i> Archive
             </button>
         </div>
 
         <script>
         function goBackToQuarters() {
-            const returnUrl = sessionStorage.getItem('quartersReturnUrl');
-            if (returnUrl) {
-                sessionStorage.removeItem('quartersReturnUrl');
-                window.location.href = returnUrl;
-            } else {
-                window.location.href = '/quarters';
-            }
+            const url = sessionStorage.getItem('quartersReturnUrl');
+            sessionStorage.removeItem('quartersReturnUrl');
+            window.location.href = url || '/quarters';
         }
-
         function goBackToReport() {
-            const returnUrl = sessionStorage.getItem('reportReturnUrl');
-            if (returnUrl) {
-                sessionStorage.removeItem('reportReturnUrl');
-                window.location.href = returnUrl;
-            } else {
-                window.location.href = '/report';
-            }
+            const url = sessionStorage.getItem('reportReturnUrl');
+            sessionStorage.removeItem('reportReturnUrl');
+            window.location.href = url || '/report';
+        }
+        function goBackToDashboard() {
+            const url = sessionStorage.getItem('dashboardReturnUrl');
+            sessionStorage.removeItem('dashboardReturnUrl');
+            window.location.href = url || '/dashboard';
         }
         </script>
 
         <!-- Profile Tabs -->
         <div class="profile-tabs">
-            <button class="tab-item active" data-tab="basic">
-                <i class="fas fa-info-circle"></i> Basic Info
-            </button>
-            <button class="tab-item" data-tab="location">
-                <i class="fas fa-map-marker-alt"></i> Location
-            </button>
-            <button class="tab-item" data-tab="connectivity">
-                <i class="fas fa-wifi"></i> Connectivity
-            </button>
-            <button class="tab-item" data-tab="contact">
-                <i class="fas fa-address-book"></i> Contact
-            </button>
-            <button class="tab-item" data-tab="staff">
-                <i class="fas fa-users"></i> Staff
-            </button>
+            <button class="tab-item active" data-tab="basic"><i class="fas fa-info-circle"></i> Basic Info</button>
+            <button class="tab-item" data-tab="location"><i class="fas fa-map-marker-alt"></i> Location</button>
+            <button class="tab-item" data-tab="connectivity"><i class="fas fa-wifi"></i> Connectivity</button>
+            <button class="tab-item" data-tab="contact"><i class="fas fa-address-book"></i> Contact</button>
+            <button class="tab-item" data-tab="staff"><i class="fas fa-users"></i> Staff</button>
         </div>
 
-        <!-- Tab: Basic Info -->
-        <!-- ══ TAB: Basic Info ══ -->
+        <!-- TAB: Basic Info -->
         <div id="tab-basic" class="tab-panel active">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -219,7 +181,7 @@
             </div>
         </div>
 
-        <!-- ══ TAB: Location ══ -->
+        <!-- TAB: Location -->
         <div id="tab-location" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -264,7 +226,7 @@
             </div>
         </div>
 
-        <!-- ══ TAB: Connectivity ══ -->
+        <!-- TAB: Connectivity -->
         <div id="tab-connectivity" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -328,7 +290,7 @@
             </div>
         </div>
 
-        <!-- ══ TAB: Contact ══ -->
+        <!-- TAB: Contact -->
         <div id="tab-contact" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -347,26 +309,9 @@
                     </div>
                 </div>
             </div>
-            <div class="card mb-3 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-network-wired text-primary mr-2"></i>ISP Contact</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ISP Contact Person</small>
-                            <div th:text="${postOffice.ispContactPerson ?: 'N/A'}">—</div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ISP Contact Number</small>
-                            <div th:text="${postOffice.ispContactNumber ?: 'N/A'}">—</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- ══ TAB: Staff ══ -->
+        <!-- TAB: Staff -->
         <div id="tab-staff" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -391,7 +336,7 @@
             </div>
         </div>
 
-        <!-- ✅ ADMIN ONLY: Archive Modal -->
+        <!-- ADMIN ONLY: Archive Modal -->
         <div sec:authorize="hasRole('ADMIN')">
             <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -422,12 +367,10 @@
                     </div>
                 </div>
             </div>
-        </div><!-- end ADMIN Archive Modal -->
+        </div>
 
-        <!-- Tab switching and carousel initialization -->
         <script src="/js/profile-init.js"></script>
 
-        <!-- OFFICE_DATA: injected here, inside fragment, runs before profile.js -->
         <script th:inline="javascript">
             window.OFFICE_DATA = {
                 id:                         /*[[${office.id}]]*/ null,
@@ -452,7 +395,6 @@
             };
         </script>
 
-        <!-- Profile Photo Management JavaScript -->
         <script src="/js/profile-photos.js"></script>
 
     </div><!-- /.profile-section -->

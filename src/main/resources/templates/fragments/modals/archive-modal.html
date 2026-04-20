@@ -1,0 +1,34 @@
+<!-- Archive Reason Modal Fragment -->
+<div th:fragment="archiveModal" class="modal fade" id="archiveReasonModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-archive mr-2"></i>Archive Post Office
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    You are about to archive <strong id="archiveOfficeName"></strong>.
+                    This office will be hidden from all views but can be restored later.
+                </p>
+                <div class="form-group">
+                    <label for="archiveReasonInput">
+                        Reason for archiving <small class="text-muted">(optional)</small>
+                    </label>
+                    <textarea id="archiveReasonInput" class="form-control" rows="3"
+                              placeholder="e.g. Office closed, Duplicate record, Under review..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
+                    <i class="fas fa-archive mr-1"></i>Archive
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

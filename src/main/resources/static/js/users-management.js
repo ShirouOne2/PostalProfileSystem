@@ -9,7 +9,8 @@ let isEditMode = false;
 const ROLES = {
     1: 'System Admin',
     2: 'Area Admin',
-    3: 'User'
+    3: 'User',
+    4: 'SRD Operation'
 };
 
 // Area map
@@ -115,14 +116,19 @@ function createUserCell(user) {
 }
 
 function createRoleBadge(roleId) {
-    const colors = { 1: '#dc3545', 2: '#fd7e14', 3: '#28a745' };
+    const colors = { 
+        1: '#dc3545', // System Admin - Red
+        2: '#fd7e14', // Area Admin - Orange  
+        3: '#28a745', // User - Green
+        4: '#17a2b8'  // SRD Operation - Blue
+    };
     const label  = ROLES[roleId] || 'Unknown';
     const color  = colors[roleId] || '#6c757d';
     return `<span class="badge" style="background:${color}; color:white; padding:4px 10px; border-radius:12px;">${label}</span>`;
 }
 
 function getAreaLabel(roleId, areaId) {
-    if (roleId === 1 && !areaId) {
+    if ((roleId === 1 || roleId === 4) && !areaId) {
         return '<span class="badge" style="background:#17a2b8; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-shield-alt mr-1"></i> Full Access</span>';
     }
     return areaId ? (AREAS[areaId] || 'Area ' + areaId) : 'N/A';
@@ -149,8 +155,8 @@ function createActionButtons(userId) {
 function onRoleChange() {
     const role = parseInt($('#role').val());
 
-    if (role === 1) {
-        // System Admin → Full Access pre-selected
+    if (role === 1 || role === 4) {
+        // System Admin / SRD Operation → Full Access pre-selected
         $('#areaGroup').show();
         $('#fullAccessOption').show();
         $('#areaId').val('0');
@@ -334,9 +340,9 @@ async function saveUser() {
     const roleVal = parseInt($('#role').val());
     const areaVal = $('#areaId').val();
 
-    // ✅ System Admin + Full Access → areaId = null
+    // ✅ System Admin / SRD Operation + Full Access → areaId = null
     let areaId = null;
-    if (roleVal !== 1) {
+    if (roleVal !== 1 && roleVal !== 4) {
         areaId = areaVal ? parseInt(areaVal) : null;
     } else if (areaVal && areaVal !== '0') {
         areaId = parseInt(areaVal);

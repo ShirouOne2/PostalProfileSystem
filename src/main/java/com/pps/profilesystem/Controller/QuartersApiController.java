@@ -62,7 +62,7 @@ public class QuartersApiController {
             Integer areaInt = parseInteger(area);
 
             // Apply user area restrictions: non-system-admin users can only see their assigned area
-            if (roleId != null && roleId != 1) {
+            if (roleId != null && roleId != 1 && roleId != 4) {
                 // User is not a system admin, restrict to their assigned area
                 if (userAreaId != null) {
                     // If no area filter is set, default to user's area
@@ -198,6 +198,7 @@ public class QuartersApiController {
         dto.put("postmaster", po.getPostmaster());
         dto.put("speed",    po.getSpeed());
         dto.put("status",   po.getConnectionStatus());
+        dto.put("officeStatus", po.getOfficeStatus());
         dto.put("areaId",   po.getArea() != null ? po.getArea().getId() : null);
         dto.put("area",     po.getArea() != null ? po.getArea().getAreaName() : null);
         dto.put("regionId", po.getRegion() != null ? po.getRegion().getId() : null);

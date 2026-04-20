@@ -133,40 +133,67 @@ function applyTableFilters() {
     // Apply search
     table.search(searchValue);
 
+    // Apply area and office status filters normally
     if (IS_ADMIN) {
         // Admin: # | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
         table.column(2).search(areaValue ? areaValue : '');
-        table.column(5).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
         table.column(6).search(officeStatusValue ? officeStatusValue : '');
     } else {
         // Non-admin filtering logic
         if (IS_AREA_ADMIN) {
             // Area Admin: #(0) | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
             table.column(2).search(areaValue ? areaValue : '');
-            table.column(5).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
             table.column(6).search(officeStatusValue ? officeStatusValue : '');
         } else {
             // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
-            table.column(4).search(connectivityValue ? (connectivityValue === 'true' ? 'Active' : 'Inactive') : '');
             table.column(5).search(officeStatusValue ? officeStatusValue : '');
         }
     }
 
-        /* Clear search × */
-        document.getElementById('dashClearSearchBtn')?.addEventListener('click', function () {
-            document.getElementById('dashSearchInput').value = '';
-            applyFilters();
+    // Apply connectivity filter using custom search function
+    const connectivityColumnIndex = IS_ADMIN ? 5 : (IS_AREA_ADMIN ? 5 : 4);
+    if (connectivityValue) {
+        // Apply custom search for connectivity based on actual connectionStatus value
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const tableIdFromSettings = settings.nTable.id;
+            const isCorrectTable = (IS_ADMIN && tableIdFromSettings === 'systemAdminTable') || 
+                                  (!IS_ADMIN && tableIdFromSettings === 'officeTable');
+            
+            if (!isCorrectTable) return true;
+            
+            const connectivityCell = table.row(dataIndex).node().cells[connectivityColumnIndex];
+            const badgeElement = connectivityCell.querySelector('.badge');
+            
+            if (!badgeElement) return true;
+            
+            const isActive = badgeElement.classList.contains('badge-success');
+            const filterForActive = connectivityValue === 'true';
+            
+            return isActive === filterForActive;
         });
+    } else {
+        // Clear any existing custom connectivity search
+        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
+            return !searchFunc.toString().includes('connectivityColumnIndex');
+        });
+    }
 
-        /* Live search */
-        let timer;
-        document.getElementById('dashSearchInput')?.addEventListener('input', function () {
-            clearTimeout(timer);
-            timer = setTimeout(applyFilters, 300);
-        });
-        document.getElementById('dashSearchInput')?.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
-        });
+    table.draw();
+    updateActiveFilterCount();
+}
+
+function resetTableFilters() {
+    const tableId = IS_ADMIN ? '#systemAdminTable' : '#officeTable';
+    if (!$.fn.DataTable.isDataTable(tableId)) return;
+    const table = $(tableId).DataTable();
+    
+    // Clear custom connectivity search functions
+    $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
+        return !searchFunc.toString().includes('connectivityColumnIndex');
+    });
+    
+    // Reset all filters
+    table.search('').columns().search('').draw();
 
         /* Instant on dropdown */
         ['dashFilterArea', 'dashFilterConnStatus', 'dashFilterOfficeStatus'].forEach(id => {
@@ -250,7 +277,7 @@ function applyTableFilters() {
     ];
 
     dashboardTable = $('#systemAdminTable').DataTable({
-        pageLength: 25,
+        pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
         paging: true,
         ordering: true,

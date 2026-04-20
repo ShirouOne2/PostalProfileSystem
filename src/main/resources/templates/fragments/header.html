@@ -11,12 +11,37 @@
                 <i class="fas fa-bars fa-lg text-primary"></i>
             </button>
 
-            <!-- Logo -->
-            <a class="navbar-brand d-flex align-items-center" th:href="@{/table}">
-                <img th:src="@{/assets/images/phlpostlogo.png}"
-                     alt="PHLPost Logo"
-                     style="height: 45px;">
-            </a>
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="navbar-brand">
+                <ol class="breadcrumb mb-0 bg-transparent p-0">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/dashboard}" class="text-primary text-decoration-none">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item" th:unless="${activePage == 'dashboard' or activePage == 'table' or activePage == 'quarters' or activePage == 'report'}">
+                        <a th:href="@{/table}" class="text-primary text-decoration-none">
+                            <i class="fas fa-map-marked-alt"></i> Postal Office Locator
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item" th:unless="${activePage == 'dashboard' or activePage == 'table' or activePage == 'quarters' or activePage == 'report'}">
+                        <a th:href="@{/quarters}" class="text-primary text-decoration-none">
+                            <i class="fas fa-wifi"></i> Connectivity
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" 
+                        th:text="${activePage == 'dashboard' ? 'Dashboard' : 
+                                activePage == 'table' ? 'Postal Office Locator' :
+                                activePage == 'quarters' ? 'Connectivity' :
+                                activePage == 'report' ? 'Report' :
+                                activePage == 'insert' ? 'Add New Office' :
+                                activePage == 'users' ? 'User Management' :
+                                activePage == 'archive' ? 'Archive' :
+                                activePage == 'profile' ? 'Profile' : 'Page'}">
+                        Page
+                    </li>
+                </ol>
+            </nav>
 
             <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">
@@ -24,7 +49,7 @@
                 <!-- Notification Bell — Admin only -->
                 <li class="nav-item dropdown mr-3 position-relative"
                     id="notifBellLi"
-                    sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN')">
+                    sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN','SRD_OPERATION')">
 
                     <!-- Bell button -->
                     <a class="nav-link text-muted p-2"
@@ -61,6 +86,17 @@
                             </div>
                         </div>
 
+                        <!-- Divider -->
+                        <div class="dropdown-divider"></div>
+                        
+                        <!-- View All Notifications Button -->
+                        <div class="px-3 py-2">
+                            <a href="/notifications" class="btn btn-primary btn-sm btn-block">
+                                <i class="fas fa-inbox mr-2"></i>
+                                View All Notifications
+                            </a>
+                        </div>
+
                     </div>
                 </li>
                 <!-- end notification bell -->
@@ -88,7 +124,7 @@
                         <a class="dropdown-item" th:href="@{/my-profile}">
                             <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
                         </a>
-                        <div sec:authorize="hasRole('ADMIN')">
+                        <div sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" th:href="@{/users}">
                                 <i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i> Manage Users

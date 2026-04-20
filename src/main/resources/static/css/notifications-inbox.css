@@ -1,0 +1,309 @@
+/* Notifications Inbox Page Styles */
+
+/* Notification Item Styles */
+.notification-item {
+    border-left: 4px solid #e3e6f0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.notification-item.unread {
+    border-left-color: #4e73df;
+    background-color: #f8f9fc;
+}
+
+.notification-item.read {
+    border-left-color: #e3e6f0;
+    opacity: 0.8;
+}
+
+.notification-item:hover {
+    background-color: #eef4ff !important;
+    transform: translateX(2px);
+}
+
+.notification-item.unread:hover {
+    border-left-color: #2e59d9;
+}
+
+/* Notification Content */
+.notification-content {
+    padding: 1rem;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.notification-item:last-child .notification-content {
+    border-bottom: none;
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.notification-type {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.notification-type i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.notification-timestamp {
+    font-size: 0.75rem;
+    color: #858796;
+    white-space: nowrap;
+}
+
+.notification-message {
+    color: #5a5c69;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.notification-details {
+    font-size: 0.8rem;
+    color: #858796;
+}
+
+.notification-details strong {
+    color: #5a5c69;
+}
+
+/* Unread Indicator */
+.unread-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 8px;
+    height: 8px;
+    background-color: #4e73df;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Grid View Styles */
+.notifications-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    border-left: 4px solid #e3e6f0;
+}
+
+.notification-card.unread {
+    border-left-color: #4e73df;
+    background-color: #f8f9fc;
+}
+
+.notification-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Stats Card Enhancements */
+.stats-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Filter Section */
+.filter-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* View Toggle Buttons */
+.view-toggle .btn {
+    transition: all 0.2s ease;
+}
+
+.view-toggle .btn:hover {
+    transform: translateY(-1px);
+}
+
+.view-toggle .btn.active {
+    background-color: #4e73df !important;
+    border-color: #4e73df !important;
+    color: white !important;
+}
+
+/* Loading and Empty States */
+.loading-state, .empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #e3e6f0;
+    margin-bottom: 1rem;
+}
+
+/* Notification Type Badges */
+.badge-new { background-color: #28a745; }
+.badge-updated { background-color: #007bff; }
+.badge-connected { background-color: #17a2b8; }
+.badge-disconnected { background-color: #dc3545; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .notification-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .notification-timestamp {
+        align-self: flex-end;
+    }
+    
+    .notifications-grid {
+        grid-template-columns: 1fr;
+        padding: 0.5rem;
+    }
+    
+    .stats-card {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Animation for new notifications */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-item.new {
+    animation: slideIn 0.3s ease;
+}
+
+/* Sidebar notification badge */
+.sidebar-notification-badge {
+    transition: all 0.2s ease;
+}
+
+.sidebar-notification-badge:hover {
+    transform: scale(1.1);
+}
+
+/* Filter controls styling */
+.filter-control {
+    border-radius: 6px;
+    border: 1px solid #e3e6f0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Action buttons */
+.action-buttons .btn {
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Notification summary text */
+.notification-summary {
+    font-size: 0.875rem;
+    color: #858796;
+    font-weight: 500;
+}
+
+/* View button styling */
+.notification-item .btn-outline-primary {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.notification-item .btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.notification-card .btn-primary {
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.notification-card .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Full notification modal */
+#fullNotificationModal .modal-header {
+    background: linear-gradient(135deg, #002868 0%, #1a3a7a 100%);
+    color: #fff;
+}
+
+#fullNotificationModal .modal-header .close { 
+    color: #fff; 
+    opacity: 0.85; 
+}
+
+#fullNotificationModal .modal-dialog { 
+    max-width: 600px; 
+    width: 95%;
+    margin: 1.75rem auto;
+}
+
+.notification-full-details .row {
+    border-bottom: 1px solid #e3e6f0;
+    padding-bottom: 0.75rem;
+}
+
+.notification-full-details .row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.notification-full-details strong {
+    color: #5a5c69;
+    font-weight: 600;
+}
+
+.notification-full-details .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
