@@ -1,5 +1,20 @@
 /* Dashboard Stats Cards Styling */
 
+/* Custom 5-card layout */
+.col-xl-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.col-lg-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
 /* Stats Cards Container */
 .stats-cards-row {
     margin-bottom: 2rem;

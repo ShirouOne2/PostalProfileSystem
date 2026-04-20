@@ -74,6 +74,11 @@ public class GlobalModelAdvice {
             model.addAttribute("loggedInInitial",  getInitial(user.getUsername()));
             model.addAttribute("loggedInRoleId",   user.getRole());
             model.addAttribute("loggedInAreaId",   user.getAreaId());
+            
+            // Role flags for Thymeleaf templates
+            model.addAttribute("isSystemAdmin",   user.getRole() != null && (user.getRole() == 1 || user.getRole() == 4));
+            model.addAttribute("isAreaAdmin",     user.getRole() != null && user.getRole() == 2);
+            model.addAttribute("isSrdOperation",  user.getRole() != null && user.getRole() == 4);
         });
     }
 
@@ -85,6 +90,7 @@ public class GlobalModelAdvice {
             case 1:  return "System Admin";
             case 2:  return "Area Admin";
             case 3:  return "User";
+            case 4:  return "SRD Operation";
             default: return "User";
         }
     }

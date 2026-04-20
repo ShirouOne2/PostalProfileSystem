@@ -53,8 +53,8 @@ public class MapController {
 
             List<PostalOffice> offices;
             
-            if (roleId != null && roleId == 1) {
-                // System Admin sees all offices
+            if (roleId != null && (roleId == 1 || roleId == 4)) {
+                // System Admin and SRD Operation see all offices
                 offices = postalOfficeRepository.findAllWithAreaForMapNonArchived();
             } else {
                 // Area Admin and regular users see only offices in their assigned area

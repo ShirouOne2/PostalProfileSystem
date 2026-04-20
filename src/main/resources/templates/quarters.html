@@ -56,7 +56,7 @@
                                 </label>
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
                                     <option value="">Select Year</option>
-                                    <option th:each="y : ${#numbers.sequence(1993, 2027)}"
+                                    <option th:each="y : ${#numbers.sequence(2010, 2027)}"
                                             th:value="${y}" th:text="${y}"
                                             th:selected="${y == currentYear}">2026</option>
                                 </select>
@@ -189,7 +189,6 @@
                             <th>Province</th>
                             <th>City/Municipality</th>
                             <th>Connection Status</th>
-                            <th>Office Status</th>
                             <th>Speed</th>
                             <th>Action</th>
                         </tr>

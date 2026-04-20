@@ -339,40 +339,12 @@ function initializeTable() {
                 },
                 {
                     targets: 6,
-                    data: 'officeStatus',
-                    width: '120px',
-                    className: 'dt-center',
-                    render: function(data, type, row) {
-                        if (type !== 'display') {
-                            return data || 'N/A';
-                        }
-                        
-                        if (!data) {
-                            return '<span class="badge badge-secondary">N/A</span>';
-                        }
-                        
-                        let badge = '';
-                        switch(data.toUpperCase()) {
-                            case 'OPEN':
-                                badge = '<span class="badge badge-info">Open</span>';
-                                break;
-                            case 'CLOSED':
-                                badge = '<span class="badge badge-danger">Closed</span>';
-                                break;
-                            default:
-                                badge = '<span class="badge badge-secondary">' + data + '</span>';
-                        }
-                        return badge;
-                    }
-                },
-                {
-                    targets: 7,
                     data: 'speed',
                     defaultContent: 'N/A',
                     render: function(d) { return d || 'N/A'; }
                 },
                 {
-                    targets: 8,
+                    targets: 7,
                     data: null,
                     orderable: false,
                     width: '90px',
@@ -523,21 +495,14 @@ function printQuartersReport() {
             ? '<span style="color:#155724;font-weight:600;">Active</span>'
             : '<span style="color:#721c24;font-weight:600;">Inactive</span>';
         
-        const officeStatus = row.officeStatus || 'N/A';
-        const officeStatusBadge = officeStatus === 'OPEN' 
-            ? '<span style="color:#17a2b8;font-weight:600;">Open</span>'
-            : officeStatus === 'CLOSED'
-            ? '<span style="color:#ffc107;font-weight:600;">Closed</span>'
-            : '<span style="color:#6c757d;font-weight:600;">' + officeStatus + '</span>';
-        
-        rowsHtml += '<tr><td>' + (idx + 1) + '</td><td>' + (row.name || 'N/A') + '</td><td>' + (row.area || 'N/A') + '</td><td>' + (row.province || 'N/A') + '</td><td>' + (row.city || 'N/A') + '</td><td>' + connStatus + '</td><td>' + officeStatusBadge + '</td><td>' + (row.speed || 'N/A') + '</td></tr>';
+        rowsHtml += '<tr><td>' + (idx + 1) + '</td><td>' + (row.name || 'N/A') + '</td><td>' + (row.area || 'N/A') + '</td><td>' + (row.province || 'N/A') + '</td><td>' + (row.city || 'N/A') + '</td><td>' + connStatus + '</td><td>' + (row.speed || 'N/A') + '</td></tr>';
     });
 
     const pw = window.open('', '_blank', 'width=1100,height=750');
     pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Connectivity Report</title><style>body{font-family:\'Segoe UI\',Arial,sans-serif;font-size:12px;color:#222;padding:24px;}h2{color:#002868;}table{width:100%;border-collapse:collapse;margin-top:12px;}thead tr{background:#002868;color:#fff;}thead th{padding:8px 10px;font-size:11px;font-weight:600;text-align:left;text-transform:uppercase;}tbody tr{border-bottom:1px solid #e8eaf0;}tbody tr:nth-child(even){background:#f7f9fc;}tbody td{padding:7px 10px;font-size:11px;}@media print{body{padding:10px;}}</style></head><body>');
     pw.document.write('<h2>PHLPost — Connectivity Report</h2>');
     pw.document.write('<p><strong>Year:</strong> ' + year + ' &nbsp;|&nbsp; <strong>Quarter:</strong> ' + quarter + ' &nbsp;|&nbsp; <strong>Area:</strong> ' + area + ' &nbsp;|&nbsp; <strong>Status:</strong> ' + status + ' &nbsp;|&nbsp; <strong>Total Records:</strong> ' + rows.length + ' &nbsp;|&nbsp; <strong>Printed:</strong> ' + new Date().toLocaleString('en-PH') + '</p>');
-    pw.document.write('<table><thead><tr><th>#</th><th>Post Office</th><th>Area</th><th>Province</th><th>City/Municipality</th><th>Connection Status</th><th>Office Status</th><th>Speed</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>');
+    pw.document.write('<table><thead><tr><th>#</th><th>Post Office</th><th>Area</th><th>Province</th><th>City/Municipality</th><th>Connection Status</th><th>Speed</th></tr></thead><tbody>' + rowsHtml + '</tbody></table>');
     pw.document.write('<script>window.onload=function(){window.print();}<\/script></body></html>');
     pw.document.close();
 }

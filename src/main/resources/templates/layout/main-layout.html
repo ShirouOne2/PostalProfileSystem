@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <!-- DataTables CSS -->
-    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
+    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard' or activePage == 'report'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
     <!-- Custom CSS -->
@@ -48,145 +48,7 @@
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table-custom.css}">
     <link th:if="${activePage == 'users'}" rel="stylesheet" th:href="@{/css/users-management.css}">
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fc;
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        /* Main content margin synced with sidebar width */
-        .main-content {
-            flex: 1;
-            margin-left: 260px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            transition: margin-left 0.25s ease;
-        }
-
-        /* Applied by JS when sidebar is collapsed */
-        body.sidebar-is-collapsed .main-content {
-            margin-left: 80px;
-        }
-
-        .main-header {
-            background: #fff;
-            border-bottom: 1px solid #e3e6f0;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-
-        .main-body {
-            flex: 1;
-            padding: 1.5rem;
-        }
-
-        .main-footer {
-            background: #fff;
-            border-top: 1px solid #e3e6f0;
-            padding: 1rem 1.5rem;
-            margin-top: auto;
-        }
-
-        @media (max-width: 768px) {
-            .main-content { margin-left: 64px !important; }
-            .main-body { padding: 1rem; }
-        }
-
-        .text-gray-600 { color: #858796; }
-        .text-gray-800 { color: #5a5c69; }
-        .border-left-primary   { border-left: 4px solid #4e73df !important; }
-        .border-left-success   { border-left: 4px solid #1cc88a !important; }
-        .border-left-warning   { border-left: 4px solid #f6c23e !important; }
-        .border-left-info      { border-left: 4px solid #36b9cc !important; }
-
-        .spinner-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        .spinner-overlay.show { display: flex; }
-
-        /* ── Office Profile Popup Modal ─────────────────────────── */
-        #officeProfilePopupModal .modal-header {
-            background: linear-gradient(135deg, #002868 0%, #1a3a7a 100%);
-            color: #fff;
-        }
-        #officeProfilePopupModal .modal-header .close { color: #fff; opacity: 0.85; }
-        #officeProfilePopupModal .modal-dialog { 
-            max-width: 900px; 
-            width: 95%;
-            margin: 1.75rem auto;
-        }
-        #officeProfilePopupModal .modal-body { 
-            padding: 0; 
-            min-height: 400px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        #officeProfilePopupModal iframe {
-            width: 100%; height: 75vh;
-            border: none; display: block;
-        }
-        
-        /* Popup tab styling */
-        #officeProfilePopupModal [data-popup-tab] {
-            cursor: pointer;
-            border-radius: 4px 4px 0 0;
-            margin-bottom: -1px;
-        }
-        #officeProfilePopupModal [data-popup-tab]:hover {
-            background-color: #e9ecef;
-        }
-        #officeProfilePopupModal [data-popup-tab].active {
-            background-color: #fff;
-            border-bottom: 2px solid #007bff !important;
-        }
-        
-        /* Responsive fixes for popup */
-        @media (max-width: 768px) {
-            #officeProfilePopupModal .modal-dialog {
-                max-width: 95%;
-                margin: 10px auto;
-            }
-            #officeProfilePopupModal .modal-body {
-                max-height: 80vh;
-            }
-        }
-
-        /* Office name links in tables */
-        .office-name-link {
-            color: #002868;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            border-bottom: 1px dashed transparent;
-            transition: border-color 0.15s, color 0.15s;
-        }
-        .office-name-link:hover {
-            color: var(--phlpost-red, #C1272D);
-            border-bottom-color: var(--phlpost-red, #C1272D);
-            text-decoration: none;
-        }
-    </style>
-    
-    <!-- <th:block th:if="${activePage == 'users'}" -->
-    <!--       th:replace="~{fragments/modals/User-modal :: userModalStyles}"> -->
-    <!-- </th:block> -->
+    <link rel="stylesheet" th:href="@{/css/main-layout.css}">
 
 </head>
 
@@ -291,7 +153,7 @@
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
     <!-- 9. DataTables JS -->
-    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
+    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard' or activePage == 'report'}" 
             src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js" defer></script>
     
     <!-- 10. Table JS -->
@@ -308,7 +170,7 @@
    <script th:if="${activePage == 'users'}" th:src="@{/js/users-management.js}"></script>
 
    <!-- 13. Archive JS -->
-   <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
+   <script th:if="${activePage == 'archive' or activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/archive.js}"></script>
 
    <!-- 14. Insert Office Wizard JS -->
    <script th:if="${activePage == 'insert'}" th:src="@{/js/insert-office-wizard.js}"></script>
@@ -341,7 +203,7 @@
    <!-- 23. Bootstrap tooltip init — runs after jQuery & Bootstrap are loaded.
             Covers: insert-office page ISP/connection tooltips,
                     edit modal ISP/connection tooltips. -->
-   <script th:if="${activePage == 'insert' or activePage == 'table' or activePage == 'profile'}" 
+   <script th:if="${activePage == 'insert' or activePage == 'table' or activePage == 'profile' or activePage == 'dashboard'}" 
            th:src="@{/js/global-tooltips.js}"></script>
 
 </body>

@@ -35,7 +35,7 @@
                                 </label>
                                 <select id="yearSelector" class="form-control form-control-sm filter-select">
                                     <option value="">Select Years</option>
-                                    <option th:each="y : ${#numbers.sequence(1993, 2027)}"
+                                    <option th:each="y : ${#numbers.sequence(2010, 2027)}"
                                             th:value="${y}" th:text="${y}"
                                             th:selected="${selectedYearFilter != null and selectedYearFilter == y.toString()}">2026</option>
                                 </select>

@@ -127,7 +127,7 @@
                             <i class="fas fa-print"></i> Print Profile
                         </button>
                         <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn"
-                                sec:authorize="hasRole('ADMIN')">
+                                sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
                             <i class="fas fa-archive"></i> Archive
                         </button>
                     </div>

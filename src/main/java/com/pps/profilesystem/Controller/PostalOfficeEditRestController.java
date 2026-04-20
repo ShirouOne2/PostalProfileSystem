@@ -3,6 +3,7 @@ package com.pps.profilesystem.Controller;
 import com.pps.profilesystem.Entity.*;
 import com.pps.profilesystem.DTO.ConnectivityNotification;
 import com.pps.profilesystem.Service.ConnectivityNotificationService;
+import com.pps.profilesystem.Service.ApprovalService;
 import com.pps.profilesystem.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +16,8 @@ import java.util.*;
 /**
  * REST endpoints used by edit-modal.js
  *
- *  GET  /api/postal-office/{id}  →  fetch office data for the modal
- *  PUT  /api/postal-office/{id}  →  save changes from the modal
+ *  GET  /api/postal-office/{id}  ->  fetch office data for the modal
+ *  PUT  /api/postal-office/{id}  ->  save changes from the modal
  */
 @RestController
 @RequestMapping("/api/postal-office")
@@ -24,13 +25,14 @@ public class PostalOfficeEditRestController {
 
     @Autowired private PostalOfficeRepository         postalOfficeRepository;
     @Autowired private ConnectivityNotificationService notifService;
+    @Autowired private ApprovalService                approvalService;
     @Autowired private AreaRepository                 areaRepository;
     @Autowired private RegionsRepository              regionsRepository;
     @Autowired private ProvinceRepository             provinceRepository;
     @Autowired private CityMunicipalityRepository     cityMunicipalityRepository;
     @Autowired private BarangayRepository             barangayRepository;
 
-    // ── GET ───────────────────────────────────────────────────────────────────
+    // -- GET --
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
@@ -53,11 +55,11 @@ public class PostalOfficeEditRestController {
                     d.put("latitude",                   o.getLatitude());
                     d.put("longitude",                  o.getLongitude());
 
-                    // Location hierarchy IDs — JS uses these to pre-select dropdowns
-                    // Area is EAGER — safe to access directly
+                    // Location hierarchy IDs -- JS uses these to pre-select dropdowns
+                    // Area is EAGER -- safe to access directly
                     d.put("areaId", o.getArea() != null ? o.getArea().getId() : null);
 
-                    // LAZY associations — wrapped in try-catch to avoid LazyInitializationException
+                    // LAZY associations -- wrapped in try-catch to avoid LazyInitializationException
                     try { d.put("regionId",   o.getRegion()           != null ? o.getRegion().getId()           : null); }
                     catch (Exception e) { d.put("regionId",   null); }
                     try { d.put("provinceId", o.getProvince()         != null ? o.getProvince().getId()         : null); }
@@ -104,7 +106,7 @@ public class PostalOfficeEditRestController {
         }
     }
 
-    // ── PUT ───────────────────────────────────────────────────────────────────
+    // -- PUT --
 
     @PutMapping("/{id}")
     @Transactional
@@ -117,64 +119,151 @@ public class PostalOfficeEditRestController {
         try {
             PostalOffice o = opt.get();
             Snapshot before = Snapshot.of(o);
-
-            // Basic
-            set(body, "name",           v -> o.setName(v.toString().trim()));
-            set(body, "postmaster",     v -> o.setPostmaster(str(v)));
-            set(body, "classification", v -> o.setClassification(str(v)));
-            set(body, "serviceProvided",v -> o.setServiceProvided(str(v)));
-
-            // Address / coordinates
-            set(body, "address",    v -> o.setAddress(str(v)));
-            set(body, "zipCode",    v -> o.setZipCode(str(v)));
-            set(body, "latitude",   v -> { try { o.setLatitude(Double.parseDouble(v.toString()));  } catch (Exception ignored) {} });
-            set(body, "longitude",  v -> { try { o.setLongitude(Double.parseDouble(v.toString())); } catch (Exception ignored) {} });
-
-            // Location hierarchy
-            set(body, "areaId",     v -> { Integer x = num(v); if (x != null) areaRepository.findById(x).ifPresent(o::setArea);                       else o.setArea(null); });
-            set(body, "regionId",   v -> { Integer x = num(v); if (x != null) regionsRepository.findById(x).ifPresent(o::setRegion);                   else o.setRegion(null); });
-            set(body, "provinceId", v -> { Integer x = num(v); if (x != null) provinceRepository.findById(x).ifPresent(o::setProvince);                else o.setProvince(null); });
-            set(body, "cityMunId",  v -> { Integer x = num(v); if (x != null) cityMunicipalityRepository.findById(x).ifPresent(o::setCityMunicipality); else o.setCityMunicipality(null); });
-            set(body, "barangayId", v -> { Integer x = num(v); if (x != null) barangayRepository.findById(x).ifPresent(o::setBarangay);                else o.setBarangay(null); });
-
-            // Connectivity
-            set(body, "connectionStatus",         v -> o.setConnectionStatus(bool(v)));
-            set(body, "officeStatus",             v -> o.setOfficeStatus(str(v)));
-            set(body, "internetServiceProvider",  v -> o.setInternetServiceProvider(str(v)));
-            set(body, "typeOfConnection",         v -> o.setTypeOfConnection(str(v)));
-            set(body, "speed",                    v -> o.setSpeed(str(v)));
-            set(body, "staticIpAddress",          v -> o.setStaticIpAddress(str(v)));
-
-            // Staff
-            set(body, "noOfEmployees",     v -> o.setNoOfEmployees(num(v)));
-            set(body, "noOfPostalTellers", v -> o.setNoOfPostalTellers(num(v)));
-            set(body, "noOfLetterCarriers",v -> o.setNoOfLetterCarriers(num(v)));
-
-            // Contacts
-            set(body, "postalOfficeContactPerson", v -> o.setPostalOfficeContactPerson(str(v)));
-            set(body, "postalOfficeContactNumber", v -> o.setPostalOfficeContactNumber(str(v)));
-            set(body, "ispContactPerson",          v -> o.setIspContactPerson(str(v)));
-            set(body, "ispContactNumber",          v -> o.setIspContactNumber(str(v)));
-            set(body, "remarks",                   v -> o.setRemarks(str(v)));
-
-            postalOfficeRepository.save(o);
-
-            // Diff + notify
             String actor = actor(auth);
-            List<String> changes = diff(before, o);
-            if (!changes.isEmpty()) {
-                ConnectivityNotification.Type type = resolveType(before, o);
-                notifService.push(type, o.getName(), o.getId(), actor, String.join(" · ", changes));
-            }
 
-            return ResponseEntity.ok(Map.of("success", true, "message", "Office updated successfully."));
+            // Check if user is admin or area admin
+            boolean isAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_AREA_ADMIN"));
+
+            // Prepare changes for approval request if needed
+            Map<String, Object> oldValues = createOldValuesMap(before);
+            Map<String, Object> newValues = createNewValuesMap(body);
+
+            if (isAdmin) {
+                // Admin can directly update
+                applyChanges(o, body);
+                postalOfficeRepository.save(o);
+
+                // Diff + notify
+                List<String> changes = diff(before, o);
+                if (!changes.isEmpty()) {
+                    ConnectivityNotification.Type type = resolveType(before, o);
+                    notifService.push(type, o.getName(), o.getId(), actor, String.join(" · ", changes));
+                }
+
+                return ResponseEntity.ok(Map.of("success", true, "message", "Office updated successfully."));
+            } else {
+                // Regular user needs approval
+                if (approvalService.hasPendingRequestForOffice(id)) {
+                    return error(409, "There is already a pending approval request for this office.");
+                }
+
+                // Create approval request
+                Integer areaId = o.getArea() != null ? o.getArea().getId() : null;
+                approvalService.createApprovalRequest(
+                        ApprovalRequest.RequestType.EDIT_OFFICE,
+                        id,
+                        o.getName(),
+                        actor,
+                        oldValues,
+                        newValues,
+                        areaId
+                );
+
+                return ResponseEntity.ok(Map.of(
+                        "success", true, 
+                        "message", "Your changes have been submitted for approval.",
+                        "requiresApproval", true
+                ));
+            }
 
         } catch (Exception e) {
             return error(500, "Update failed: " + e.getMessage());
         }
     }
 
-    // ── Diff ──────────────────────────────────────────────────────────────────
+    private Map<String, Object> createOldValuesMap(Snapshot before) {
+        Map<String, Object> oldValues = new HashMap<>();
+        oldValues.put("name", before.name);
+        oldValues.put("postmaster", before.postmaster);
+        oldValues.put("classification", before.classification);
+        oldValues.put("serviceProvided", before.serviceProvided);
+        oldValues.put("address", before.address);
+        oldValues.put("zipCode", before.zipCode);
+        oldValues.put("connectionStatus", before.connectionStatus);
+        oldValues.put("officeStatus", before.officeStatus);
+        oldValues.put("internetServiceProvider", before.isp);
+        oldValues.put("typeOfConnection", before.connType);
+        oldValues.put("speed", before.speed);
+        oldValues.put("staticIpAddress", before.staticIp);
+        oldValues.put("noOfEmployees", before.employees);
+        oldValues.put("noOfPostalTellers", before.tellers);
+        oldValues.put("noOfLetterCarriers", before.carriers);
+        oldValues.put("postalOfficeContactPerson", before.contactPerson);
+        oldValues.put("postalOfficeContactNumber", before.contactNumber);
+        oldValues.put("ispContactPerson", before.ispContactPerson);
+        oldValues.put("ispContactNumber", before.ispContactNumber);
+        oldValues.put("remarks", before.remarks);
+        return oldValues;
+    }
+
+    private Map<String, Object> createNewValuesMap(Map<String, Object> body) {
+        Map<String, Object> newValues = new HashMap<>();
+        newValues.put("name", body.get("name"));
+        newValues.put("postmaster", body.get("postmaster"));
+        newValues.put("classification", body.get("classification"));
+        newValues.put("serviceProvided", body.get("serviceProvided"));
+        newValues.put("address", body.get("address"));
+        newValues.put("zipCode", body.get("zipCode"));
+        newValues.put("connectionStatus", body.get("connectionStatus"));
+        newValues.put("officeStatus", body.get("officeStatus"));
+        newValues.put("internetServiceProvider", body.get("internetServiceProvider"));
+        newValues.put("typeOfConnection", body.get("typeOfConnection"));
+        newValues.put("speed", body.get("speed"));
+        newValues.put("staticIpAddress", body.get("staticIpAddress"));
+        newValues.put("noOfEmployees", body.get("noOfEmployees"));
+        newValues.put("noOfPostalTellers", body.get("noOfPostalTellers"));
+        newValues.put("noOfLetterCarriers", body.get("noOfLetterCarriers"));
+        newValues.put("postalOfficeContactPerson", body.get("postalOfficeContactPerson"));
+        newValues.put("postalOfficeContactNumber", body.get("postalOfficeContactNumber"));
+        newValues.put("ispContactPerson", body.get("ispContactPerson"));
+        newValues.put("ispContactNumber", body.get("ispContactNumber"));
+        newValues.put("remarks", body.get("remarks"));
+        return newValues;
+    }
+
+    private void applyChanges(PostalOffice o, Map<String, Object> body) {
+        // Basic
+        set(body, "name",           v -> o.setName(v.toString().trim()));
+        set(body, "postmaster",     v -> o.setPostmaster(str(v)));
+        set(body, "classification", v -> o.setClassification(str(v)));
+        set(body, "serviceProvided",v -> o.setServiceProvided(str(v)));
+
+        // Address / coordinates
+        set(body, "address",    v -> o.setAddress(str(v)));
+        set(body, "zipCode",    v -> o.setZipCode(str(v)));
+        set(body, "latitude",   v -> { try { o.setLatitude(Double.parseDouble(v.toString()));  } catch (Exception ignored) {} });
+        set(body, "longitude",  v -> { try { o.setLongitude(Double.parseDouble(v.toString())); } catch (Exception ignored) {} });
+
+        // Location hierarchy
+        set(body, "areaId",     v -> { Integer x = num(v); if (x != null) areaRepository.findById(x).ifPresent(o::setArea);                       else o.setArea(null); });
+        set(body, "regionId",   v -> { Integer x = num(v); if (x != null) regionsRepository.findById(x).ifPresent(o::setRegion);                   else o.setRegion(null); });
+        set(body, "provinceId", v -> { Integer x = num(v); if (x != null) provinceRepository.findById(x).ifPresent(o::setProvince);                else o.setProvince(null); });
+        set(body, "cityMunId",  v -> { Integer x = num(v); if (x != null) cityMunicipalityRepository.findById(x).ifPresent(o::setCityMunicipality); else o.setCityMunicipality(null); });
+        set(body, "barangayId", v -> { Integer x = num(v); if (x != null) barangayRepository.findById(x).ifPresent(o::setBarangay);                else o.setBarangay(null); });
+
+        // Connectivity
+        set(body, "connectionStatus",         v -> o.setConnectionStatus(bool(v)));
+        set(body, "officeStatus",             v -> o.setOfficeStatus(str(v)));
+        set(body, "internetServiceProvider",  v -> o.setInternetServiceProvider(str(v)));
+        set(body, "typeOfConnection",         v -> o.setTypeOfConnection(str(v)));
+        set(body, "speed",                    v -> o.setSpeed(str(v)));
+        set(body, "staticIpAddress",          v -> o.setStaticIpAddress(str(v)));
+
+        // Staff
+        set(body, "noOfEmployees",     v -> o.setNoOfEmployees(num(v)));
+        set(body, "noOfPostalTellers", v -> o.setNoOfPostalTellers(num(v)));
+        set(body, "noOfLetterCarriers",v -> o.setNoOfLetterCarriers(num(v)));
+
+        // Contacts
+        set(body, "postalOfficeContactPerson", v -> o.setPostalOfficeContactPerson(str(v)));
+        set(body, "postalOfficeContactNumber", v -> o.setPostalOfficeContactNumber(str(v)));
+        set(body, "ispContactPerson",          v -> o.setIspContactPerson(str(v)));
+        set(body, "ispContactNumber",          v -> o.setIspContactNumber(str(v)));
+        set(body, "remarks",                   v -> o.setRemarks(str(v)));
+    }
+
+    // -- Diff --
 
     private List<String> diff(Snapshot b, PostalOffice a) {
         List<String> lines = new ArrayList<>();
@@ -185,7 +274,7 @@ public class PostalOfficeEditRestController {
         cmp(lines, "Address",        b.address,          a.getAddress());
         cmp(lines, "Zip Code",       b.zipCode,          a.getZipCode());
         if (!Objects.equals(b.connectionStatus, a.getConnectionStatus()))
-            lines.add("Status: " + label(b.connectionStatus) + " → " + label(a.getConnectionStatus()));
+            lines.add("Status: " + label(b.connectionStatus) + " -> " + label(a.getConnectionStatus()));
         cmp(lines, "ISP",        b.isp,      a.getInternetServiceProvider());
         cmp(lines, "Conn. Type", b.connType, a.getTypeOfConnection());
         cmp(lines, "Speed",      b.speed,    a.getSpeed());
@@ -202,14 +291,14 @@ public class PostalOfficeEditRestController {
     }
 
     private void cmp(List<String> out, String lbl, String b, String a) {
-        if (!blank(b).equals(blank(a))) out.add(lbl + ": " + blank(b) + " → " + blank(a));
+        if (!blank(b).equals(blank(a))) out.add(lbl + ": " + blank(b) + " -> " + blank(a));
     }
     private void cmpNum(List<String> out, String lbl, Integer b, Integer a) {
-        String bv = b == null ? "—" : String.valueOf(b);
-        String av = a == null ? "—" : String.valueOf(a);
-        if (!bv.equals(av)) out.add(lbl + ": " + bv + " → " + av);
+        String bv = b == null ? "?" : String.valueOf(b);
+        String av = a == null ? "?" : String.valueOf(a);
+        if (!bv.equals(av)) out.add(lbl + ": " + bv + " -> " + av);
     }
-    private String blank(String s) { return (s == null || s.isBlank()) ? "—" : s.trim(); }
+    private String blank(String s) { return (s == null || s.isBlank()) ? "?" : s.trim(); }
     private String label(Boolean b){ return Boolean.TRUE.equals(b) ? "Active" : "Inactive"; }
 
     private ConnectivityNotification.Type resolveType(Snapshot b, PostalOffice a) {
@@ -220,10 +309,10 @@ public class PostalOfficeEditRestController {
         return ConnectivityNotification.Type.UPDATED;
     }
 
-    // ── Snapshot ──────────────────────────────────────────────────────────────
+    // -- Snapshot --
 
     private static class Snapshot {
-        String  name, postmaster, classification, serviceProvided, address, zipCode;
+        String  name, postmaster, classification, serviceProvided, address, zipCode, officeStatus;
         Boolean connectionStatus;
         String  isp, connType, speed, staticIp;
         Integer employees, tellers, carriers;
@@ -237,6 +326,7 @@ public class PostalOfficeEditRestController {
             s.serviceProvided  = o.getServiceProvided();
             s.address          = o.getAddress();
             s.zipCode          = o.getZipCode();
+            s.officeStatus     = o.getOfficeStatus();
             s.connectionStatus = o.getConnectionStatus();
             s.isp              = o.getInternetServiceProvider();
             s.connType         = o.getTypeOfConnection();
@@ -254,7 +344,7 @@ public class PostalOfficeEditRestController {
         }
     }
 
-    // ── Generic helpers ───────────────────────────────────────────────────────
+    // -- Generic helpers --
 
     private String actor(Authentication auth) {
         return (auth != null && auth.getName() != null) ? auth.getName() : "unknown";

@@ -29,7 +29,7 @@
     // Run immediately (before paint) so there's no layout jump on load
     (function applyPersistedState() {
         var sidebar   = document.getElementById('sidebar');
-        var collapsed = localStorage.getItem(COLLAPSED_KEY) === 'true';
+        var collapsed = false; // Always start with expanded sidebar
         if (sidebar && collapsed) sidebar.classList.add('collapsed');
         syncBody(collapsed);
     }());

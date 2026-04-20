@@ -29,7 +29,7 @@
                 <div class="card-header d-flex align-items-center py-2 px-3"
                      style="background:linear-gradient(135deg,#002868,#1a3a7a);border-bottom:none;">
                     <span class="font-weight-bold text-white" style="font-size:14px;">
-                        <i class="fas fa-map-marked-alt mr-2"></i>Branch Locator
+                        <i class="fas fa-map-marked-alt mr-2"></i>Postal Office Locator
                     </span>
                 </div>
                 <div class="card-body p-3">
@@ -122,19 +122,7 @@
 
                   
 
-                    <!-- Apply / Clear -->
-                    <div class="d-flex mt-auto" style="gap:8px;">
-                        <button id="applyFilters" class="btn btn-primary font-weight-bold flex-fill"
-                                style="border-radius:8px;font-size:13px;">
-                            <i class="fas fa-search mr-1"></i>Apply
-                        </button>
-                        <button id="clearFilters" class="btn btn-outline-secondary"
-                                style="border-radius:8px;font-size:13px;">
-                            <i class="fas fa-times mr-1"></i>Clear
-                        </button>
                     </div>
-                </div>
-
 
                   <!-- Areas (Select Multiple) -->
                     <div th:if="${isSystemAdmin}">
@@ -188,6 +176,14 @@
                                     <label class="form-check-label" for="area9">Area 9</label>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Clear Filter -->
+                        <div class="mt-3">
+                            <button id="clearFilters" class="btn btn-outline-secondary w-100"
+                                    style="border-radius:8px;font-size:13px;">
+                                <i class="fas fa-times mr-1"></i>Clear Filters
+                            </button>
                         </div>
                     </div>
             </div>

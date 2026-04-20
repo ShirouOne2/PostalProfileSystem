@@ -64,14 +64,12 @@ public class SecurityConfig {
                     "/api/keep-alive",          // public ping for session check
                     "/api/user/current"         // public check for authentication status
                 ).permitAll()
-                // FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
-                // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
-                // 403 Forbidden on /api/notifications/stream, causing silent SSE failure.
-                .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN")
-                // Only ADMIN can access user management and archive
+                // Only ADMIN, AREA_ADMIN, and SRD_OPERATION can access user management and archive
                 // AREA_ADMIN can access but sees only their own area's data
-                .requestMatchers("/users", "/register").hasAnyRole("ADMIN", "AREA_ADMIN")
-                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasAnyRole("ADMIN", "AREA_ADMIN")
+                .requestMatchers("/users", "/register").hasAnyRole("ADMIN", "AREA_ADMIN", "SRD_OPERATION")
+                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasAnyRole("ADMIN", "AREA_ADMIN", "SRD_OPERATION")
+                // SRD_OPERATION should have same access as ADMIN for notifications
+                .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN", "SRD_OPERATION")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -99,7 +97,7 @@ public class SecurityConfig {
             // This prevents the browser Back button from showing protected pages after logout.
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.sameOrigin())
-                .cacheControl(cache -> {})   // enables no-cache / no-store / must-revalidate
+                .cacheControl(cache -> {})
             );
 
         return http.build();

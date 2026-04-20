@@ -10,6 +10,7 @@
  * Requires: jQuery, SweetAlert2, Bootstrap 4
  */
 $(document).ready(function () {
+    console.log('Archive.js loaded and ready!');
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -41,14 +42,65 @@ $(document).ready(function () {
     let pendingArchiveId   = null;
     let pendingArchiveRow  = null;
 
-    $(document).on('click', '.btn-archive', function () {
+    $(document).on('click', '.btn-archive', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Archive button clicked!', this);
+        console.log('Office ID:', $(this).data('office-id'));
+        console.log('Office Name:', $(this).data('office-name'));
+        
         pendingArchiveId  = $(this).data('office-id');
         pendingArchiveRow = $(this).closest('tr');
         const name        = $(this).data('office-name');
 
+        console.log('Setting up modal with name:', name);
+        
+        // Check if modal element exists
+        const $modal = $('#archiveReasonModal');
+        console.log('Modal element found:', $modal.length > 0);
+        console.log('Bootstrap modal available:', typeof $.fn.modal === 'function');
+        
+        if ($modal.length === 0) {
+            console.error('Archive modal not found in DOM!');
+            alert('Error: Archive modal not found. Please refresh the page.');
+            return;
+        }
+        
         $('#archiveOfficeName').text(name);
         $('#archiveReasonInput').val('');
-        $('#archiveReasonModal').modal('show');
+        
+        // Try to show modal
+        try {
+            // Try Bootstrap 4/5 modal syntax
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = new bootstrap.Modal($modal[0]);
+                modal.show();
+                console.log('Bootstrap 5 modal shown successfully');
+            } else if (typeof $.fn.modal === 'function') {
+                $modal.modal('show');
+                console.log('Bootstrap 4 modal shown successfully');
+            } else {
+                // Fallback: force show using direct DOM manipulation
+                $modal.addClass('show').css('display', 'block');
+                $('body').addClass('modal-open');
+                $('<div class="modal-backdrop fade show"></div>').insertAfter($modal);
+                console.log('Fallback modal show method used');
+            }
+        } catch (error) {
+            console.error('Error showing modal:', error);
+            alert('Error showing archive modal: ' + error.message);
+        }
+    });
+
+    // Fallback: Also try to catch clicks on the archive icon
+    $(document).on('click', '.btn-archive i', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Archive icon clicked!', this);
+        const $button = $(this).parent('.btn-archive');
+        if ($button.length) {
+            $button.trigger('click');
+        }
     });
 
     $('#confirmArchiveBtn').on('click', function () {
@@ -69,9 +121,15 @@ $(document).ready(function () {
                 $btn.prop('disabled', false).html('<i class="fas fa-archive mr-1"></i> Archive');
 
                 if (res.success) {
-                    // Remove the row from the active table
-                    if (pendingArchiveRow) pendingArchiveRow.fadeOut(400, function () { $(this).remove(); });
-                    showSuccess(res.message);
+                    // Check if we're on dashboard page - if so, reload the page
+                    if (window.location.pathname.includes('/dashboard')) {
+                        showSuccess(res.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        // Remove the row from the active table
+                        if (pendingArchiveRow) pendingArchiveRow.fadeOut(400, function () { $(this).remove(); });
+                        showSuccess(res.message);
+                    }
                 } else {
                     showError(res.message || 'Archive failed.');
                 }

@@ -5,6 +5,60 @@
     contain: layout style;
 }
 
+/* Dropdown toggle button styling - inherit from sidebar-link */
+.sidebar-dropdown-toggle {
+    /* Inherit all sidebar-link styles */
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 0.92rem;
+    border-left: 4px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-left-color 0.15s ease;
+    contain: layout style;
+    will-change: background-color, color, border-left-color;
+    
+    /* Button specific overrides */
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.sidebar-dropdown-toggle i {
+    width: 1.5rem;
+    margin-right: 0.7rem;
+    color: var(--phlpost-blue);
+}
+
+.sidebar-dropdown-toggle:hover {
+    background: var(--sidebar-hover);
+    color: var(--phlpost-blue);
+    border-left: 4px solid var(--phlpost-blue);
+}
+
+.sidebar-dropdown-toggle:hover .dropdown-arrow {
+    color: var(--phlpost-blue);
+}
+
+.sidebar-dropdown-toggle.active {
+    background: #fff5f5;
+    border-left: 4px solid var(--phlpost-red);
+    color: var(--phlpost-red);
+    font-weight: 600;
+}
+
+.sidebar-dropdown-toggle.active i {
+    color: var(--phlpost-red);
+}
+
+.sidebar-dropdown-toggle.active .dropdown-arrow {
+    color: var(--phlpost-red);
+}
+
 /* Arrow icon inside the toggle */
 .sidebar-dropdown-toggle .dropdown-arrow {
     margin-left: auto;
@@ -25,21 +79,15 @@
 
 /* ── Submenu ───────────────────────────────────────────────── */
 .sidebar-submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    display: none;
     background: #f8fafd;
     border-left: 3px solid var(--phlpost-blue);
     margin-left: 1.5rem;
     border-radius: 0 0 6px 6px;
-    will-change: max-height;
-    contain: layout style;
-    transform: translateZ(0);
 }
 
 .sidebar-dropdown.open .sidebar-submenu {
-    max-height: 300px;
-    transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
 }
 
 /* ── Sublink ───────────────────────────────────────────────── */
@@ -53,6 +101,8 @@
     transition: background 0.15s ease, color 0.15s ease;
     border-left: 3px solid transparent;
     position: relative;
+    pointer-events: auto;
+    z-index: 1;
 }
 
 .sidebar-sublink i {

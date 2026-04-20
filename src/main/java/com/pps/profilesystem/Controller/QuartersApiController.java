@@ -62,7 +62,7 @@ public class QuartersApiController {
             Integer areaInt = parseInteger(area);
 
             // Apply user area restrictions: non-system-admin users can only see their assigned area
-            if (roleId != null && roleId != 1) {
+            if (roleId != null && roleId != 1 && roleId != 4) {
                 // User is not a system admin, restrict to their assigned area
                 if (userAreaId != null) {
                     // If no area filter is set, default to user's area

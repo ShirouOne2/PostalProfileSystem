@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Management</title>
-</head>
-<body>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
-<!-- Use the main layout -->
-<div th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
-    
-    <!-- Page Title -->
+<head>
     <title>User Management - PPS Profile System</title>
+</head>
+
+<body th:data-is-system-admin="${isSystemAdmin}" 
+      th:data-is-area-admin="${isAreaAdmin}"
+      th:data-is-srd-operation="${isSrdOperation}">
+
+<div th:fragment="content">
     
-    <!-- Page Content -->
-    <div th:fragment="content">
-        
+    <link rel="stylesheet" th:href="@{/css/users-management.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
         <!-- Page Header -->
         <div class="page-header">
             <div>
@@ -64,9 +65,8 @@
         <!-- User Modal Fragment -->
         <div th:replace="~{fragments/modals/User-modal :: userModal}"></div>
         
+        <script th:src="@{/js/users.js}"></script>
     </div>
-
-</div>
 
 </body>
 </html>

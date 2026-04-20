@@ -38,16 +38,16 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 1001;
     contain: layout style paint;
     will-change: transform;
     transform: translateZ(0);
-    transition: transform 0.3s ease, width 0.3s ease;
+    transition: transform 0.22s ease;
 }
 
 /* Collapsed Sidebar State */
 #sidebar.collapsed {
-    width: 64px;
+    width: 80px;
 }
 
 /* Hide menu text in collapsed state */

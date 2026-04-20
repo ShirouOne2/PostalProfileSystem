@@ -124,9 +124,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initFilters() {
-        // Attach event listeners to the Apply and Clear filter buttons
-        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        // Attach event listener to Clear filter button
         document.getElementById('clearFilters').addEventListener('click', clearFilters);
+        
+        // Attach event listener to connectivity status filter for auto-apply
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                // Auto-apply filters when connectivity status changes
+                applyFilters();
+            });
+        }
         
         // Attach event listener to Select All checkbox
         const selectAllCheckbox = document.getElementById('selectAllAreas');
@@ -163,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
             selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < areaCheckboxes.length;
         }
     }
-
+    
     // ── Restore saved filter state if returning from profile ─────────────────
     const savedRaw = sessionStorage.getItem('tableFilterState');
     if (savedRaw && sessionStorage.getItem('tableFilterSource') === 'table') {
@@ -794,13 +802,9 @@ function updateLegendVisibility(areasWithMatches) {
     const legendItems = document.querySelectorAll('#mapLegend [data-area]');
     legendItems.forEach(function(item) {
         const areaId = item.getAttribute('data-area');
-        if (areasWithMatches.has(areaId)) {
-            item.style.opacity = '1';
-            item.style.visibility = 'visible';
-        } else {
-            item.style.opacity = '0.3';
-            item.style.visibility = 'hidden';
-        }
+        // Keep all legend items always visible without animation
+        item.style.opacity = '1';
+        item.style.visibility = 'visible';
     });
 }
 
@@ -837,8 +841,12 @@ function renderTags(search, area, connStatus, offStatus) {
         () => { document.getElementById('filterConnStatus').value = ''; applyFilters(); }
     );
     if (offStatus) tag(
-        offStatus === 'Open' ? 'tag-open' : 'tag-closed',
-        offStatus === 'Open' ? 'fas fa-door-open mr-1' : 'fas fa-door-closed mr-1',
+        offStatus === 'Open' ? 'tag-open' : 
+        offStatus === 'Closed' ? 'tag-closed' : 
+        offStatus === 'TBD' ? 'tag-tbd' : 'tag-closed',
+        offStatus === 'Open' ? 'fas fa-door-open mr-1' : 
+        offStatus === 'Closed' ? 'fas fa-door-closed mr-1' : 
+        offStatus === 'TBD' ? 'fas fa-question-circle mr-1' : 'fas fa-door-closed mr-1',
         'Office: ' + offStatus,
         () => { document.getElementById('filterOfficeStatus').value = ''; applyFilters(); }
     );
@@ -928,50 +936,6 @@ function performDelete(officeId, officeName) {
             }
         })
         .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' }));
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  ARCHIVE
-// ═══════════════════════════════════════════════════════════════
-(function () {
-    let pendingId = null;
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelector('#myTable tbody')?.addEventListener('click', function (e) {
-            const btn = e.target.closest('.btn-archive');
-            if (!btn) return;
-            pendingId = btn.dataset.officeId;
-            document.getElementById('archiveOfficeName').textContent = btn.dataset.officeName || '';
-            document.getElementById('archiveReasonInput').value = '';
-            $('#archiveReasonModal').modal('show');
-        });
-
-        document.getElementById('confirmArchiveBtn')?.addEventListener('click', function () {
-            if (!pendingId) return;
-            const reason = document.getElementById('archiveReasonInput').value.trim();
-            fetch('/api/archive/' + pendingId, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ reason })
-            })
-            .then(r => r.json())
-            .then(res => {
-                $('#archiveReasonModal').modal('hide');
-                if (res.success) {
-                    Swal.fire({ icon: 'success', title: 'Archived!', timer: 2000, showConfirmButton: false })
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Archive failed.' });
-                }
-            })
-            .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' }));
-        });
-    });
-})();
-
-// ── Open profile as popup (replaces full-page navigation) ────────────────────
-function saveTableStateAndView(officeId) {
-    window.open('/profile-popup/' + officeId, '_blank');
 }
 
 // ── Unified Office Profile Popup ──────────────────────────────────────────────
@@ -1148,6 +1112,7 @@ function printReport() {
                 .inactive { color: #dc3545; font-weight: bold; }
                 .open { color: #007bff; font-weight: bold; }
                 .closed { color: #fd7e14; font-weight: bold; }
+                .tbd { color: #6c757d; font-weight: bold; }
                 .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
                 @media print {
                     .no-print { display: none; }
@@ -1216,7 +1181,7 @@ function printReport() {
                         <td>${row[3] || ''}</td>
                         <td>${row[4] || ''}</td>
                         <td class="${row[5]?.includes('Active') ? 'active' : 'inactive'}">${row[5] || ''}</td>
-                        <td class="${row[6]?.includes('Open') ? 'open' : row[6]?.includes('Closed') ? 'closed' : ''}">${row[6] || ''}</td>
+                        <td class="${row[6]?.includes('Open') ? 'open' : row[6]?.includes('Closed') ? 'closed' : row[6]?.includes('TBD') ? 'tbd' : ''}">${row[6] || ''}</td>
                         <td>${row[7] || ''}</td>
             `;
         } else {
