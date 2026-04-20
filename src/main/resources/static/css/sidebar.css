@@ -224,7 +224,7 @@ nav#sidebar.collapsed .sidebar-brand {
     color: var(--phlpost-yellow);
     font-size: 1.2rem;
     margin-right: 0.6rem;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .brand-text {
@@ -232,7 +232,7 @@ nav#sidebar.collapsed .sidebar-brand {
     font-size: 1rem;
     color: var(--phlpost-blue);
     letter-spacing: 0.5px;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 /* ============================================
@@ -242,7 +242,7 @@ nav#sidebar.collapsed .sidebar-brand {
     padding: 1rem 0;
     flex: 1;
     contain: layout style;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-heading {
@@ -251,7 +251,7 @@ nav#sidebar.collapsed .sidebar-brand {
     color: var(--sidebar-muted);
     padding: 1rem 1.5rem 0.4rem;
     text-transform: uppercase;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-link {
@@ -265,14 +265,14 @@ nav#sidebar.collapsed .sidebar-brand {
     transition: background 0.15s ease, color 0.15s ease, border-left-color 0.15s ease;
     contain: layout style;
     will-change: background-color, color, border-left-color;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-link i {
     width: 1.5rem;
     margin-right: 0.7rem;
     color: var(--phlpost-blue);
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-link:hover {
@@ -286,12 +286,12 @@ nav#sidebar.collapsed .sidebar-brand {
     border-left: 4px solid var(--phlpost-red);
     color: var(--phlpost-red);
     font-weight: normal;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .sidebar-link.active i {
     color: var(--phlpost-red);
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 /* Divider */

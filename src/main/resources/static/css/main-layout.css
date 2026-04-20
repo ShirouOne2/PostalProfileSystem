@@ -13,6 +13,26 @@ body {
     overflow-x: hidden;
 }
 
+/* Global font override for all text elements */
+* {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Specific font overrides for icons and text elements */
+i, .fas, .far, .fab, .fa, .bx, .glyphicon {
+    font-family: "Font Awesome 5 Free", Helvetica, Arial, sans-serif !important;
+}
+
+/* Ensure all text inputs and form elements use Helvetica */
+input, textarea, select, button, .btn, .form-control {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
+/* Ensure all headings and text elements use Helvetica */
+h1, h2, h3, h4, h5, h6, p, span, div, a, label, th, td {
+    font-family: Helvetica, Arial, sans-serif !important;
+}
+
 .page-wrapper {
     display: flex;
     width: 100%;

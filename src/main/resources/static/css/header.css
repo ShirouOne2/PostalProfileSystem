@@ -21,6 +21,7 @@
     color: #2B5BA6 !important;
     text-decoration: none;
     transition: opacity 0.15s ease;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .navbar-brand:hover {
@@ -49,6 +50,7 @@
     transition: all 0.15s ease;
     position: relative;
     display: inline-block;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .nav-link.text-muted:hover {
@@ -72,6 +74,7 @@
     font-weight: normal;
     transition: transform 0.15s ease, opacity 0.15s ease;
     will-change: transform, opacity;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 /* User Dropdown */
@@ -83,6 +86,7 @@
     color: #2c3e50 !important;
     text-decoration: none;
     transition: background 0.15s ease;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .nav-link.dropdown-toggle:hover {
@@ -94,7 +98,7 @@
 .text-right.mr-2.d-none.d-md-block {
     text-align: right;
     margin-right: 0.5rem;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .text-right.mr-2.d-none.d-md-block div:first-child {
@@ -123,7 +127,7 @@
     font-weight: normal;
     font-size: 14px;
     text-transform: uppercase;
-    font-family: Helvetica, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 /* Dropdown Menu */
@@ -141,6 +145,7 @@
     text-decoration: none;
     transition: background 0.15s ease;
     font-size: 14px;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .dropdown-item:hover {
@@ -153,6 +158,7 @@
     color: #8a97a8;
     width: 16px;
     text-align: center;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 .dropdown-item:hover i {
