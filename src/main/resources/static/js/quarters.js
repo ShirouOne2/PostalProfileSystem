@@ -2,6 +2,14 @@
  * Quarters Management Page
  */
 
+/** Role booleans from #quartersRoleFlags (injected inside page content; not on document.body). */
+function quartersRoleAttr(dashedKey) {
+    const el = document.getElementById('quartersRoleFlags');
+    if (!el) return false;
+    const v = el.getAttribute('data-' + dashedKey);
+    return v != null && String(v).toLowerCase() === 'true';
+}
+
 $(document).ready(function () {
 
     createMapModal();
@@ -19,14 +27,6 @@ $(document).ready(function () {
 
     $('#printReportBtn').on('click', function () {
         printQuartersReport();
-    });
-
-    $('#quartersConfirmArchiveBtn').on('click', function () {
-        const id     = $('#quartersArchiveModal').data('office-id');
-        const name   = $('#quartersArchiveOfficeName').text();
-        const reason = $('#quartersArchiveReasonInput').val().trim();
-        $('#quartersArchiveModal').modal('hide');
-        performArchive(id, name, reason);
     });
 
     const _qScroll = sessionStorage.getItem('quartersReturnScroll');
@@ -101,7 +101,7 @@ function getCurrentQuarter() {
 
 function applyFilters() {
     const year   = $('#yearSelector').val();
-    const area   = $('#areaFilter').val();
+    const area   = $('#areaFilter').length ? $('#areaFilter').val() : '';
     const status = $('#statusFilter').val();
 
     let quarter = $('#quarterFilter').val();
@@ -125,7 +125,7 @@ function applyFilters() {
 function clearFilters() {
     $('#yearSelector').val('');
     $('#quarterFilter').val('');
-    $('#areaFilter').val('');
+    if ($('#areaFilter').length) $('#areaFilter').val('');
     $('#statusFilter').val('');
     $('#searchBar').val('');
     highlightActiveSelects();
@@ -146,8 +146,8 @@ function renderFilterTags() {
 
     const year    = $('#yearSelector').val();
     const quarter = $('#quarterFilter').val();
-    const area    = $('#areaFilter option:selected').text().trim();
-    const areaVal = $('#areaFilter').val();
+    const area    = $('#areaFilter').length ? $('#areaFilter option:selected').text().trim() : '';
+    const areaVal = $('#areaFilter').length ? $('#areaFilter').val() : '';
     const status  = $('#statusFilter').val();
     const search  = $('#searchBar').val().trim();
 
@@ -202,7 +202,7 @@ function performSearch(searchTerm) {
 
 function applyFiltersWithSearch() {
     const year   = $('#yearSelector').val();
-    const area   = $('#areaFilter').val();
+    const area   = $('#areaFilter').length ? $('#areaFilter').val() : '';
     const status = $('#statusFilter').val();
     const search = $('#searchBar').val().trim();
 
@@ -238,7 +238,7 @@ function initializeTable() {
 
     const yearFilter    = $('#yearSelector').val()  || '';
     const quarterFilter = $('#quarterFilter').val() || '';
-    const areaFilter    = $('#areaFilter').val()    || '';
+    const areaFilter    = $('#areaFilter').length ? ($('#areaFilter').val() || '') : '';
     const statusFilter  = $('#statusFilter').val()  || '';
 
     let ajaxUrl = '/api/quarters/post-offices';
@@ -296,6 +296,10 @@ function initializeTable() {
                     targets: 1,
                     data: 'area',
                     defaultContent: 'N/A',
+                    // System Admin should see Area column; others should not.
+                    visible: (function () {
+                        return quartersRoleAttr('is-system-admin');
+                    })(),
                     render: function(d) { return d || 'N/A'; }
                 },
                 {
@@ -306,7 +310,7 @@ function initializeTable() {
                         if (type !== 'display') return data || '';
                         if (!data) return 'N/A';
                         const safe = String(data).replace(/'/g, "\\'");
-                        return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + row.id + '\', \'' + safe + '\')">' + data + '</a>';
+                        return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + row.id + '\', \'' + safe + '\')" data-toggle="tooltip" data-placement="top" title="Click to view details for ' + data + '">' + data + '</a>';
                     }
                 },
                 {
@@ -348,17 +352,31 @@ function initializeTable() {
                     data: null,
                     orderable: false,
                     width: '90px',
-                    className: 'dt-center',
+                    className: (function() {
+                        const isSrdOperation = quartersRoleAttr('is-srd-operation');
+                        return isSrdOperation ? 'd-none' : 'dt-center';
+                    })(),
+                    visible: (function() {
+                        const isSrdOperation = quartersRoleAttr('is-srd-operation');
+                        return !isSrdOperation;
+                    })(),
                     render: function(d, t, row) {
                         try {
-                            const isSystemAdmin = $('body').data('is-system-admin') === true;
-                            const isAreaAdmin   = $('body').data('is-area-admin')   === true;
-                            let btns = '<button class="btn btn-sm btn-warning edit-btn" data-id="' + row.id + '" title="Edit"><i class="fas fa-edit"></i></button>';
-                            if (isSystemAdmin || isAreaAdmin) {
-                                btns += ' <button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;" data-id="' + row.id + '" data-name="' + (row.name || 'Office').replace(/"/g, '&quot;') + '" title="Archive"><i class="fas fa-archive"></i></button>';
+                            const isSrdOperation   = quartersRoleAttr('is-srd-operation');
+                            const canQuarterEdit   = quartersRoleAttr('can-quarter-edit');
+                            const canQuarterArchive = quartersRoleAttr('can-quarter-archive');
+
+                            if (isSrdOperation) return '';
+                            let btns = '';
+                            if (canQuarterEdit) {
+                                btns += '<button class="btn btn-sm btn-warning edit-btn" data-id="' + row.id + '" title="Edit"><i class="fas fa-edit"></i></button>';
+                            }
+                            if (canQuarterArchive) {
+                                btns += (btns ? ' ' : '') + '<button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;" data-id="' + row.id + '" data-name="' + (row.name || 'Office').replace(/"/g, '&quot;') + '" title="Archive"><i class="fas fa-archive"></i></button>';
                             }
                             return btns;
                         } catch(e) {
+                            console.error('Error rendering action buttons:', e);
                             return '';
                         }
                     }
@@ -370,7 +388,10 @@ function initializeTable() {
 
             pageLength: 10,
             responsive: true,
-            order: [[2, ''], [1, '']],
+            order: (function () {
+                // If Area is visible (System Admin), keep old "Area then Name" feel.
+                return quartersRoleAttr('is-system-admin') ? [[1, ''], [2, '']] : [[2, '']];
+            })(),
 
             dom: '<"d-flex align-items-center justify-content-between mb-2"<"dt-info" i><"dt-length" l>>rt<"dt-footer d-flex align-items-center justify-content-between mt-2"p>',
 
@@ -385,7 +406,15 @@ function initializeTable() {
 
         table.on('draw', function () { 
             try {
-                updateTableSummary(table); 
+                updateTableSummary(table);
+                // Re-initialize tooltips for dynamically added content
+                if (typeof $ !== 'undefined' && typeof $.fn.tooltip !== 'undefined') {
+                    table.rows().nodes().to$().find('[data-toggle="tooltip"]').tooltip('dispose').tooltip({
+                        container: 'body',
+                        trigger: 'hover focus',
+                        delay: { show: 300, hide: 100 }
+                    });
+                }
             } catch(e) {
                 console.error('Table draw error:', e);
             }
@@ -573,37 +602,90 @@ function editOffice(id) {
         url: '/api/postal-office/' + id, method: 'GET',
         success: function(o) {
             Swal.close();
+            
+            // Clear any previous modal data
+            $('#editOfficeForm')[0].reset();
+            
+            // Set office ID
             $('#editOfficeId').val(o.id);
+            
+            // Populate fields that are visible on quarters page (Connectivity section)
             $('#editStatus').val(o.connectionStatus ? 'true' : 'false');
             $('#editOfficeStatus').val(o.officeStatus || '');
             $('#editClassification').val(o.classification || '');
             $('#editServiceProvided').val(o.serviceProvided || '');
             $('#editISP').val(o.internetServiceProvider || '');
             $('#editTypeOfConnection').val(o.typeOfConnection || '');
-            $('#editIPAddressType').val(o.staticIpAddress === 'Static' ? 'static' : '');
+            window._quartersEditOriginal = {
+                connectionStatus: !!o.connectionStatus,
+                officeStatus: o.officeStatus || null,
+                classification: o.classification || null,
+                serviceProvided: o.serviceProvided || null,
+                internetServiceProvider: o.internetServiceProvider || null,
+                typeOfConnection: o.typeOfConnection || null,
+                staticIpAddress: o.staticIpAddress || null
+            };
+            
+            // Handle IP Address Type
+            if (o.staticIpAddress === 'Static') {
+                $('#editIPAddressType').val('static');
+            } else if (o.staticIpAddress === 'Dynamic' || o.staticIpAddress === null) {
+                $('#editIPAddressType').val('dynamic');
+            } else {
+                $('#editIPAddressType').val('');
+            }
+            
+            // Show the modal
             $('#editOfficeModal').modal('show');
         },
-        error: function(xhr) { Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Failed to load office data' }); }
+        error: function(xhr) { 
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: xhr.responseJSON?.message || 'Failed to load office data' 
+            }); 
+        }
     });
 }
 
 function saveOfficeChanges() {
     const id = $('#editOfficeId').val();
-    const data = {
+    const candidate = {
         connectionStatus: $('#editStatus').val() === 'true',
         officeStatus: $('#editOfficeStatus').val() || null,
         classification: $('#editClassification').val() || null,
         serviceProvided: $('#editServiceProvided').val() || null,
         internetServiceProvider: $('#editISP').val() || null,
         typeOfConnection: $('#editTypeOfConnection').val() || null,
-        staticIpAddress: $('#editIPAddressType').val() === 'static' ? 'Static' : null
+        staticIpAddress: $('#editIPAddressType').val() === 'static'
+            ? 'Static'
+            : ($('#editIPAddressType').val() === 'dynamic' ? 'Dynamic' : null)
     };
+    const original = window._quartersEditOriginal || {};
+    const data = {};
+    Object.keys(candidate).forEach((k) => {
+        if (String(candidate[k]) !== String(original[k])) {
+            data[k] = candidate[k];
+        }
+    });
+    if (Object.keys(data).length === 0) {
+        Swal.fire({ icon: 'info', title: 'No Changes', text: 'No field changes detected.' });
+        return;
+    }
     Swal.fire({ title: 'Saving Changes...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
     $.ajax({
         url: '/api/postal-office/' + id, method: 'PUT', contentType: 'application/json', data: JSON.stringify(data),
-        success: function() {
+        success: function(res) {
             $('#editOfficeModal').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Saved!', text: 'Changes have been saved successfully', timer: 1800, showConfirmButton: false })
+            Swal.fire({
+                icon: 'success',
+                title: res && res.requiresApproval ? 'Submitted!' : 'Saved!',
+                text: (res && res.message) ? res.message : ((res && res.requiresApproval)
+                    ? 'Your changes were submitted for approval.'
+                    : 'Changes have been saved successfully'),
+                timer: 1800,
+                showConfirmButton: false
+            })
                 .then(() => location.reload());
         },
         error: function(xhr) { Swal.fire({ icon: 'error', title: 'Update Failed', text: xhr.responseJSON?.message || 'Failed to update post office' }); }
@@ -615,6 +697,22 @@ function archiveOfficeFromQuarters(id, officeName) {
     $('#quartersArchiveReasonInput').val('');
     $('#quartersArchiveModal').data('office-id', id).modal('show');
 }
+
+// Archive modal confirmation button handler
+$(document).on('click', '#quartersConfirmArchiveBtn', function() {
+    const modal = $('#quartersArchiveModal');
+    const officeId = modal.data('office-id');
+    const officeName = $('#quartersArchiveOfficeName').text();
+    const reason = $('#quartersArchiveReasonInput').val().trim();
+
+    if (!officeId) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Office ID not found' });
+        return;
+    }
+
+    modal.modal('hide');
+    performArchive(officeId, officeName, reason);
+});
 
 function performArchive(id, officeName, reason) {
     Swal.fire({ title: 'Archiving...', allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });

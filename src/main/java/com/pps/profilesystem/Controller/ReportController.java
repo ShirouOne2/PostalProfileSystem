@@ -80,7 +80,7 @@ public class ReportController {
 
         model.addAttribute("currentYear",       currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
-        model.addAttribute("areas",              getAllAreas());
+        model.addAttribute("areas",              getAllAreas(roleId, userAreaId));
         model.addAttribute("connectivityStats",
             getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
         model.addAttribute("quartersData",
@@ -375,8 +375,15 @@ public class ReportController {
         return info;
     }
 
-    private List<Area> getAllAreas() {
-        try { return areaRepository.findAll(); }
+    private List<Area> getAllAreas(Integer roleId, Integer userAreaId) {
+        try {
+            List<Area> all = areaRepository.findAll();
+            if (roleId != null && (roleId == 1 || roleId == 4)) return all;
+            if (userAreaId == null) return new ArrayList<>();
+            return all.stream()
+                .filter(a -> userAreaId.equals(a.getId()))
+                .toList();
+        }
         catch (Exception e) { return new ArrayList<>(); }
     }
 

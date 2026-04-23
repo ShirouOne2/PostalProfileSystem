@@ -12,28 +12,11 @@
 
 <div th:fragment="content">
     
-    <link rel="stylesheet" th:href="@{/css/users-management.css}">
+    <link rel="stylesheet" th:href="@{/css/approvals.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1><i class="fas fa-clipboard-check me-2"></i> Approval Dashboard</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Approvals</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="header-actions">
-            <button class="btn btn-secondary" onclick="refreshRequests()" aria-label="Refresh requests">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-            <button class="btn btn-secondary logout-btn" onclick="logout()" aria-label="Logout">Logout</button>
-        </div>
-    </div>
-
+   
     <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-4">
@@ -86,7 +69,6 @@
                     <tr>
                         <th>Request ID</th>
                         <th>Type</th>
-                        <th>User Details</th>
                         <th>Requested By</th>
                         <th>Changes</th>
                         <th>Created</th>

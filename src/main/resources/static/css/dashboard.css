@@ -142,16 +142,63 @@
 
 /* DataTable Styling for Dashboard */
 
-/* Table Container */
+/* Table Container (legacy; dashboard tables use .dashboard-dt-wrap for DataTables) */
 .table-responsive {
     background-color: #ffffff;
     border-radius: 0;
     padding: 0;
 }
 
-/* DataTable Wrapper */
+/* Host for DataTables: avoids nested overflow fights with Bootstrap .table-responsive */
+.dashboard-dt-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    background-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+    .dashboard-dt-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* DataTables moves <table> inside #officeTable_wrapper / #systemAdminTable_wrapper */
+#officeTable_wrapper,
+#systemAdminTable_wrapper {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    color: #333333;
+}
+
+/* DataTables 2 layout rows (when present) */
+#officeTable_wrapper .dt-layout-row,
+#systemAdminTable_wrapper .dt-layout-row {
+    width: 100%;
+    max-width: 100%;
+}
+
+#officeTable_wrapper table.dataTable,
+#systemAdminTable_wrapper table.dataTable {
+    width: 100% !important;
+    margin: 0;
+}
+
+/* DataTables 2 may use .dt-container instead of legacy class names */
+.dashboard-dt-wrap .dt-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* DataTable Wrapper (global fallback) */
 .dataTables_wrapper {
     color: #333333;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* System Admin Table */
@@ -204,13 +251,19 @@
 }
 
 #systemAdminTable tbody tr {
-    background-color: #ffffff;
     border-bottom: 1px solid #dee2e6;
     transition: background-color 0.2s ease;
 }
 
+/* Let Bootstrap table-striped + DataTables play nicely (avoid forcing every row white). */
+#systemAdminTable.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #ffffff;
+}
+#systemAdminTable.table-striped tbody tr:nth-of-type(even) {
+    background-color: #f8f9fc;
+}
 #systemAdminTable tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #eef2f7 !important;
 }
 
 #systemAdminTable tbody td {
@@ -273,14 +326,26 @@
     opacity: 1;
 }
 
+/* Area Admin dashboard table: explicit Area column (align with system admin table) */
+#officeTable.dashboard-office-area-admin thead th,
+#officeTable.dashboard-office-area-admin tbody td {
+    vertical-align: middle;
+}
+
 #officeTable tbody tr {
-    background-color: #ffffff;
     border-bottom: 1px solid #dee2e6;
     transition: background-color 0.2s ease;
 }
 
+/* Area Admin / User office table — restore zebra striping (was overridden by flat white). */
+#officeTable.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #ffffff;
+}
+#officeTable.table-striped tbody tr:nth-of-type(even) {
+    background-color: #f8f9fc;
+}
 #officeTable tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #eef2f7 !important;
 }
 
 #officeTable tbody td {
@@ -550,7 +615,8 @@
         font-size: 1.25rem;
     }
     
-    .table-responsive {
+    .table-responsive,
+    .dashboard-dt-wrap {
         font-size: 12px;
     }
     

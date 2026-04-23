@@ -126,7 +126,7 @@
                         <div class="card-body">
                             <div class="alert alert-info mb-3 py-2">
                                 <i class="fas fa-info-circle"></i>
-                                Select Area first, then Region, Province, then City/Municipality.
+                                Select Area first, then Province, then City/Municipality.
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
@@ -145,28 +145,16 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="regionId">Region <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="regionId" name="regionId">
-                                            <option value="">-- Select Region --</option>
-                                            <option th:each="region : ${regions}"
-                                                    th:value="${region.id}"
-                                                    th:text="${region.name}"></option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a Region.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
                                         <label for="provinceId">Province <span class="text-danger">*</span></label>
                                         <select class="form-control" id="provinceId" name="provinceId" disabled>
                                             <option value="">-- Select Province --</option>
                                         </select>
                                         <div class="invalid-feedback">Please select a Province.</div>
-                                        <small class="form-text text-muted">Select a Region first</small>
+                                        <small class="form-text text-muted">Select an Area first</small>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="cityMunId">City / Municipality <span class="text-danger">*</span></label>
@@ -657,10 +645,6 @@
                                     <div class="col-sm-6 mb-2">
                                         <small class="text-muted d-block">Area</small>
                                         <div id="summaryArea" class="font-weight-bold">—</div>
-                                    </div>
-                                    <div class="col-sm-6 mb-2">
-                                        <small class="text-muted d-block">Region</small>
-                                        <div id="summaryRegion" class="font-weight-bold">—</div>
                                     </div>
                                     <div class="col-sm-6 mb-2">
                                         <small class="text-muted d-block">Province</small>

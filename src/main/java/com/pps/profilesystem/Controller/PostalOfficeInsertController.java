@@ -10,6 +10,7 @@ import com.pps.profilesystem.Service.LocationHierarchyService;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.ConnectivityRepository;
 import com.pps.profilesystem.Repository.ProviderRepository;
+import com.pps.profilesystem.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -31,17 +32,29 @@ public class PostalOfficeInsertController {
     @Autowired private ConnectivityNotificationService notifService;
     @Autowired private ConnectivityRepository connectivityRepository;
     @Autowired private ProviderRepository providerRepository;
+    @Autowired private UserRepository userRepository;
 
     // ── Location lookup endpoints ─────────────────────────────────────────────
 
     @GetMapping("/areas")
-    public ResponseEntity<?> getAllAreas() {
+    public ResponseEntity<?> getAllAreas(Authentication auth) {
         try {
-            List<Map<String, Object>> result = locationService.getAllAreas().stream()
+            List<Area> visibleAreas = getVisibleAreasForUser(auth);
+            List<Map<String, Object>> result = visibleAreas.stream()
                 .map(a -> { Map<String, Object> m = new HashMap<>(); m.put("id", a.getId()); m.put("name", a.getAreaName()); return m; })
                 .collect(Collectors.toList());
             return ResponseEntity.ok(result);
         } catch (Exception e) { return err("Failed to load areas: " + e.getMessage()); }
+    }
+
+    /**
+     * Compatibility endpoint for UIs that must always show the complete area list.
+     * (Some pages may have role-based filtering elsewhere; this endpoint is explicit.)
+     */
+    @GetMapping("/areas/all")
+    public ResponseEntity<?> getAllAreasUnfiltered(Authentication auth) {
+        // Legacy endpoint; now aligned with role visibility policy.
+        return getAllAreas(auth);
     }
 
     @GetMapping("/regions")
@@ -59,6 +72,16 @@ public class PostalOfficeInsertController {
         try {
             List<ProvinceDTO> dtos = locationService.getProvincesByRegion(regionId).stream()
                 .map(p -> new ProvinceDTO(p.getId(), p.getName())).collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) { return err("Failed to load provinces: " + e.getMessage()); }
+    }
+
+    @GetMapping("/provinces/by-area/{areaId}")
+    public ResponseEntity<?> getProvincesByArea(@PathVariable Integer areaId) {
+        try {
+            List<ProvinceDTO> dtos = locationService.getProvincesByArea(areaId).stream()
+                    .map(p -> new ProvinceDTO(p.getId(), p.getName()))
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(dtos);
         } catch (Exception e) { return err("Failed to load provinces: " + e.getMessage()); }
     }
@@ -95,11 +118,22 @@ public class PostalOfficeInsertController {
             saveConnectivityRecord(saved, requestData);
 
             String actor  = actor(auth);
+            Integer actorRoleId = ConnectivityNotificationService.roleIdFromAuthorities(
+                    auth != null ? auth.getAuthorities() : null
+            );
             boolean hasConn = Boolean.TRUE.equals(saved.getConnectionStatus());
 
-            notifService.push(
-                hasConn ? ConnectivityNotification.Type.CONNECTED : ConnectivityNotification.Type.NEW,
-                saved.getName(), saved.getId(), actor, buildInsertDetail(saved, requestData)
+            notifService.pushAudit(
+                    hasConn ? ConnectivityNotification.Type.CONNECTED : ConnectivityNotification.Type.NEW,
+                    saved.getName(),
+                    saved.getId(),
+                    actor,
+                    actorRoleId,
+                    buildInsertDetail(saved, requestData),
+                    null,
+                    "CONNECTIVITY",
+                    "PostalOffice",
+                    saved.getId() != null ? saved.getId().longValue() : null
             );
 
             Map<String, Object> response = new HashMap<>();
@@ -170,6 +204,26 @@ public class PostalOfficeInsertController {
         return (auth != null && auth.getName() != null) ? auth.getName() : "unknown";
     }
 
+    private List<Area> getVisibleAreasForUser(Authentication auth) {
+        List<Area> allAreas = locationService.getAllAreas();
+        if (auth == null || auth.getName() == null) return allAreas;
+
+        User currentUser = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (currentUser == null) return allAreas;
+
+        Integer roleId = currentUser.getRole();
+        Integer areaId = currentUser.getAreaId();
+
+        // Admin (1) and SRD Operation (4) can access all areas.
+        if (roleId != null && (roleId == 1 || roleId == 4)) return allAreas;
+
+        // Area Admin (2) and User (3) only see their assigned area.
+        if (areaId == null) return List.of();
+        return allAreas.stream()
+                .filter(a -> areaId.equals(a.getId()))
+                .collect(Collectors.toList());
+    }
+
     private ResponseEntity<Map<String, Object>> err(String msg) {
         Map<String, Object> e = new HashMap<>();
         e.put("success", false); e.put("message", msg);
@@ -236,15 +290,11 @@ public class PostalOfficeInsertController {
             Integer areaId = parseInteger(requestData.get("areaId"));
             if (areaId != null) locationService.getAllAreas().stream().filter(a -> a.getId().equals(areaId)).findFirst().ifPresent(office::setArea);
         }
-        if (requestData.get("regionId") != null) {
-            Integer regionId = parseInteger(requestData.get("regionId"));
-            if (regionId != null) locationService.getAllRegions().stream().filter(r -> r.getId().equals(regionId)).findFirst().ifPresent(office::setRegion);
-        }
         if (requestData.get("provinceId") != null) {
             Integer provinceId = parseInteger(requestData.get("provinceId"));
-            Integer regionId   = parseInteger(requestData.get("regionId"));
-            if (provinceId != null && regionId != null)
-                locationService.getProvincesByRegion(regionId).stream().filter(p -> p.getId().equals(provinceId)).findFirst().ifPresent(office::setProvince);
+            Integer areaId     = parseInteger(requestData.get("areaId"));
+            if (provinceId != null && areaId != null)
+                locationService.getProvincesByArea(areaId).stream().filter(p -> p.getId().equals(provinceId)).findFirst().ifPresent(office::setProvince);
         }
         if (requestData.get("cityMunId") != null) {
             Integer cityMunId  = parseInteger(requestData.get("cityMunId"));

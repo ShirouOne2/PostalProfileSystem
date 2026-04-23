@@ -5,173 +5,97 @@
 
 <head>
     <title th:text="${title}">User Management - PPS Profile System</title>
-   
 </head>
 
-<body th:data-is-system-admin="${isSystemAdmin}" 
+<body th:data-is-system-admin="${isSystemAdmin}"
       th:data-is-area-admin="${isAreaAdmin}">
 
-<div th:fragment="content">     
+<div th:fragment="content">
+    <!-- users-management.css is loaded by main-layout when activePage == 'users' -->
 
-     <link rel="stylesheet" th:href="@{/css/users-management.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1 th:text="${pageTitle}">User Management</h1>
-            <nav class="breadcrumb">
-                <span th:text="${breadcrumbHome}">Home</span>
-                <span>/</span>
-                <span th:text="${breadcrumbPage}">User Management</span>
-            </nav>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn-add-user" onclick="showAddModal()">
-                <i class="fas fa-plus"></i> Add New User
-            </button>
-            <button class="btn btn-secondary logout-btn" onclick="logout()">Logout</button>
-        </div>
-    </div>
+    <div class="users-page container-fluid px-0 px-sm-2 px-md-3">
 
-    <!-- Loading Spinner Overlay -->
-    <div id="loadingSpinner" class="spinner-overlay" style="display: none;">
-        <div class="spinner-content">
-            <i class="fas fa-spinner fa-spin fa-3x"></i>
-        </div>
-    </div>
-
-    <!-- Content Card -->
-    <div class="content-card">
-        <div class="card-header-custom">
-            <h2 th:text="${cardTitle}">Users List</h2>
-            <div>
-                <!-- Search and filter controls can be added here -->
+        <div class="page-header page-header--toolbar-only">
+            <div class="page-header-actions">
+                <button type="button" class="btn-add-user" onclick="showAddModal()">
+                    <i class="fas fa-plus"></i> Add New User
+                </button>
+                <button type="button" class="btn btn-secondary logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
 
-        <!-- Users Table -->
-        <div class="table-responsive">
-            <table id="usersTable" class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <tr th:if="${users == null or #lists.isEmpty(users)}">
-                        <td colspan="6" class="text-center">
-                            <div class="empty-state">
-                                <i class="fas fa-users"></i>
-                                <h3>No users found</h3>
-                                <p>Click "Add New User" to create your first user.</p>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:each="user : ${users}" th:if="${users != null and not #lists.isEmpty(users)}">
-                        <td th:text="${user.id}">1</td>
-                        <td>
-                            <div class="user-info">
-                                <div class="user-avatar" th:text="${#strings.substring(user.name, 0, 1).toUpperCase()}">A</div>
-                                <div class="user-details">
-                                    <div class="user-name" th:text="${user.name}">Admin User</div>
-                                    <div class="user-email" th:text="${user.email}">admin@example.com</div>
+        <!-- Content Card -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h2 th:text="${cardTitle}">Users List</h2>
+                <div></div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table id="usersTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr th:if="${users == null or #lists.isEmpty(users)}">
+                            <td colspan="6" class="text-center">
+                                <div class="empty-state">
+                                    <i class="fas fa-users"></i>
+                                    <h3>No users found</h3>
+                                    <p>Click "Add New User" to create your first user.</p>
                                 </div>
-                            </div>
-                        </td>
-                        <td th:text="${user.email}">admin@example.com</td>
-                        <td>
-                            <span class="badge badge-role" th:text="${user.role}">ADMIN</span>
-                        </td>
-                        <td>
-                            <span th:class="${user.active ? 'badge badge-active' : 'badge badge-inactive'}" 
-                                  th:text="${user.active ? 'Active' : 'Inactive'}">Active</span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" th:onclick="'viewUser(' + ${user.id} + ')'" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-action btn-edit" th:onclick="'editUser(' + ${user.id} + ')'" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-action btn-delete" th:onclick="'deleteUser(' + ${user.id} + ')'" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        <tr th:each="user : ${users}" th:if="${users != null and not #lists.isEmpty(users)}">
+                            <td th:text="${user.id}">1</td>
+                            <td>
+                                <div class="user-info">
+                                    <div class="user-avatar" th:text="${#strings.substring(user.name, 0, 1).toUpperCase()}">A</div>
+                                    <div class="user-details">
+                                        <div class="user-name" th:text="${user.name}">Admin User</div>
+                                        <div class="user-email" th:text="${user.email}">admin@example.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td th:text="${user.email}">admin@example.com</td>
+                            <td>
+                                <span class="badge badge-role" th:text="${user.role}">ADMIN</span>
+                            </td>
+                            <td>
+                                <span th:class="${user.active ? 'badge badge-active' : 'badge badge-inactive'}"
+                                      th:text="${user.active ? 'Active' : 'Inactive'}">Active</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-action btn-view" th:onclick="'viewUser(' + ${user.id} + ')'" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-edit" th:onclick="'editUser(' + ${user.id} + ')'" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-delete" th:onclick="'deleteUser(' + ${user.id} + ')'" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+
+        <!-- User Modal included via Thymeleaf fragment -->
+        <div th:replace="~{fragments/modals/User-modal :: userModal}"></div>
+
+    </div><!-- /.users-page -->
 </div>
 
-    <!-- Add/Edit User Modal -->
-    <div id="userModal" class="modal fade" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Add New User</h5>
-                    <button type="button" class="btn-close" onclick="closeModal()"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="userForm">
-                        <input type="hidden" id="userId">
-
-                        <div class="mb-3">
-                            <label for="userName" class="form-label">Name <span class="required">*</span></label>
-                            <input type="text" class="form-control" id="userName" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="userEmail" class="form-label">Email <span class="required">*</span></label>
-                            <input type="email" class="form-control" id="userEmail" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="userPassword" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="userPassword">
-                            <div class="form-text">Leave blank to keep current password</div>
-                            <div class="password-strength">
-                                <div class="password-strength-bar" id="passwordStrengthBar"></div>
-                            </div>
-                            <div class="password-strength-text" id="passwordStrengthText"></div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="userRole" class="form-label">Role</label>
-                            <select class="form-select" id="userRole">
-                                <option value="USER">User</option>
-                                <option value="ADMIN">Admin</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="userActive" checked>
-                                <label class="form-check-label" for="userActive">
-                                    Active
-                                </label>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="button" class="btn-modal-save" onclick="saveUser()">Save User</button>
-                </div>
-            </div>
-        </div>
-         <script src="users.js"></script>
-    </div>
-
-   
-</body>
 </html>

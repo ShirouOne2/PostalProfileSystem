@@ -30,7 +30,7 @@
                                                 ? 'background-image: url(@{/api/postal-office/{id}/cover-photo/{slot}(id=${postOffice.id}, slot=1)}); background-size: cover; background-position: center;'
                                                 : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
                                 </div>
-                                <div class="cover-upload-overlay" data-slot="1">
+                                <div class="cover-upload-overlay" data-slot="1" th:if="${canProfilePhotoUpload}">
                                     <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 1</span>
                                 </div>
                             </div>
@@ -42,7 +42,7 @@
                                                 ? 'background-image: url(@{/api/postal-office/{id}/cover-photo/{slot}(id=${postOffice.id}, slot=2)}); background-size: cover; background-position: center;'
                                                 : 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'">
                                 </div>
-                                <div class="cover-upload-overlay" data-slot="2">
+                                <div class="cover-upload-overlay" data-slot="2" th:if="${canProfilePhotoUpload}">
                                     <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 2</span>
                                 </div>
                             </div>
@@ -54,7 +54,7 @@
                                                 ? 'background-image: url(@{/api/postal-office/{id}/cover-photo/{slot}(id=${postOffice.id}, slot=3)}); background-size: cover; background-position: center;'
                                                 : 'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'">
                                 </div>
-                                <div class="cover-upload-overlay" data-slot="3">
+                                <div class="cover-upload-overlay" data-slot="3" th:if="${canProfilePhotoUpload}">
                                     <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 3</span>
                                 </div>
                             </div>
@@ -101,7 +101,7 @@
                                          src="https://ui-avatars.com/api/?name=Post+Office&size=150&background=667eea&color=fff&rounded=true"
                                          class="profile-picture" alt="Profile Picture">
                                 </th:block>
-                                <div class="profile-upload-overlay" id="profileUploadOverlay">
+                                <div class="profile-upload-overlay" id="profileUploadOverlay" th:if="${canProfilePhotoUpload}">
                                     <span><i class="fas fa-camera"></i><br>Change Photo</span>
                                 </div>
                             </div>
@@ -120,14 +120,15 @@
 
                     <!-- Action Buttons -->
                     <div class="text-center mb-3">
-                        <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn">
+                        <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn"
+                                th:if="${canProfileEdit}">
                             <i class="fas fa-edit"></i> Edit Profile
                         </button>
                         <button onclick="window.print()" class="btn btn-info btn-sm mr-1">
                             <i class="fas fa-print"></i> Print Profile
                         </button>
                         <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn"
-                                sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
+                                th:if="${canProfileArchive}">
                             <i class="fas fa-archive"></i> Archive
                         </button>
                     </div>
@@ -185,10 +186,6 @@
                                     <div class="col-md-6 mb-3">
                                         <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Area</small>
                                         <div th:text="${postOffice.area ?: 'N/A'}">—</div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Region</small>
-                                        <div th:text="${postOffice.region ?: 'N/A'}">—</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Province</small>
@@ -345,8 +342,8 @@
     </div>
 </div>
 
-<!-- ADMIN ONLY: Archive Modal -->
-<div sec:authorize="hasRole('ADMIN')">
+<!-- Archive Modal -->
+<div th:if="${canProfileArchive}">
     <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -381,6 +378,7 @@
 <script src="/js/profile-init.js"></script>
 
 <script th:inline="javascript">
+    window.PROFILE_PAGE_SOURCE = /*[[${source}]]*/ 'table';
     window.OFFICE_DATA = {
         id:                         /*[[${postOffice.id}]]*/ null,
         name:                       /*[[${postOffice.postalOffice}]]*/ '',

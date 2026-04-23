@@ -76,15 +76,6 @@ function renderPendingRequests() {
                     ${getRequestTypeDisplay(request.requestType)}
                 </span>
             </td>
-            <td>
-                <div class="user-info">
-                    <div class="user-avatar">${getInitials(request.userName)}</div>
-                    <div class="user-details">
-                        <div class="user-name">${request.userName}</div>
-                        <div class="user-email">${request.userEmail}</div>
-                    </div>
-                </div>
-            </td>
             <td>${request.requestedBy}</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="viewRequestDetails(${request.id})">
@@ -142,17 +133,18 @@ async function viewRequestDetails(requestId) {
                         <tr><td><strong>Request ID:</strong></td><td>#${details.id}</td></tr>
                         <tr><td><strong>Type:</strong></td><td>${getRequestTypeDisplay(details.requestType)}</td></tr>
                         <tr><td><strong>Status:</strong></td><td>${getStatusDisplay(details.status)}</td></tr>
-                        <tr><td><strong>Created:</strong></td><td>${formatDate(details.createdAt)}</td></tr>
+                        <tr><td><strong>Requested At:</strong></td><td>${formatDate(details.requestedAt)}</td></tr>
                         <tr><td><strong>Requested By:</strong></td><td>${details.requestedBy}</td></tr>
+                        <tr><td><strong>Office:</strong></td><td>${details.officeName || 'N/A'}</td></tr>
                     </table>
                 </div>
                 <div class="col-md-6">
-                    <h6>User Information</h6>
+                    <h6>Approval Trail</h6>
                     <table class="table table-sm">
-                        <tr><td><strong>Name:</strong></td><td>${details.userName}</td></tr>
-                        <tr><td><strong>Email:</strong></td><td>${details.userEmail}</td></tr>
-                        <tr><td><strong>Current Role:</strong></td><td>${details.currentRole || 'N/A'}</td></tr>
-                        <tr><td><strong>Current Status:</strong></td><td>${details.currentStatus || 'N/A'}</td></tr>
+                        <tr><td><strong>Area Admin:</strong></td><td>${details.areaAdminProcessedBy || 'Pending'}</td></tr>
+                        <tr><td><strong>Area Action Time:</strong></td><td>${formatDate(details.areaAdminProcessedAt)}</td></tr>
+                        <tr><td><strong>Final Processor:</strong></td><td>${details.processedBy || 'Pending'}</td></tr>
+                        <tr><td><strong>Final Action Time:</strong></td><td>${formatDate(details.processedAt)}</td></tr>
                     </table>
                 </div>
             </div>
@@ -161,17 +153,17 @@ async function viewRequestDetails(requestId) {
                 <div class="col-12">
                     <h6>Requested Changes</h6>
                     <div class="border rounded p-3 bg-light">
-                        ${formatChanges(details.requestedChanges)}
+                        ${formatChangesDiff(details.oldValues, details.newValues)}
                     </div>
                 </div>
             </div>
             
-            ${details.originalData ? `
+            ${details.oldValues ? `
             <div class="row mt-3">
                 <div class="col-12">
-                    <h6>Original Data</h6>
+                    <h6>Original Data (Raw)</h6>
                     <div class="border rounded p-3 bg-light">
-                        ${formatChanges(details.originalData)}
+                        ${formatChanges(details.oldValues)}
                     </div>
                 </div>
             </div>
@@ -179,7 +171,7 @@ async function viewRequestDetails(requestId) {
         `;
         
         document.getElementById('requestDetails').innerHTML = detailsHtml;
-        document.getElementById('requestModal').classList.add('show');
+        $('#requestModal').modal('show');
         
     } catch (error) {
         console.error('Error loading request details:', error);
@@ -331,7 +323,7 @@ async function processApproval(requestId, action, notes = '') {
 
 // Close request modal
 function closeRequestModal() {
-    document.getElementById('requestModal').classList.remove('show');
+    $('#requestModal').modal('hide');
     currentRequestId = null;
 }
 
@@ -354,18 +346,18 @@ function refreshRequests() {
 // Helper functions
 function getRequestTypeClass(type) {
     const classes = {
-        'CREATE_USER': 'success',
-        'UPDATE_USER': 'primary',
-        'DELETE_USER': 'danger'
+        'NEW_OFFICE': 'success',
+        'EDIT_OFFICE': 'primary',
+        'DELETE_OFFICE': 'danger'
     };
     return classes[type] || 'secondary';
 }
 
 function getRequestTypeDisplay(type) {
     const displays = {
-        'CREATE_USER': 'Create User',
-        'UPDATE_USER': 'Update User',
-        'DELETE_USER': 'Delete User'
+        'NEW_OFFICE': 'New Office',
+        'EDIT_OFFICE': 'Edit Office',
+        'DELETE_OFFICE': 'Delete Office'
     };
     return displays[type] || type;
 }
@@ -373,10 +365,9 @@ function getRequestTypeDisplay(type) {
 function getStatusDisplay(status) {
     const displays = {
         'PENDING': '<span class="badge bg-warning">Pending</span>',
-        'AREA_ADMIN_APPROVED': '<span class="badge bg-info">Area Admin Approved</span>',
-        'SRD_APPROVED': '<span class="badge bg-success">SRD Approved</span>',
-        'AREA_ADMIN_REJECTED': '<span class="badge bg-danger">Rejected</span>',
-        'SRD_REJECTED': '<span class="badge bg-danger">Rejected</span>'
+        'AREA_APPROVED': '<span class="badge bg-info">Area Approved (Waiting SRD)</span>',
+        'APPROVED': '<span class="badge bg-success">Approved</span>',
+        'REJECTED': '<span class="badge bg-danger">Rejected</span>'
     };
     return displays[status] || status;
 }
@@ -407,6 +398,120 @@ function formatChanges(changes) {
     } catch (e) {
         return `<pre>${changes}</pre>`;
     }
+}
+
+function formatChangesDiff(oldValues, newValues) {
+    let oldObj = {};
+    let newObj = {};
+
+    try {
+        oldObj = oldValues
+            ? (typeof oldValues === 'string' ? JSON.parse(oldValues) : oldValues)
+            : {};
+    } catch (e) {
+        oldObj = {};
+    }
+
+    try {
+        newObj = newValues
+            ? (typeof newValues === 'string' ? JSON.parse(newValues) : newValues)
+            : {};
+    } catch (e) {
+        newObj = {};
+    }
+
+    // Only check keys that exist in newValues (fields that were actually edited)
+    const editedKeys = Object.keys(newObj || {});
+    
+    const updatedFields = [];
+
+    editedKeys.forEach((key) => {
+        const oldVal = normalizeDiffValue(oldObj[key]);
+        const newVal = normalizeDiffValue(newObj[key]);
+        
+        // Only include if the value actually changed
+        if (oldVal !== newVal) {
+            updatedFields.push({ key, oldVal, newVal });
+        }
+    });
+
+    if (updatedFields.length === 0) {
+        return '<div class="text-muted">No changes detected.</div>';
+    }
+
+    let html = '';
+
+    // Show updated fields only
+    html += `
+        <div class="mb-3">
+            <h6 class="text-primary font-weight-bold">
+                <i class="fas fa-edit mr-1"></i>Updated Fields (${updatedFields.length})
+            </h6>
+            ${updatedFields.map(({ key, oldVal, newVal }) => `
+                <div class="mb-2 p-3 border border-primary rounded bg-light">
+                    <div class="font-weight-bold text-primary">${humanizeFieldName(key)}</div>
+                    <div class="mt-1" style="font-size:12px;">
+                        <div class="mb-1">
+                            <span class="text-danger font-weight-bold">Before:</span> 
+                            <span class="text-muted">${escapeHtml(oldVal)}</span>
+                        </div>
+                        <div>
+                            <span class="text-success font-weight-bold">After:</span> 
+                            <span class="text-dark">${escapeHtml(newVal)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    return html;
+}
+
+function normalizeDiffValue(value) {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value).trim();
+}
+
+function humanizeFieldName(key) {
+    const labels = {
+        name: 'Post Office Name',
+        postmaster: 'Postmaster',
+        classification: 'Classification',
+        serviceProvided: 'Service Provided',
+        address: 'Address',
+        zipCode: 'Zip Code',
+        connectionStatus: 'Connection Status',
+        officeStatus: 'Office Status',
+        internetServiceProvider: 'Internet Service Provider',
+        typeOfConnection: 'Type of Connection',
+        speed: 'Speed',
+        staticIpAddress: 'Static IP Address',
+        noOfEmployees: 'No. of Employees',
+        noOfPostalTellers: 'No. of Postal Tellers',
+        noOfLetterCarriers: 'No. of Letter Carriers',
+        postalOfficeContactPerson: 'Postal Office Contact Person',
+        postalOfficeContactNumber: 'Postal Office Contact Number',
+        ispContactPerson: 'ISP Contact Person',
+        ispContactNumber: 'ISP Contact Number',
+        remarks: 'Remarks',
+        areaId: 'Area',
+        regionId: 'Region',
+        provinceId: 'Province',
+        cityMunId: 'City / Municipality',
+        barangayId: 'Barangay'
+    };
+    return labels[key] || key;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 // Logout function

@@ -1,6 +1,7 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.UserRepository;
@@ -84,8 +85,14 @@ public class DataTableController {
         model.addAttribute("closedCount",   closedCount);
         model.addAttribute("areaCount",     postalOfficeRepository.countDistinctAreasNonArchived());
 
-        // For modal dropdowns
-        model.addAttribute("areas",   locationService.getAllAreas());
+        // For modal dropdowns and filters
+        List<Area> visibleAreas = locationService.getAllAreas();
+        if (!(roleId != null && (roleId == 1 || roleId == 4))) {
+            visibleAreas = visibleAreas.stream()
+                    .filter(a -> areaId != null && areaId.equals(a.getId()))
+                    .collect(Collectors.toList());
+        }
+        model.addAttribute("areas",   visibleAreas);
         model.addAttribute("regions", locationService.getAllRegions());
 
         model.addAttribute("activePage",    "table");

@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initFilters() {
-        // Attach event listener to Clear filter button
-        document.getElementById('clearFilters').addEventListener('click', clearFilters);
+        const clearBtn = document.getElementById('clearFilters');
+        if (clearBtn) clearBtn.addEventListener('click', clearFilters);
         
         // Attach event listener to connectivity status filter for auto-apply
         const statusFilter = document.getElementById('statusFilter');

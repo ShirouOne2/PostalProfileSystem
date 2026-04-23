@@ -13,14 +13,22 @@ let map;
 let markers = [];
 let markerClusterGroup;
 
-// Detect which table layout is rendered (set by Thymeleaf th:if="${isSystemAdmin}")
-const IS_ADMIN = document.body?.dataset?.isSystemAdmin === 'true' || 
-    (document.getElementById('systemAdminTable')
-    ?.querySelector('thead th:nth-child(3)')
-    ?.textContent.trim().toLowerCase().includes('area') ?? false);
+/** Role flags from #dashboardRoleFlags (layout has no role attrs on document.body). */
+function dashboardRoleAttr(dashedKey) {
+    const el = document.getElementById('dashboardRoleFlags');
+    if (!el) return false;
+    const v = el.getAttribute('data-' + dashedKey);
+    return v != null && String(v).toLowerCase() === 'true';
+}
 
-// Also check if user is Area Admin by looking for the isAreaAdmin data attribute
-const IS_AREA_ADMIN = document.body?.dataset?.isAreaAdmin === 'true' || false;
+// Full dashboard table (system admin + SRD layout): Thymeleaf isSystemAdmin = role 1 or 4
+const IS_ADMIN = dashboardRoleAttr('is-system-admin') ||
+    (document.getElementById('systemAdminTable')
+        // Area column is now before Name (2nd column after #)
+        ?.querySelector('thead th:nth-child(2)')
+        ?.textContent?.trim().toLowerCase().includes('area') ?? false);
+
+const IS_AREA_ADMIN = dashboardRoleAttr('is-area-admin');
 const IS_PRIVILEGED_USER = IS_ADMIN || IS_AREA_ADMIN;
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -108,16 +116,24 @@ function applyTableFilters() {
     // Apply search
     table.search(searchValue);
 
-    // Apply area and office status filters normally
+    // Apply area and office status filters
     if (IS_ADMIN) {
-        // Admin: # | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Remarks(7) | Actions(8)
-        table.column(2).search(areaValue ? areaValue : '');
+        // Admin (updated): # | Area(1) | Name(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
+        if (document.getElementById('filterArea')) {
+            table.column(1).search(areaValue ? areaValue : '');
+        } else {
+            table.column(1).search('');
+        }
         table.column(6).search(officeStatusValue ? officeStatusValue : '');
     } else {
         // Non-admin filtering logic
         if (IS_AREA_ADMIN) {
             // Area Admin: #(0) | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
-            table.column(2).search(areaValue ? areaValue : '');
+            if (document.getElementById('filterArea')) {
+                table.column(2).search(areaValue ? areaValue : '');
+            } else {
+                table.column(2).search('');
+            }
             table.column(6).search(officeStatusValue ? officeStatusValue : '');
         } else {
             // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
@@ -216,23 +232,37 @@ function initializeSystemAdminTable() {
         $('#systemAdminTable').DataTable().destroy();
     }
 
+    // Check if Actions column exists in the HTML for SRD Operation users
+    const hasActionsColumn = $('#systemAdminTable thead th').length > 7;
+    const isSrdOperation = dashboardRoleAttr('is-srd-operation');
+    
     const adminColumnDefs = [
         { targets: 0, width: '45px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
             return meta.row + meta.settings._iDisplayStart + 1;
         }},
-        { targets: 1, orderable: true, render: function(data, type, row, meta) {
+        { targets: 1, orderable: true },   // Area
+        { targets: 2, orderable: true, render: function(data, type, row, meta) {
             if (!data) return 'N/A';
             var trNode = meta.settings.aoData[meta.row].nTr;
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
             return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
-        }},
-        { targets: 2, orderable: true },   // Area
+        }}, // Name
         { targets: 3, orderable: true },   // Province
         { targets: 4, orderable: true },   // City/Municipality
         { targets: 5, width: '120px', orderable: true, className: 'dt-center' },  // Connection
-        { targets: 6, width: '105px', orderable: true, className: 'dt-center' },  // Office Status
-        { targets: 7, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+        { targets: 6, width: '105px', orderable: true, className: 'dt-center' }   // Office Status
     ];
+    
+    // Only add Actions column definition if it exists in HTML
+    if (hasActionsColumn && !isSrdOperation) {
+        adminColumnDefs.push({ 
+            targets: 7, 
+            width: '120px', 
+            orderable: false, 
+            className: 'dt-center',
+            searchable: false 
+        }); // Actions
+    }
 
     dashboardTable = $('#systemAdminTable').DataTable({
         pageLength: 10,
@@ -244,7 +274,7 @@ function initializeSystemAdminTable() {
         serverSide: false,
 
         columnDefs: adminColumnDefs,
-        order: [[2, ''], [1, '']], // Sort by Area then Name
+        order: [[1, ''], [2, '']], // Sort by Area then Name
 
         language: {
             search: '',
@@ -271,11 +301,15 @@ function initializeOfficeTable() {
         $('#officeTable').DataTable().destroy();
     }
 
+    // Check if Actions column exists in the HTML for SRD Operation users
+    const hasActionsColumnOffice = $('#officeTable thead th').length > 6;
+    const isSrdOperation = dashboardRoleAttr('is-srd-operation');
+    
     // Dynamic column definitions based on user role
     let userColumnDefs;
     
     if (IS_AREA_ADMIN) {
-        // Area Admin: 8 columns including Area
+        // Area Admin: Base columns without Actions
         userColumnDefs = [
             { targets: 0, width: '60px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
                 return meta.row + meta.settings._iDisplayStart + 1;
@@ -286,15 +320,26 @@ function initializeOfficeTable() {
                 var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
                 return '<a href="#" class="office-name-link" data-office-id="' + officeId + '" data-office-name="' + data.replace(/"/g, '&quot;') + '" onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName); return false;">' + data + '</a>';
             }},   // Name
-            { targets: 2, orderable: true },   // Area
+            // Hide Area column for Area Admin view (header + cells)
+            { targets: 2, orderable: true, visible: false },   // Area
             { targets: 3, orderable: true },   // Province
             { targets: 4, orderable: true },   // City/Municipality
             { targets: 5, orderable: true, className: 'dt-center' }, // Connectivity
-            { targets: 6, orderable: true, className: 'dt-center' }, // Office Status
-            { targets: 7, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+            { targets: 6, orderable: true, className: 'dt-center' }  // Office Status
         ];
+        
+        // Only add Actions column definition if it exists in HTML
+        if (hasActionsColumnOffice && !isSrdOperation) {
+            userColumnDefs.push({ 
+                targets: 7, 
+                width: '120px', 
+                orderable: false, 
+                className: 'dt-center',
+                searchable: false 
+            }); // Actions
+        }
     } else {
-        // Regular User: 7 columns (no Area column)
+        // Regular User: Base columns without Actions
         userColumnDefs = [
             { targets: 0, width: '60px', orderable: false, className: 'dt-center', render: function(data, type, row, meta) {
                 return meta.row + meta.settings._iDisplayStart + 1;
@@ -308,9 +353,19 @@ function initializeOfficeTable() {
             { targets: 2, orderable: true },   // Province
             { targets: 3, orderable: true },   // City/Municipality
             { targets: 4, orderable: true, className: 'dt-center' }, // Connectivity
-            { targets: 5, orderable: true, className: 'dt-center' }, // Office Status
-            { targets: 6, width: '120px', orderable: false, className: 'dt-center', searchable: false } // Actions
+            { targets: 5, orderable: true, className: 'dt-center' }   // Office Status
         ];
+        
+        // Only add Actions column definition if it exists in HTML
+        if (hasActionsColumnOffice && !isSrdOperation) {
+            userColumnDefs.push({ 
+                targets: 6, 
+                width: '120px', 
+                orderable: false, 
+                className: 'dt-center',
+                searchable: false 
+            }); // Actions
+        }
     }
 
     dashboardTable = $('#officeTable').DataTable({
@@ -323,7 +378,7 @@ function initializeOfficeTable() {
         serverSide: false,
 
         columnDefs: userColumnDefs,
-        order: [[1, '']], // Sort by Name
+        order: [[1, '']], // Sort by Name (Area hidden for Area Admin)
 
         language: {
             search: '',

@@ -16,27 +16,52 @@
 
 /* ─── Module-level cache ────────────────────────────────────────────────── */
 var _areasCache   = null;
-var _regionsCache = null;
+var _editOriginal = null;
 
 /* ─── jQuery ready: preload data + event bindings ───────────────────────── */
 $(function () {
 
-    // Preload areas and regions so modal opens fast
+    // Preload areas so modal opens fast
     if (!_areasCache)   _areasCache   = $.getJSON('/api/postal/areas');
-    if (!_regionsCache) _regionsCache = $.getJSON('/api/postal/regions');
 
     /* Keep hidden input in sync with Area select */
     $(document).on('change', '#editAreaId', function () {
         $('#editAreaIdHidden').val(this.value);
     });
 
+    /* Cascading location dropdowns (Area → Province → City → Barangay) */
+    $(document).on('change', '#editAreaId', function () {
+        _resetSelect('#editProvinceId', '-- Select Province --',          true);
+        _resetSelect('#editCityMunId',  '-- Select City/Municipality --', true);
+        _resetSelect('#editBarangayId', '-- Select Barangay --',          true);
+
+        if (!this.value) return;
+        _loadOptions('/api/postal/provinces/by-area/' + this.value, '#editProvinceId', '-- Select Province --')
+            .catch(function () { Swal.fire('Error', 'Failed to load provinces.', 'error'); });
+    });
+
     /* Profile page — Edit Profile button */
     $(document).on('click', '#profileEditBtn', function () {
         var d = window.OFFICE_DATA;
         if (!d || !d.id) { Swal.fire('Error', 'Office data not available.', 'error'); return; }
+        var $btn = $(this);
+        var oldHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Loading...');
+
         $.getJSON('/api/postal-office/' + d.id)
             .done(function (data) { window.openModal(data); })
-            .fail(function ()     { window.openModal(d); });
+            .fail(function (xhr) {
+                Swal.fire(
+                    'Error',
+                    (xhr && xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message
+                        : 'Failed to load latest office data for editing.',
+                    'error'
+                );
+            })
+            .always(function () {
+                $btn.prop('disabled', false).html(oldHtml);
+            });
     });
 
     /* Table / Dashboard — per-row edit buttons */
@@ -114,16 +139,6 @@ $(function () {
         });
     });
 
-    /* Cascading location dropdowns */
-    $(document).on('change', '#editRegionId', function () {
-        _resetSelect('#editProvinceId', '-- Select Province --',          true);
-        _resetSelect('#editCityMunId',  '-- Select City/Municipality --', true);
-        _resetSelect('#editBarangayId', '-- Select Barangay --',          true);
-        if (!this.value) return;
-        _loadOptions('/api/postal/provinces/by-region/' + this.value, '#editProvinceId', '-- Select Province --')
-            .catch(function () { Swal.fire('Error', 'Failed to load provinces.', 'error'); });
-    });
-
     $(document).on('change', '#editProvinceId', function () {
         _resetSelect('#editCityMunId',  '-- Select City/Municipality --', true);
         _resetSelect('#editBarangayId', '-- Select Barangay --',          true);
@@ -151,10 +166,11 @@ $(function () {
  * Called by: dashboard.js, table.js, quarters.js, profile.js, etc.
  */
 window.openModal = function (d) {
-    $.when(_areasCache, _regionsCache).then(
-        function (areasResult, regionsResult) {
-            _populateSelect('#editAreaId',   areasResult[0],   'id', 'name', '-- Select Area --');
-            _populateSelect('#editRegionId', regionsResult[0], 'id', 'name', '-- Select Region --');
+    $.when(_areasCache).then(
+        function (areasData) {
+            // With a single $.when(deferred), jQuery passes the resolved JSON as the first arg
+            // (not as [data, status, jqXHR] like in the multi-deferred case).
+            _populateSelect('#editAreaId', areasData, 'id', 'name', '-- Select Area --');
             _fillModal(d);
             _applyAreaLock();
             _resetPhotoUI();
@@ -181,51 +197,54 @@ function saveOfficeChanges() {
     var id = ($('#editOfficeId').val() || '').trim();
     if (!id) { Swal.fire('Error', 'No office ID.', 'error'); return; }
 
-    var name = ($('#editName').val() || '').trim();
-    if (!name) {
+    if ($('#editName').length && !($('#editName').val() || '').trim()) {
         Swal.fire('Validation Error', 'Office Name is required.', 'warning');
         $('#editName').focus();
         return;
     }
 
-    var payload = {
-        name:                      name,
-        officeCode:                ($('#editOfficeCode').val()       || '').trim(),
-        postmaster:                ($('#editPostmaster').val()        || '').trim(),
-        actingPostmaster:          ($('#editActingPostmaster').val()   || '').trim(),
-        officeEmail:               ($('#editOfficeEmail').val()        || '').trim(),
-        classification:             $('#editClassification').val()    || null,
-        serviceProvided:            $('#editServiceProvided').val()   || null,
-        address:                   ($('#editAddress').val()           || '').trim(),
-        zipCode:                   ($('#editZipCode').val()           || '').trim(),
-        latitude:                   parseFloat($('#editLatitude').val())  || null,
-        longitude:                  parseFloat($('#editLongitude').val()) || null,
-        connectionStatus:           $('#editStatus').val() === 'true',
-        officeStatus:               $('#editOfficeStatus').val()      || null,
-        isActive:                  $('#editIsActive').val()            || null,
-        isConnected:               $('#editIsConnected').val()         || null,
-        dateOpen:                  $('#editDateOpen').val()            || null,
-        dateClosed:                $('#editDateClosed').val()          || null,
-        frequencyOfDelivery:       $('#editFrequencyOfDelivery').val() || null,
-        internetServiceProvider:   ($('#editISP').val()               || '').trim(),
-        typeOfConnection:          ($('#editTypeOfConnection').val()  || '').trim(),
-        speed:                     ($('#editSpeed').val()             || '').trim(),
-        staticIpAddress:           ($('#editIPAddressType').val() === 'static' ? 'Static' : null),
-        noOfEmployees:              parseInt($('#editNoOfEmployees').val()) || 0,
-        noOfPostalTellers:          parseInt($('#editNoOfTellers').val())   || 0,
-        noOfLetterCarriers:         parseInt($('#editNoOfCarriers').val())  || 0,
-        postalOfficeContactPerson: ($('#editContactPerson').val()    || '').trim(),
-        postalOfficeContactNumber: ($('#editContactNumber').val()    || '').trim(),
-        ispContactPerson:          ($('#editISPContactPerson').val() || '').trim(),
-        ispContactNumber:          ($('#editISPContactNumber').val() || '').trim(),
-        remarks:                   ($('#editRemarks').val()          || '').trim() || null,
-        // Read area from HIDDEN input — disabled <select> returns '' in some browsers
-        areaId:     parseInt($('#editAreaIdHidden').val()) || null,
-        regionId:   parseInt($('#editRegionId').val())     || null,
-        provinceId: parseInt($('#editProvinceId').val())   || null,
-        cityMunId:  parseInt($('#editCityMunId').val())    || null,
-        barangayId: parseInt($('#editBarangayId').val())   || null
-    };
+    var candidate = {};
+    _setIfExists(candidate, 'name', '#editName', function () { return _trimOrNull('#editName'); });
+    _setIfExists(candidate, 'postmaster', '#editPostmaster', function () { return _trimOrNull('#editPostmaster'); });
+    _setIfExists(candidate, 'classification', '#editClassification', function () { return _trimOrNull('#editClassification'); });
+    _setIfExists(candidate, 'serviceProvided', '#editServiceProvided', function () { return _trimOrNull('#editServiceProvided'); });
+    _setIfExists(candidate, 'address', '#editAddress', function () { return _trimOrNull('#editAddress'); });
+    _setIfExists(candidate, 'zipCode', '#editZipCode', function () { return _trimOrNull('#editZipCode'); });
+    _setIfExists(candidate, 'latitude', '#editLatitude', function () { return _numOrNull('#editLatitude'); });
+    _setIfExists(candidate, 'longitude', '#editLongitude', function () { return _numOrNull('#editLongitude'); });
+    _setIfExists(candidate, 'connectionStatus', '#editStatus', function () { return $('#editStatus').val() === 'true'; });
+    _setIfExists(candidate, 'officeStatus', '#editOfficeStatus', function () { return _trimOrNull('#editOfficeStatus'); });
+    _setIfExists(candidate, 'internetServiceProvider', '#editISP', function () { return _trimOrNull('#editISP'); });
+    _setIfExists(candidate, 'typeOfConnection', '#editTypeOfConnection', function () { return _trimOrNull('#editTypeOfConnection'); });
+    _setIfExists(candidate, 'speed', '#editSpeed', function () { return _trimOrNull('#editSpeed'); });
+    _setIfExists(candidate, 'staticIpAddress', '#editIPAddressType', function () {
+        var t = $('#editIPAddressType').val();
+        return t === 'static' ? 'Static' : (t === 'dynamic' ? 'Dynamic' : null);
+    });
+    _setIfExists(candidate, 'noOfEmployees', '#editNoOfEmployees', function () { return _intOrNull('#editNoOfEmployees'); });
+    _setIfExists(candidate, 'noOfPostalTellers', '#editNoOfTellers', function () { return _intOrNull('#editNoOfTellers'); });
+    _setIfExists(candidate, 'noOfLetterCarriers', '#editNoOfCarriers', function () { return _intOrNull('#editNoOfCarriers'); });
+    _setIfExists(candidate, 'postalOfficeContactPerson', '#editContactPerson', function () { return _trimOrNull('#editContactPerson'); });
+    _setIfExists(candidate, 'postalOfficeContactNumber', '#editContactNumber', function () { return _trimOrNull('#editContactNumber'); });
+    _setIfExists(candidate, 'ispContactPerson', '#editISPContactPerson', function () { return _trimOrNull('#editISPContactPerson'); });
+    _setIfExists(candidate, 'ispContactNumber', '#editISPContactNumber', function () { return _trimOrNull('#editISPContactNumber'); });
+    _setIfExists(candidate, 'remarks', '#editRemarks', function () { return _trimOrNull('#editRemarks'); });
+    _setIfExists(candidate, 'areaId', '#editAreaIdHidden', function () { return _intOrNull('#editAreaIdHidden'); });
+    _setIfExists(candidate, 'provinceId', '#editProvinceId', function () { return _intOrNull('#editProvinceId'); });
+    _setIfExists(candidate, 'cityMunId', '#editCityMunId', function () { return _intOrNull('#editCityMunId'); });
+    _setIfExists(candidate, 'barangayId', '#editBarangayId', function () { return _intOrNull('#editBarangayId'); });
+
+    var payload = {};
+    Object.keys(candidate).forEach(function (k) {
+        if (!_isEqual(candidate[k], _editOriginal ? _editOriginal[k] : undefined)) {
+            payload[k] = candidate[k];
+        }
+    });
+
+    if (Object.keys(payload).length === 0) {
+        Swal.fire('No Changes', 'No field changes detected.', 'info');
+        return;
+    }
 
     var $btn = $('#editOfficeModal .modal-footer .btn-warning');
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Saving…');
@@ -239,8 +258,11 @@ function saveOfficeChanges() {
             if (res.success) {
                 $('#editOfficeModal').modal('hide');
                 Swal.fire({
-                    icon: 'success', title: 'Saved!',
-                    text: 'Changes have been saved successfully.',
+                    icon: 'success',
+                    title: res.requiresApproval ? 'Submitted!' : 'Saved!',
+                    text: res.message || (res.requiresApproval
+                        ? 'Your changes were submitted for approval.'
+                        : 'Changes have been saved successfully.'),
                     timer: 1800, showConfirmButton: false
                 }).then(function () { location.reload(); });
             } else {
@@ -261,6 +283,7 @@ function saveOfficeChanges() {
    ═══════════════════════════════════════════════════════════════════════ */
 
 function _fillModal(d) {
+    _editOriginal = _snapshotOriginal(d || {});
     $('#editOfficeId').val(d.id || '');
 
     _setField('#editName',       d.name);
@@ -308,7 +331,7 @@ function _fillModal(d) {
 }
 
 function _fillLocationHierarchy(d) {
-    var regionId   = d.regionId   || null;
+    var areaId     = d.areaId     || null;
     var provinceId = d.provinceId || null;
     var cityMunId  = d.cityMunId  || null;
     var barangayId = d.barangayId || null;
@@ -317,10 +340,9 @@ function _fillLocationHierarchy(d) {
     _resetSelect('#editCityMunId',  '-- Select City/Municipality --', true);
     _resetSelect('#editBarangayId', '-- Select Barangay --',          true);
 
-    $('#editRegionId').val(regionId || '');
-    if (!regionId) return;
+    if (!areaId) return;
 
-    _loadOptions('/api/postal/provinces/by-region/' + regionId, '#editProvinceId', '-- Select Province --')
+    _loadOptions('/api/postal/provinces/by-area/' + areaId, '#editProvinceId', '-- Select Province --')
         .then(function () {
             $('#editProvinceId').val(provinceId || '');
             if (!provinceId) return;
@@ -336,16 +358,10 @@ function _fillLocationHierarchy(d) {
 }
 
 function _applyAreaLock() {
-    var roleId     = window.CURRENT_USER_ROLE_ID;
-    var userAreaId = window.CURRENT_USER_AREA_ID;
-
-    if (roleId !== 1 && userAreaId != null) {
-        $('#editAreaId').val(userAreaId).prop('disabled', true);
-        $('#editAreaIdHidden').val(userAreaId);
-    } else {
-        $('#editAreaId').prop('disabled', false);
-        $('#editAreaIdHidden').val($('#editAreaId').val());
-    }
+    // Locking/disabled behavior removed by request.
+    // Keep hidden field synced for payload consistency.
+    $('#editAreaId').prop('disabled', false);
+    $('#editAreaIdHidden').val($('#editAreaId').val());
 }
 
 function _resetPhotoUI() {
@@ -398,4 +414,76 @@ function _populateSelect(selector, list, idKey, labelKey, placeholder) {
 
 function _resetSelect(selector, placeholder, disabled) {
     $(selector).html('<option value="">' + placeholder + '</option>').prop('disabled', !!disabled);
+}
+
+function _snapshotOriginal(d) {
+    return {
+        name: _norm(d.name),
+        postmaster: _norm(d.postmaster),
+        classification: _norm(d.classification),
+        serviceProvided: _norm(d.serviceProvided),
+        address: _norm(d.address),
+        zipCode: _norm(d.zipCode),
+        latitude: _normNum(d.latitude),
+        longitude: _normNum(d.longitude),
+        connectionStatus: d.connectionStatus === true || d.connectionStatus === 'true',
+        officeStatus: _norm(d.officeStatus),
+        internetServiceProvider: _norm(d.internetServiceProvider),
+        typeOfConnection: _norm(d.typeOfConnection),
+        speed: _norm(d.speed),
+        staticIpAddress: _norm(d.staticIpAddress),
+        noOfEmployees: _normInt(d.noOfEmployees),
+        noOfPostalTellers: _normInt(d.noOfPostalTellers),
+        noOfLetterCarriers: _normInt(d.noOfLetterCarriers),
+        postalOfficeContactPerson: _norm(d.postalOfficeContactPerson),
+        postalOfficeContactNumber: _norm(d.postalOfficeContactNumber),
+        ispContactPerson: _norm(d.ispContactPerson),
+        ispContactNumber: _norm(d.ispContactNumber),
+        remarks: _norm(d.remarks),
+        areaId: _normInt(d.areaId),
+        provinceId: _normInt(d.provinceId),
+        cityMunId: _normInt(d.cityMunId),
+        barangayId: _normInt(d.barangayId)
+    };
+}
+
+function _setIfExists(obj, key, selector, getter) {
+    if (!$(selector).length) return;
+    obj[key] = getter();
+}
+function _trimOrNull(selector) {
+    var v = $(selector).val();
+    if (v === null || v === undefined) return null;
+    v = String(v).trim();
+    return v === '' ? null : v;
+}
+function _intOrNull(selector) {
+    var v = $(selector).val();
+    if (v === null || v === undefined || String(v).trim() === '') return null;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+}
+function _numOrNull(selector) {
+    var v = $(selector).val();
+    if (v === null || v === undefined || String(v).trim() === '') return null;
+    var n = parseFloat(v);
+    return isNaN(n) ? null : n;
+}
+function _norm(v) {
+    if (v === null || v === undefined) return null;
+    var s = String(v).trim();
+    return s === '' ? null : s;
+}
+function _normInt(v) {
+    if (v === null || v === undefined || String(v).trim() === '') return null;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+}
+function _normNum(v) {
+    if (v === null || v === undefined || String(v).trim() === '') return null;
+    var n = parseFloat(v);
+    return isNaN(n) ? null : n;
+}
+function _isEqual(a, b) {
+    return String(a) === String(b);
 }

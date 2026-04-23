@@ -179,8 +179,7 @@ function _renderPopupBody(data, officeId, fullProfileUrl) {
                 _infoRow('fas fa-cash-register', 'Tellers',     data.noOfPostalTellers) +
               '</div>' +
               '<div class="col-md-6">' +
-                _infoRow('fas fa-headset',        'ISP Contact', data.ispContactPerson) +
-                _infoRow('fas fa-phone-volume',   'ISP Number',  data.ispContactNumber) +
+              
                 _infoRow('fas fa-mail-bulk',      'Carriers',    data.noOfLetterCarriers) +
               '</div>' +
             '</div>' +

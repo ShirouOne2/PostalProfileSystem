@@ -85,7 +85,13 @@ function saveOfficeChanges() {
         success: function (res) {
             if (res.success) {
                 $('#editOfficeModal').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Saved!', text: 'Changes saved successfully.', timer: 1800, showConfirmButton: false })
+                Swal.fire({
+                    icon: 'success',
+                    title: res.requiresApproval ? 'Submitted!' : 'Saved!',
+                    text: res.message || (res.requiresApproval ? 'Your changes were submitted for approval.' : 'Changes saved successfully.'),
+                    timer: 1800,
+                    showConfirmButton: false
+                })
                     .then(function () { location.reload(); });
             } else {
                 Swal.fire('Error', res.message || 'Save failed.', 'error');

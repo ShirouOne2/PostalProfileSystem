@@ -9,7 +9,7 @@
     var notifContent = document.getElementById('notifContent');
     var sidebarBadge = document.getElementById('sidebarNotifBadge');
 
-    // Only admins have #notifBellLi — bail out for everyone else
+    // Bell appears only for authorized roles; bail out on pages without it.
     if (!bellLi || !notifContent) return;
 
     var es           = null;
@@ -18,14 +18,29 @@
 
     // ── Event delegation ─────────────────────────────────────────────────────
     // One listener on #notifContent covers all current and future items —
-    // no cloneNode, no re-bind needed after every SSE update.
+    // Event delegation on #notifContent covers all current and future items
     notifContent.addEventListener('click', function (e) {
 
-        // Individual notification → mark as read
+        // Individual notification -> navigate to appropriate inbox and mark as read
         var item = e.target.closest('[data-notif-id]');
         if (item) {
-            fetch('/api/notifications/mark-read/' + item.getAttribute('data-notif-id'),
-                  { method: 'POST' });
+            var notifId = item.getAttribute('data-notif-id');
+            
+            // Navigate to appropriate page based on notification content
+            var notifContent = item.textContent || item.innerText;
+            var isApprovalNotification = notifContent.includes('Approval request') || 
+                                        notifContent.includes('waiting for Area Admin review') ||
+                                        notifContent.includes('ready for SRD final approval');
+            
+            // Mark as read
+            fetch('/api/notifications/mark-read/' + notifId, { method: 'POST' });
+            
+            // Navigate to appropriate page
+            if (isApprovalNotification) {
+                window.location.href = '/approvals';
+            } else {
+                window.location.href = '/notifications';
+            }
             return;
         }
 
@@ -101,11 +116,7 @@
 
     // ── Initialize ────────────────────────────────────────────────────────────
     connect();
-
-    // ── Cleanup on navigation ─────────────────────────────────────────────────
-    // Close the SSE connection AND cancel any pending retry timer so the server
-    // emitter is released immediately and no ghost connections are opened.
-    window.addEventListener('beforeunload', function () {
+    window._sseClose = function () {
         if (retryTimer) {
             clearTimeout(retryTimer);
             retryTimer = null;
@@ -114,6 +125,13 @@
             es.close();
             es = null;
         }
+    };
+
+    // ── Cleanup on navigation ─────────────────────────────────────────────────
+    // Close the SSE connection AND cancel any pending retry timer so the server
+    // emitter is released immediately and no ghost connections are opened.
+    window.addEventListener('beforeunload', function () {
+        window._sseClose();
     });
 
 })();

@@ -53,4 +53,7 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     /** Any active (non-final) request for an office */
     @Query("SELECT COUNT(ar) > 0 FROM ApprovalRequest ar WHERE ar.officeId = :officeId AND ar.status IN ('PENDING','AREA_APPROVED')")
     boolean existsActiveRequestForOffice(@Param("officeId") Integer officeId);
+
+    @Query("SELECT ar FROM ApprovalRequest ar WHERE ar.officeId = :officeId AND ar.status IN ('PENDING','AREA_APPROVED') ORDER BY ar.requestedAt DESC")
+    List<ApprovalRequest> findActiveRequestsByOfficeId(@Param("officeId") Integer officeId);
 }

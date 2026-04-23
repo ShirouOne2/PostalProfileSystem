@@ -9,87 +9,207 @@
     --dark-color: #5a5c69;
 }
 
-/* Base Styles */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fc;
-}
-
-/* Page Layout */
-.page-wrapper {
-    padding: 30px;
+/* Page shell — scoped to User Management only.
+   Do NOT style global .page-wrapper (main-layout uses it for sidebar + main flex). */
+.users-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* Page Header */
-.page-header {
+.users-page .page-header {
     background: white;
-    padding: 25px 30px;
+    padding: 1rem 1.25rem;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
+    margin-bottom: 1.25rem;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
-.page-header h1 {
+.users-page .page-header > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.users-page .page-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    flex: 0 1 auto;
+    justify-content: flex-end;
+}
+
+/* Top bar with only actions (no title / breadcrumb) */
+.users-page .page-header.page-header--toolbar-only {
+    justify-content: flex-end;
+}
+
+.users-page .page-header.page-header--toolbar-only .page-header-actions {
+    flex: 1 1 auto;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.users-page .page-header h1 {
     margin: 0;
-    font-size: 28px;
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
     font-weight: 700;
     color: #333;
+    word-wrap: break-word;
 }
 
-.page-header .breadcrumb {
-    margin: 0;
+.users-page .page-header .breadcrumb {
+    margin: 0.35rem 0 0;
     background: transparent;
     padding: 0;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
 }
 
 /* Content Card */
-.content-card {
+.users-page .content-card {
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 30px;
+    padding: 1rem 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
-.card-header-custom {
+@media (min-width: 768px) {
+    .users-page .content-card {
+        padding: 1.5rem 1.75rem;
+    }
+}
+
+.users-page .card-header-custom {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 2px solid #f0f0f0;
 }
 
+.users-page .card-header-custom h2 {
+    margin: 0;
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+}
+
 /* Buttons */
-.btn-add-user {
+.users-page .btn-add-user {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     color: white;
-    padding: 12px 24px;
+    padding: 0.625rem 1rem;
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
-.btn-add-user:hover {
+.users-page .btn-add-user:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     color: white;
 }
 
-.btn-add-user i {
+.users-page .btn-add-user i {
     margin-right: 8px;
 }
 
-/* DataTables Styling */
-.dataTables_wrapper {
-    padding: 0;
-    overflow-x: auto;
+/* DataTables — scoped so other pages’ tables are unaffected */
+.users-page .users-dt-wrap,
+.users-page #usersTable_wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
-table.dataTable {
+.users-page #usersTable_wrapper.dt-container {
+    width: 100%;
+    max-width: 100%;
+}
+
+.users-page .dataTables_wrapper {
+    padding: 0;
+    overflow-x: visible;
+}
+
+/* DataTables 2: top row only — length + search grouped (not footer row) */
+.users-page #usersTable_wrapper > .dt-layout-row:first-child:not(.dt-layout-table) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    justify-content: flex-start;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.users-page #usersTable_wrapper > .dt-layout-row:first-child:not(.dt-layout-table) .dt-layout-cell.dt-layout-end {
+    margin-left: 0 !important;
+    flex: 1 1 14rem;
+    max-width: 22rem;
+    min-width: 0;
+}
+
+.users-page #usersTable_wrapper > .dt-layout-row:first-child:not(.dt-layout-table) .dt-layout-cell.dt-layout-start {
+    flex: 0 1 auto;
+}
+
+/* Footer row: info + pagination (last layout row under wrapper) */
+.users-page #usersTable_wrapper > .dt-layout-row:last-of-type {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Legacy DataTables DOM (if present) */
+.users-page #usersTable_wrapper .dataTables_length,
+.users-page #usersTable_wrapper .dataTables_filter {
+    float: none !important;
+    margin: 0 0 0.5rem 0 !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.users-page #usersTable_wrapper .dataTables_filter label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.users-page #usersTable_wrapper .dataTables_filter input {
+    min-width: 0;
+    flex: 1 1 10rem;
+    max-width: 20rem;
+}
+
+.users-page table.dataTable {
     border-collapse: separate;
     border-spacing: 0;
     min-width: 800px;
@@ -97,17 +217,21 @@ table.dataTable {
 }
 
 /* Table container for responsive behavior */
-.table-responsive {
+.users-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    min-width: 0;
 }
 
-/* Force table to not overflow its container */
-.table-responsive table {
-    width: auto;
+/* Plain Bootstrap table on user.html — allow horizontal scroll when needed */
+.users-page .table-responsive table.table {
+    min-width: 36rem;
+    width: 100%;
+    margin-bottom: 0;
 }
 
-table.dataTable thead th {
+.users-page table.dataTable thead th {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     font-weight: 600;
@@ -117,18 +241,18 @@ table.dataTable thead th {
     border: none;
 }
 
-table.dataTable tbody td {
+.users-page table.dataTable tbody td {
     padding: 15px;
     vertical-align: middle;
     border-bottom: 1px solid #f0f0f0;
 }
 
-table.dataTable tbody tr:hover {
+.users-page table.dataTable tbody tr:hover {
     background-color: #f8f9fc;
 }
 
 /* Badge Styles */
-.badge {
+.users-page .badge {
     padding: 6px 12px;
     font-weight: 600;
     font-size: 11px;
@@ -151,12 +275,13 @@ table.dataTable tbody tr:hover {
 }
 
 /* Action Buttons */
-.action-buttons {
+.users-page .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
-.btn-action {
+.users-page .btn-action {
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 13px;
@@ -166,73 +291,90 @@ table.dataTable tbody tr:hover {
     transition: all 0.3s ease;
 }
 
-.btn-edit {
+.users-page .btn-edit {
     background-color: #36b9cc;
     color: white;
 }
 
-.btn-edit:hover {
+.users-page .btn-edit:hover {
     background-color: #2c9faf;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(54, 185, 204, 0.3);
 }
 
-.btn-delete {
+.users-page .btn-delete {
     background-color: #e74a3b;
     color: white;
 }
 
-.btn-delete:hover {
+.users-page .btn-delete:hover {
     background-color: #d32f2f;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(231, 74, 59, 0.3);
 }
 
-.btn-view {
+.users-page .btn-view {
     background-color: #4e73df;
     color: white;
 }
 
-.btn-view:hover {
+.users-page .btn-view:hover {
     background-color: #2e59d9;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
 }
 
-/* Modal Styles */
-.modal-content {
+/* User modal only — avoids restyling office profile / other modals on this page */
+.users-page #userModal .modal-dialog {
+    max-width: min(36rem, calc(100vw - 1rem));
+    margin: 0.5rem auto;
+}
+
+.users-page #userModal .modal-content {
     border: none;
     border-radius: 15px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 
-.modal-header {
+.users-page #userModal .modal-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-radius: 15px 15px 0 0;
     padding: 20px 30px;
+    border-bottom: none;
 }
 
-.modal-header .modal-title {
+.users-page #userModal .modal-header .modal-title {
     font-weight: 700;
     font-size: 20px;
 }
 
-.modal-header .btn-close {
+.users-page #userModal .modal-header .btn-close {
     filter: brightness(0) invert(1);
 }
 
-.modal-body {
+/* Bootstrap 4 close button in gradient header */
+.users-page #userModal .modal-header .close {
+    color: #fff;
+    opacity: 0.9;
+    text-shadow: none;
+}
+
+.users-page #userModal .modal-header .close:hover {
+    opacity: 1;
+}
+
+.users-page #userModal .modal-body {
     padding: 30px;
 }
 
-.modal-footer {
+.users-page #userModal .modal-footer {
     padding: 20px 30px;
     border-top: 1px solid #e0e0e0;
 }
 
-/* Form Styles */
-.form-label {
+/* Form Styles — user modal */
+.users-page #userModal .form-label {
     font-weight: 600;
     color: #333;
     margin-bottom: 8px;
@@ -240,12 +382,13 @@ table.dataTable tbody tr:hover {
     font-size: 14px;
 }
 
-.form-label .required {
+.users-page #userModal .form-label .required {
     color: var(--danger-color);
     margin-left: 3px;
 }
 
-.form-control, .form-select {
+.users-page #userModal .form-control,
+.users-page #userModal .form-select {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     
@@ -253,7 +396,8 @@ table.dataTable tbody tr:hover {
     transition: all 0.3s ease;
 }
 
-.form-control:focus, .form-select:focus {
+.users-page #userModal .form-control:focus,
+.users-page #userModal .form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
 }
@@ -262,7 +406,7 @@ table.dataTable tbody tr:hover {
     border-color: var(--danger-color);
 }
 
-.invalid-feedback {
+.users-page #userModal .invalid-feedback {
     font-size: 13px;
     margin-top: 5px;
 }
@@ -271,7 +415,7 @@ table.dataTable tbody tr:hover {
     position: relative;
 }
 
-.input-group-text {
+.users-page #userModal .input-group-text {
     background-color: #f8f9fc;
     border: 2px solid #e0e0e0;
     border-right: none;
@@ -279,17 +423,17 @@ table.dataTable tbody tr:hover {
     padding: 12px 15px;
 }
 
-.input-group .form-control {
+.users-page #userModal .input-group .form-control {
     border-left: none;
     border-radius: 0 10px 10px 0;
 }
 
-.input-group .form-control:focus {
+.users-page #userModal .input-group .form-control:focus {
     border-left: 2px solid var(--primary-color);
 }
 
-/* Modal Buttons */
-.btn-modal-save {
+/* Modal Buttons (legacy user.html modal + shared naming) */
+.users-page #userModal .btn-modal-save {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     color: white;
@@ -298,13 +442,13 @@ table.dataTable tbody tr:hover {
     font-weight: 600;
 }
 
-.btn-modal-save:hover {
+.users-page #userModal .btn-modal-save:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     color: white;
 }
 
-.btn-modal-cancel {
+.users-page #userModal .btn-modal-cancel {
     background: white;
     border: 2px solid #e0e0e0;
     color: #666;
@@ -313,14 +457,14 @@ table.dataTable tbody tr:hover {
     font-weight: 600;
 }
 
-.btn-modal-cancel:hover {
+.users-page #userModal .btn-modal-cancel:hover {
     background: #f8f9fc;
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
 
 /* Password Strength Indicator */
-.password-strength {
+.users-page #userModal .password-strength {
     height: 5px;
     border-radius: 3px;
     margin-top: 8px;
@@ -328,35 +472,35 @@ table.dataTable tbody tr:hover {
     overflow: hidden;
 }
 
-.password-strength-bar {
+.users-page #userModal .password-strength-bar {
     height: 100%;
     transition: all 0.3s ease;
     width: 0%;
 }
 
-.password-strength-bar.weak {
+.users-page #userModal .password-strength-bar.weak {
     background: var(--danger-color);
     width: 33%;
 }
 
-.password-strength-bar.medium {
+.users-page #userModal .password-strength-bar.medium {
     background: var(--warning-color);
     width: 66%;
 }
 
-.password-strength-bar.strong {
+.users-page #userModal .password-strength-bar.strong {
     background: var(--success-color);
     width: 100%;
 }
 
-.password-strength-text {
+.users-page #userModal .password-strength-text {
     font-size: 12px;
     margin-top: 5px;
     color: #666;
 }
 
 /* User Avatar */
-.user-avatar {
+.users-page .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -369,24 +513,24 @@ table.dataTable tbody tr:hover {
     font-size: 16px;
 }
 
-.user-info {
+.users-page .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.user-details {
+.users-page .user-details {
     display: flex;
     flex-direction: column;
 }
 
-.user-name {
+.users-page .user-name {
     font-weight: 600;
     color: #333;
     font-size: 14px;
 }
 
-.user-email {
+.users-page .user-email {
     font-size: 12px;
     color: #888;
 }
@@ -410,99 +554,88 @@ table.dataTable tbody tr:hover {
 }
 
 /* Empty State */
-.empty-state {
+.users-page .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: #888;
 }
 
-.empty-state i {
+.users-page .empty-state i {
     font-size: 64px;
     color: #ddd;
     margin-bottom: 20px;
 }
 
-.empty-state h3 {
+.users-page .empty-state h3 {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 10px;
 }
 
-/* Form Check */
-.form-check {
+/* Form Check — user modal / legacy user page */
+.users-page #userModal .form-check {
     padding-left: 1.8em;
 }
 
-.form-check-input {
+.users-page #userModal .form-check-input {
     width: 1.2em;
     height: 1.2em;
     margin-top: 0.15em;
 }
 
-.form-check-label {
+.users-page #userModal .form-check-label {
     font-size: 14px;
     color: #666;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .page-header {
-        padding: 20px 25px;
+    .users-page .page-header {
+        padding: 1rem 1.15rem;
     }
-    
-    .content-card {
-        padding: 25px;
-    }
-    
-    .page-wrapper {
-        padding: 25px;
+
+    .users-page .content-card {
+        padding: 1rem 1.15rem;
     }
 }
 
 @media (max-width: 768px) {
-    .page-header {
+    .users-page .page-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
+        align-items: stretch;
     }
 
-    .action-buttons {
-        flex-direction: column;
+    .users-page .page-header-actions {
         width: 100%;
+        justify-content: stretch;
     }
 
-    .btn-action {
-        width: 100%;
+    .users-page .page-header-actions .btn-add-user,
+    .users-page .page-header-actions .logout-btn {
+        flex: 1 1 auto;
+        min-width: 0;
     }
-    
-    .page-wrapper {
-        padding: 15px;
+
+    .users-page .action-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-start;
     }
-    
-    .content-card {
-        padding: 20px;
-        border-radius: 8px;
-        overflow-x: auto;
+
+    .users-page #userModal .modal-body {
+        padding: 1rem 1.25rem;
     }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    .table-responsive {
+
+    .users-page .table-responsive {
         font-size: 14px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
-    
-    .user-info {
+
+    .users-page .user-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
-    .user-avatar {
+
+    .users-page .user-avatar {
         width: 35px;
         height: 35px;
         font-size: 14px;
@@ -510,94 +643,185 @@ table.dataTable tbody tr:hover {
 }
 
 @media (max-width: 576px) {
-    .page-header h1 {
-        font-size: 22px;
-    }
-    
-    .card-header-custom {
+    .users-page .card-header-custom {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
     }
-    
-    .page-wrapper {
-        padding: 10px;
+
+    .users-page .page-header-actions {
+        flex-direction: column;
     }
-    
-    .content-card {
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .btn-add-user {
+
+    .users-page .page-header-actions .btn-add-user,
+    .users-page .page-header-actions .logout-btn {
         width: 100%;
-        justify-content: center;
-        padding: 10px 20px;
+        text-align: center;
     }
-    
-    .table-responsive {
+
+    .users-page .table-responsive {
         font-size: 12px;
     }
-    
-    table.dataTable thead th {
+
+    .users-page #usersTable_wrapper > .dt-layout-row:first-child:not(.dt-layout-table) .dt-layout-cell.dt-layout-end {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .users-page table.dataTable thead th {
         padding: 10px 8px;
         font-size: 11px;
     }
-    
-    table.dataTable tbody td {
+
+    .users-page table.dataTable tbody td {
         padding: 10px 8px;
     }
-    
-    .badge {
+
+    .users-page .badge {
         font-size: 10px;
         padding: 4px 8px;
     }
-    
-    .btn-action {
+
+    .users-page .btn-action {
         padding: 4px 8px;
         font-size: 11px;
     }
-    
-    .user-avatar {
+
+    .users-page .user-avatar {
         width: 30px;
         height: 30px;
         font-size: 12px;
     }
-    
-    .user-name {
+
+    .users-page .user-name {
         font-size: 13px;
     }
-    
-    .user-email {
+
+    .users-page .user-email {
         font-size: 11px;
+    }
+
+    /* Optional: hide duplicate email column on small screens (shown in User cell) */
+    .users-page .table-responsive table.table thead th:nth-child(3),
+    .users-page .table-responsive table.table tbody td:nth-child(3) {
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
-    .page-header {
-        padding: 15px;
-    }
-    
-    .page-header h1 {
-        font-size: 20px;
-    }
-    
-    .content-card {
-        padding: 10px;
-    }
-    
-    .table-responsive {
+    .users-page .table-responsive {
         font-size: 11px;
     }
-    
-    .btn-add-user {
-        padding: 8px 16px;
-        font-size: 14px;
+
+    .users-page .table-responsive table.table {
+        min-width: 20rem;
     }
-    
-    /* Hide less important columns on very small screens */
-    table.dataTable th:nth-child(5),
-    table.dataTable td:nth-child(5) {
+
+    /* Hide less important columns on very small screens (DataTables) */
+    .users-page table.dataTable th:nth-child(5),
+    .users-page table.dataTable td:nth-child(5) {
         display: none;
     }
+}
+
+/* ========================================================= */
+/* User Modal Styles (moved from User-modal.html fragment)   */
+/* ========================================================= */
+
+/* Modal Header */
+.users-page #userModal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.users-page #userModal .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.users-page #userModal .modal-body {
+    padding: 2rem;
+}
+
+/* Form Controls */
+.users-page #userModal .form-group label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.users-page #userModal .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Buttons */
+.users-page #userModal .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+.users-page #userModal .btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.users-page #userModal .btn-secondary {
+    background: #6c757d;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+/* Avatar Upload */
+.users-page #userModal .avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto;
+    position: relative;
+    cursor: pointer;
+}
+
+.users-page #userModal .avatar-upload {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.users-page #userModal .avatar-upload label {
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+}
+
+.users-page #userModal .avatar-upload input[type="file"] {
+    display: none;
+}
+
+.users-page #userModal .avatar-upload .upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.users-page #userModal .avatar-upload label:hover .upload-overlay {
+    opacity: 1;
 }

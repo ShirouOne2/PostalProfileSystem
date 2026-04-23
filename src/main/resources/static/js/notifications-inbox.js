@@ -182,6 +182,21 @@
         const notif = notifications.find(n => n.id === id);
         if (!notif) return;
 
+        // Auto mark as read when modal is opened (if not already read)
+        if (!notif.read) {
+            fetch('/api/notifications/mark-read/' + id, { method: 'POST' })
+                .then(response => response.json())
+                .then(() => {
+                    // Update local state
+                    notif.read = true;
+                    renderNotifications();
+                    loadStats();
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
+        }
+
         // Populate modal with notification details
         const modalBody = document.getElementById('fullNotificationBody');
         const modalTitle = document.getElementById('fullNotificationTitle');
@@ -236,23 +251,16 @@
                         <strong>Status:</strong>
                     </div>
                     <div class="col-md-9">
-                        <span class="badge ${notif.read ? 'badge-success' : 'badge-warning'}">
-                            ${notif.read ? 'Read' : 'Unread'}
+                        <span class="badge badge-success">
+                            Read
                         </span>
                     </div>
                 </div>
             </div>
         `;
 
-        // Update mark as read button
-        if (notif.read) {
-            markAsReadBtn.style.display = 'none';
-        } else {
-            markAsReadBtn.style.display = 'inline-block';
-            markAsReadBtn.onclick = function() {
-                markAsReadFromModal(id);
-            };
-        }
+        // Hide mark as read button since it's automatically marked as read
+        markAsReadBtn.style.display = 'none';
 
         // Show modal
         $('#fullNotificationModal').modal('show');
@@ -438,8 +446,11 @@
 
         es.onerror = function() {
             console.error('SSE connection error');
+            es.close();
             setTimeout(() => setupSSE(), 3000);
         };
+
+        window.addEventListener('beforeunload', () => es.close(), { once: true });
     }
 
     // Bind events

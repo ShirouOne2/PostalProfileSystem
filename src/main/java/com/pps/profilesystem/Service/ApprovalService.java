@@ -2,6 +2,7 @@ package com.pps.profilesystem.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pps.profilesystem.DTO.ConnectivityNotification;
 import com.pps.profilesystem.Entity.*;
 import com.pps.profilesystem.Repository.*;
 import com.pps.profilesystem.Event.ApprovalRequestEvent;
@@ -35,6 +36,7 @@ public class ApprovalService {
     @Autowired private ProvinceRepository         provinceRepository;
     @Autowired private CityMunicipalityRepository cityMunicipalityRepository;
     @Autowired private BarangayRepository         barangayRepository;
+    @Autowired private ConnectivityNotificationService notifService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -72,9 +74,64 @@ public class ApprovalService {
 
         ApprovalRequest saved = approvalRequestRepository.save(request);
 
-        // Notify Area Admin
+        // Notify Area Admin (approval counters / approvals page listeners)
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, saved, "NEW_REQUEST"));
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, saved, "PENDING_COUNT_UPDATE"));
+
+        // Notify Area Admin bell dropdown/inbox
+        notifyAreaAdminForReview(saved);
+
+        return saved;
+    }
+
+    /**
+     * Creates a request that already passed Area Admin review (AREA_APPROVED),
+     * so it goes directly to Operation for final approval.
+     *
+     * Use case: Area Admin edits should still require SRD Operation approval.
+     */
+    @Transactional
+    public ApprovalRequest createAreaApprovedRequest(
+            ApprovalRequest.RequestType requestType,
+            Integer officeId,
+            String officeName,
+            String requestedBy,
+            Map<String, Object> oldValues,
+            Map<String, Object> newValues,
+            Integer areaId,
+            String areaAdminEmail,
+            String areaAdminNotes) {
+
+        ApprovalRequest request = new ApprovalRequest();
+        request.setRequestType(requestType);
+        request.setOfficeId(officeId);
+        request.setOfficeName(officeName);
+        request.setRequestedBy(requestedBy);
+        request.setRequestedAt(LocalDateTime.now());
+        request.setStatus(ApprovalRequest.RequestStatus.AREA_APPROVED);
+
+        request.setAreaAdminProcessedBy(areaAdminEmail);
+        request.setAreaAdminProcessedAt(LocalDateTime.now());
+        request.setAreaAdminNotes(areaAdminNotes);
+
+        try {
+            if (oldValues != null) request.setOldValues(objectMapper.writeValueAsString(oldValues));
+            if (newValues != null) request.setNewValues(objectMapper.writeValueAsString(newValues));
+        } catch (Exception e) {
+            if (oldValues != null) request.setOldValues(oldValues.toString());
+            if (newValues != null) request.setNewValues(newValues.toString());
+        }
+
+        if (areaId != null) {
+            areaRepository.findById(areaId).ifPresent(request::setArea);
+        }
+
+        ApprovalRequest saved = approvalRequestRepository.save(request);
+
+        // Notify Operation that a request is awaiting final approval
+        eventPublisher.publishEvent(new ApprovalRequestEvent(this, saved, "AREA_APPROVED"));
+        eventPublisher.publishEvent(new ApprovalRequestEvent(this, saved, "PENDING_COUNT_UPDATE"));
+        notifySrdForFinalApproval(saved);
 
         return saved;
     }
@@ -99,6 +156,8 @@ public class ApprovalService {
         // Notify Operation that a request is awaiting final approval
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, request, "AREA_APPROVED"));
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, request, "PENDING_COUNT_UPDATE"));
+        notifySrdForFinalApproval(request);
+        notifyRequesterStatus(request, "Area Admin approved your edit request. Waiting for SRD final approval.", areaAdminEmail);
     }
 
     /**
@@ -115,6 +174,7 @@ public class ApprovalService {
 
         approvalRequestRepository.save(request);
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, request, "PENDING_COUNT_UPDATE"));
+        notifyRequesterStatus(request, "Area Admin rejected your edit request.", areaAdminEmail);
     }
 
     // ── Operation: Step 3 ─────────────────────────────────────────────────────
@@ -142,6 +202,8 @@ public class ApprovalService {
         applyApprovedChanges(request);
 
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, request, "PENDING_COUNT_UPDATE"));
+        notifyRequesterStatus(request, "SRD Operation approved your edit request.", operationEmail);
+        notifyAreaAdminStatus(request, "SRD Operation approved the request endorsed by your area.", operationEmail);
     }
 
     /**
@@ -163,6 +225,8 @@ public class ApprovalService {
 
         approvalRequestRepository.save(request);
         eventPublisher.publishEvent(new ApprovalRequestEvent(this, request, "PENDING_COUNT_UPDATE"));
+        notifyRequesterStatus(request, "SRD Operation rejected your edit request.", operationEmail);
+        notifyAreaAdminStatus(request, "SRD Operation rejected the request endorsed by your area.", operationEmail);
     }
 
     // ── Legacy shim (called by old ApprovalController endpoints) ─────────────
@@ -236,6 +300,14 @@ public class ApprovalService {
                 officeId, ApprovalRequest.RequestStatus.PENDING)
             || approvalRequestRepository.existsByOfficeIdAndStatus(
                 officeId, ApprovalRequest.RequestStatus.AREA_APPROVED);
+    }
+
+    public Optional<ApprovalRequest> getLatestActiveRequestForOffice(Integer officeId) {
+        List<ApprovalRequest> active = approvalRequestRepository.findActiveRequestsByOfficeId(officeId);
+        if (active == null || active.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(active.get(0));
     }
 
     public Map<String, Long> getRequestStatistics(Integer areaId) {
@@ -372,5 +444,89 @@ public class ApprovalService {
             // Fallback: stored as toString() map representation — not parseable as JSON
             return null;
         }
+    }
+
+    private void notifySrdForFinalApproval(ApprovalRequest request) {
+        String officeName = request.getOfficeName() != null ? request.getOfficeName() : "Postal Office";
+        String detail = "Approval request #" + request.getId()
+                + " is ready for SRD final approval"
+                + " · Requested by: " + (request.getRequestedBy() != null ? request.getRequestedBy() : "unknown");
+
+        String actor = request.getAreaAdminProcessedBy() != null ? request.getAreaAdminProcessedBy() : "system";
+        notifService.pushAudit(
+                ConnectivityNotification.Type.UPDATED,
+                officeName,
+                request.getOfficeId(),
+                actor,
+                null,
+                detail,
+                null,
+                "APPROVAL",
+                "ApprovalRequest",
+                request.getId()
+        );
+    }
+
+    private void notifyAreaAdminForReview(ApprovalRequest request) {
+        String officeName = request.getOfficeName() != null ? request.getOfficeName() : "Postal Office";
+        String detail = "Approval request #" + request.getId()
+                + " is waiting for Area Admin review"
+                + " · Requested by: " + (request.getRequestedBy() != null ? request.getRequestedBy() : "unknown");
+
+        String actor = request.getRequestedBy() != null ? request.getRequestedBy() : "system";
+        notifService.pushAudit(
+                ConnectivityNotification.Type.UPDATED,
+                officeName,
+                request.getOfficeId(),
+                actor,
+                null,
+                detail,
+                null,
+                "APPROVAL",
+                "ApprovalRequest",
+                request.getId()
+        );
+    }
+
+    private void notifyRequesterStatus(ApprovalRequest request, String statusMessage, String actorEmail) {
+        String officeName = request.getOfficeName() != null ? request.getOfficeName() : "Postal Office";
+        String detail = "Request #" + request.getId()
+                + " · " + statusMessage
+                + " · Requested by: " + (request.getRequestedBy() != null ? request.getRequestedBy() : "unknown");
+
+        notifService.pushAudit(
+                ConnectivityNotification.Type.UPDATED,
+                officeName,
+                request.getOfficeId(),
+                actorEmail != null ? actorEmail : "system",
+                null,
+                detail,
+                request.getRequestedBy(),
+                "APPROVAL",
+                "ApprovalRequest",
+                request.getId()
+        );
+    }
+
+    private void notifyAreaAdminStatus(ApprovalRequest request, String statusMessage, String actorEmail) {
+        if (request.getAreaAdminProcessedBy() == null || request.getAreaAdminProcessedBy().isBlank()) return;
+
+        String officeName = request.getOfficeName() != null ? request.getOfficeName() : "Postal Office";
+        String detail = "Request #" + request.getId()
+                + " · " + statusMessage
+                + " · Area Admin: " + request.getAreaAdminProcessedBy();
+
+        notifService.pushAudit(
+                ConnectivityNotification.Type.UPDATED,
+                officeName,
+                request.getOfficeId(),
+                actorEmail != null ? actorEmail : "system",
+                null,
+                detail,
+                request.getAreaAdminProcessedBy(),
+                "APPROVAL",
+                "ApprovalRequest",
+                request.getId()
+        );
     }
 }

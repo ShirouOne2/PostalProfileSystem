@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
         1: [
             { id: 'areaId',     label: 'Area'              },
-            { id: 'regionId',   label: 'Region'            },
             { id: 'provinceId', label: 'Province'          },
             { id: 'cityMunId',  label: 'City / Municipality' }
         ]
@@ -121,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const all = [
             { id: 'officeName', label: 'Post Office Name',    step: 1 },
             { id: 'areaId',     label: 'Area',                step: 2 },
-            { id: 'regionId',   label: 'Region',              step: 2 },
             { id: 'provinceId', label: 'Province',            step: 2 },
             { id: 'cityMunId',  label: 'City / Municipality', step: 2 }
         ];
@@ -329,7 +327,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Location
                 areaId:                         getInt('areaId'),
-                regionId:                       getInt('regionId'),
                 provinceId:                     getInt('provinceId'),
                 cityMunId:                      getInt('cityMunId'),
                 barangayId:                     getInt('barangayId'),
@@ -432,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const fieldMap = {
                 summaryArea:           'areaId',
-                summaryRegion:         'regionId',
                 summaryProvince:       'provinceId',
                 summaryCity:           'cityMunId',
                 summaryISP:            'internetServiceProvider',
@@ -484,7 +480,7 @@ function loadingSelect(element) {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    document.getElementById('regionId')?.addEventListener('change', function () {
+    document.getElementById('areaId')?.addEventListener('change', function () {
         const provSel = document.getElementById('provinceId');
         const citySel = document.getElementById('cityMunId');
         const baraSel = document.getElementById('barangayId');
@@ -496,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!this.value) return;
 
         loadingSelect(provSel);
-        fetch('/api/postal/provinces/by-region/' + this.value)
+        fetch('/api/postal/provinces/by-area/' + this.value)
             .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message); }))
             .then(list => {
                 resetSelect(provSel, '-- Select Province --', false);

@@ -16,11 +16,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ApprovalController — role-aware 3-level approval dashboard.
+ * ApprovalController — role-aware 2-level approval dashboard.
  *
  * AREA_ADMIN (role 2) : sees PENDING requests for their assigned areas.
  * OPERATION  (role 4) : sees AREA_APPROVED requests (across all areas).
- * ADMIN      (role 1) : sees everything.
  */
 @Controller
 @RequestMapping("/approvals")
@@ -45,17 +44,15 @@ public class ApprovalController {
         List<ApprovalRequest> actionableRequests;
         List<ApprovalRequest> allRequests;
 
-        if (isOperation || isSystemAdmin) {
+        if (isOperation) {
             // Operation sees AREA_APPROVED requests to give final approval
             actionableRequests = approvalService.getAreaApprovedRequests();
             allRequests        = approvalService.getAllRequests();
         } else {
             // Area Admin sees PENDING requests in their area(s)
-            List<Area> areas = isSystemAdmin
-                    ? areaRepository.findAll()
-                    : (areaId != null
-                            ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
-                            : List.of());
+            List<Area> areas = (areaId != null
+                    ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
+                    : List.of());
 
             List<Integer> areaIds = areas.stream().map(Area::getId).toList();
             
@@ -188,17 +185,15 @@ public class ApprovalController {
             List<ApprovalRequest> actionableRequests;
             List<ApprovalRequest> allRequests;
 
-            if (Integer.valueOf(4).equals(roleId) || Integer.valueOf(1).equals(roleId)) {
+            if (Integer.valueOf(4).equals(roleId)) {
                 // Operation sees AREA_APPROVED requests to give final approval
                 actionableRequests = approvalService.getAreaApprovedRequests();
                 allRequests = approvalService.getAllRequests();
             } else {
                 // Area Admin sees PENDING requests in their area(s)
-                List<Area> areas = Integer.valueOf(1).equals(roleId)
-                        ? areaRepository.findAll()
-                        : (areaId != null
-                                ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
-                                : List.of());
+                List<Area> areas = (areaId != null
+                        ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
+                        : List.of());
 
                 List<Integer> areaIds = areas.stream().map(Area::getId).toList();
                 
@@ -217,10 +212,22 @@ public class ApprovalController {
 
             long pendingCount = actionableRequests.size();
             long approvedCount = allRequests.stream()
-                    .filter(r -> ApprovalRequest.RequestStatus.APPROVED.equals(r.getStatus()))
+                    .filter(r -> {
+                        if (!ApprovalRequest.RequestStatus.APPROVED.equals(r.getStatus())) return false;
+                        if (Integer.valueOf(2).equals(roleId)) {
+                            return auth.getName().equalsIgnoreCase(r.getAreaAdminProcessedBy());
+                        }
+                        return auth.getName().equalsIgnoreCase(r.getProcessedBy());
+                    })
                     .count();
             long rejectedCount = allRequests.stream()
-                    .filter(r -> ApprovalRequest.RequestStatus.REJECTED.equals(r.getStatus()))
+                    .filter(r -> {
+                        if (!ApprovalRequest.RequestStatus.REJECTED.equals(r.getStatus())) return false;
+                        if (Integer.valueOf(2).equals(roleId)) {
+                            return auth.getName().equalsIgnoreCase(r.getAreaAdminProcessedBy());
+                        }
+                        return auth.getName().equalsIgnoreCase(r.getProcessedBy());
+                    })
                     .count();
 
             return Map.of(
@@ -247,16 +254,14 @@ public class ApprovalController {
 
             List<ApprovalRequest> actionableRequests;
 
-            if (Integer.valueOf(4).equals(roleId) || Integer.valueOf(1).equals(roleId)) {
+            if (Integer.valueOf(4).equals(roleId)) {
                 // Operation sees AREA_APPROVED requests to give final approval
                 actionableRequests = approvalService.getAreaApprovedRequests();
             } else {
                 // Area Admin sees PENDING requests in their area(s)
-                List<Area> areas = Integer.valueOf(1).equals(roleId)
-                        ? areaRepository.findAll()
-                        : (areaId != null
-                                ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
-                                : List.of());
+                List<Area> areas = (areaId != null
+                        ? areaRepository.findById(areaId).map(List::of).orElse(List.of())
+                        : List.of());
 
                 List<Integer> areaIds = areas.stream().map(Area::getId).toList();
                 
@@ -285,7 +290,7 @@ public class ApprovalController {
             Integer areaId   = currentUser != null ? currentUser.getAreaId() : null;
 
             long count;
-            if (Integer.valueOf(4).equals(roleId) || Integer.valueOf(1).equals(roleId)) {
+            if (Integer.valueOf(4).equals(roleId)) {
                 count = approvalService.getAreaApprovedRequests().size();
             } else {
                 // Handle Area Admin with no area assigned
@@ -325,7 +330,7 @@ public class ApprovalController {
 
             Map<String, Object> result;
             
-            if (Integer.valueOf(4).equals(roleId) || Integer.valueOf(1).equals(roleId)) {
+            if (Integer.valueOf(4).equals(roleId)) {
                 // Operation level approval/rejection
                 if ("approve".equals(action)) {
                     approvalService.operationApproveRequest(requestId, auth.getName(), notes);

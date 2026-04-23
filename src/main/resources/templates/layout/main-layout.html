@@ -47,6 +47,7 @@
     <link th:if="${activePage == 'dashboard'}" rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table-custom.css}">
+    <link th:if="${activePage == 'notifications'}" rel="stylesheet" th:href="@{/css/notifications-inbox.css}">
     <link th:if="${activePage == 'users'}" rel="stylesheet" th:href="@{/css/users-management.css}">
     <link rel="stylesheet" th:href="@{/css/main-layout.css}">
 
@@ -159,9 +160,9 @@
     <!-- 10. Table JS -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
-   <!-- 10.1. Edit Modal JS -->
-   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal.js}"></script>
-   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal-photos.js}"></script>
+   <!-- 10.1. Edit Modal JS (photos helpers must load after edit-modal.js — defines window.openModal) -->
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters' or activePage == 'profile'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters' or activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
    
    <!-- 11. Quarters JS -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
@@ -177,7 +178,6 @@
 
    <!-- 15. Profile JS -->
    <script th:if="${activePage == 'profile'}" th:src="@{/js/profile.js}"></script>
-   <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
 
    <!-- 16. Session Timeout -->
    <script th:src="@{/js/session-timeout.js}"></script>
@@ -187,6 +187,7 @@
 
    <!-- 18. Notifications -->
    <script th:src="@{/js/notifications.js}"></script>
+   <script th:if="${activePage == 'notifications'}" th:src="@{/js/notifications-inbox.js}"></script>
 
    <!-- 19. Navigation Performance Optimizer -->
    <script th:src="@{/js/navigation-optimizer.js}"></script>

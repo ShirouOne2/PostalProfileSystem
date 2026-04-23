@@ -440,22 +440,6 @@
 
                         </div>
 
-                        <div class="col-md-6">
-
-                            <div class="form-group">
-
-                                <label for="editRegionId">Region</label>
-
-                                <select class="form-control" id="editRegionId">
-
-                                    <option value="">-- Select Region --</option>
-
-                                </select>
-
-                            </div>
-
-                        </div>
-
                     </div>
 
                     <div class="row">
@@ -890,7 +874,7 @@
 
                     <button type="button" class="btn btn-danger mr-auto" id="editModalArchiveBtn"
 
-                            sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
+                            sec:authorize="hasRole('ADMIN')">
 
                         <i class="fas fa-archive"></i> Archive
 
@@ -918,9 +902,7 @@
 
 
 
-    <!-- ── Photo upload script ───────────────────────────────────── -->
-
-    <script src="/js/edit-modal-photos.js"></script>
+    <!-- Photo upload JS: main-layout loads /js/edit-modal-photos.js after jQuery and edit-modal.js -->
 
     <!-- Tooltip init handled by main-layout.html script #23 -->
 

@@ -20,7 +20,6 @@ public class InsertOfficeController {
     @GetMapping
     public String showInsertPage(Model model) {
         model.addAttribute("areas", locationService.getAllAreas());
-        model.addAttribute("regions", locationService.getAllRegions());
         model.addAttribute("activePage", "insert");
         return "insert-office";
     }

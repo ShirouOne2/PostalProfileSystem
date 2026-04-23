@@ -121,16 +121,17 @@ public class PostalOfficeEditRestController {
             Snapshot before = Snapshot.of(o);
             String actor = actor(auth);
 
-            // Check if user is admin or area admin
-            boolean isAdmin = auth.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_AREA_ADMIN"));
+            boolean isSystemAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            boolean isAreaAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_AREA_ADMIN"));
 
             // Prepare changes for approval request if needed
             Map<String, Object> oldValues = createOldValuesMap(before);
             Map<String, Object> newValues = createNewValuesMap(body);
 
-            if (isAdmin) {
-                // Admin can directly update
+            if (isSystemAdmin) {
+                // System admin can directly update
                 applyChanges(o, body);
                 postalOfficeRepository.save(o);
 
@@ -138,17 +139,54 @@ public class PostalOfficeEditRestController {
                 List<String> changes = diff(before, o);
                 if (!changes.isEmpty()) {
                     ConnectivityNotification.Type type = resolveType(before, o);
-                    notifService.push(type, o.getName(), o.getId(), actor, String.join(" · ", changes));
+                    Integer actorRoleId = ConnectivityNotificationService.roleIdFromAuthorities(
+                            auth != null ? auth.getAuthorities() : null
+                    );
+                    notifService.pushAudit(
+                            type,
+                            o.getName(),
+                            o.getId(),
+                            actor,
+                            actorRoleId,
+                            String.join(" · ", changes),
+                            null,
+                            "CONNECTIVITY",
+                            "PostalOffice",
+                            o.getId() != null ? o.getId().longValue() : null
+                    );
                 }
 
                 return ResponseEntity.ok(Map.of("success", true, "message", "Office updated successfully."));
-            } else {
-                // Regular user needs approval
+            } else if (isAreaAdmin) {
+                // Area Admin edits require SRD Operation final approval (skip Area Admin step)
                 if (approvalService.hasPendingRequestForOffice(id)) {
-                    return error(409, "There is already a pending approval request for this office.");
+                    return error(409, activeRequestBlockMessage(id));
                 }
 
-                // Create approval request
+                Integer areaId = o.getArea() != null ? o.getArea().getId() : null;
+                approvalService.createAreaApprovedRequest(
+                        ApprovalRequest.RequestType.EDIT_OFFICE,
+                        id,
+                        o.getName(),
+                        actor,
+                        oldValues,
+                        newValues,
+                        areaId,
+                        actor,
+                        null
+                );
+
+                return ResponseEntity.ok(Map.of(
+                        "success", true, 
+                        "message", "Your changes have been forwarded to SRD Operation for final approval.",
+                        "requiresApproval", true
+                ));
+            } else {
+                // Regular user needs Area Admin approval first, then SRD Operation final approval
+                if (approvalService.hasPendingRequestForOffice(id)) {
+                    return error(409, activeRequestBlockMessage(id));
+                }
+
                 Integer areaId = o.getArea() != null ? o.getArea().getId() : null;
                 approvalService.createApprovalRequest(
                         ApprovalRequest.RequestType.EDIT_OFFICE,
@@ -161,7 +199,7 @@ public class PostalOfficeEditRestController {
                 );
 
                 return ResponseEntity.ok(Map.of(
-                        "success", true, 
+                        "success", true,
                         "message", "Your changes have been submitted for approval.",
                         "requiresApproval", true
                 ));
@@ -199,27 +237,38 @@ public class PostalOfficeEditRestController {
 
     private Map<String, Object> createNewValuesMap(Map<String, Object> body) {
         Map<String, Object> newValues = new HashMap<>();
-        newValues.put("name", body.get("name"));
-        newValues.put("postmaster", body.get("postmaster"));
-        newValues.put("classification", body.get("classification"));
-        newValues.put("serviceProvided", body.get("serviceProvided"));
-        newValues.put("address", body.get("address"));
-        newValues.put("zipCode", body.get("zipCode"));
-        newValues.put("connectionStatus", body.get("connectionStatus"));
-        newValues.put("officeStatus", body.get("officeStatus"));
-        newValues.put("internetServiceProvider", body.get("internetServiceProvider"));
-        newValues.put("typeOfConnection", body.get("typeOfConnection"));
-        newValues.put("speed", body.get("speed"));
-        newValues.put("staticIpAddress", body.get("staticIpAddress"));
-        newValues.put("noOfEmployees", body.get("noOfEmployees"));
-        newValues.put("noOfPostalTellers", body.get("noOfPostalTellers"));
-        newValues.put("noOfLetterCarriers", body.get("noOfLetterCarriers"));
-        newValues.put("postalOfficeContactPerson", body.get("postalOfficeContactPerson"));
-        newValues.put("postalOfficeContactNumber", body.get("postalOfficeContactNumber"));
-        newValues.put("ispContactPerson", body.get("ispContactPerson"));
-        newValues.put("ispContactNumber", body.get("ispContactNumber"));
-        newValues.put("remarks", body.get("remarks"));
+        copyIfPresent(body, newValues, "name");
+        copyIfPresent(body, newValues, "postmaster");
+        copyIfPresent(body, newValues, "classification");
+        copyIfPresent(body, newValues, "serviceProvided");
+        copyIfPresent(body, newValues, "address");
+        copyIfPresent(body, newValues, "zipCode");
+        copyIfPresent(body, newValues, "connectionStatus");
+        copyIfPresent(body, newValues, "officeStatus");
+        copyIfPresent(body, newValues, "internetServiceProvider");
+        copyIfPresent(body, newValues, "typeOfConnection");
+        copyIfPresent(body, newValues, "speed");
+        copyIfPresent(body, newValues, "staticIpAddress");
+        copyIfPresent(body, newValues, "noOfEmployees");
+        copyIfPresent(body, newValues, "noOfPostalTellers");
+        copyIfPresent(body, newValues, "noOfLetterCarriers");
+        copyIfPresent(body, newValues, "postalOfficeContactPerson");
+        copyIfPresent(body, newValues, "postalOfficeContactNumber");
+        copyIfPresent(body, newValues, "ispContactPerson");
+        copyIfPresent(body, newValues, "ispContactNumber");
+        copyIfPresent(body, newValues, "remarks");
+        copyIfPresent(body, newValues, "areaId");
+        copyIfPresent(body, newValues, "regionId");
+        copyIfPresent(body, newValues, "provinceId");
+        copyIfPresent(body, newValues, "cityMunId");
+        copyIfPresent(body, newValues, "barangayId");
         return newValues;
+    }
+
+    private void copyIfPresent(Map<String, Object> source, Map<String, Object> target, String key) {
+        if (source.containsKey(key)) {
+            target.put(key, source.get(key));
+        }
     }
 
     private void applyChanges(PostalOffice o, Map<String, Object> body) {
@@ -364,5 +413,18 @@ public class PostalOfficeEditRestController {
     }
     private ResponseEntity<?> error(int status, String msg) {
         return ResponseEntity.status(status).body(Map.of("success", false, "message", msg));
+    }
+
+    private String activeRequestBlockMessage(Integer officeId) {
+        Optional<ApprovalRequest> active = approvalService.getLatestActiveRequestForOffice(officeId);
+        if (active.isEmpty()) {
+            return "There is already a pending approval request for this office.";
+        }
+
+        ApprovalRequest req = active.get();
+        if (req.getStatus() == ApprovalRequest.RequestStatus.AREA_APPROVED) {
+            return "This office already has a request waiting for SRD Operation final approval.";
+        }
+        return "This office already has a pending request waiting for Area Admin review.";
     }
 }

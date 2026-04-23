@@ -12,33 +12,37 @@
             </button>
 
             <!-- Breadcrumbs -->
-            <nav aria-label="breadcrumb" class="navbar-brand">
-                <ol class="breadcrumb mb-0 bg-transparent p-0">
-                    <li class="breadcrumb-item">
-                        <a th:href="@{/dashboard}" class="text-primary text-decoration-none">
-                            <i class="fas fa-home"></i> Home
+            <nav aria-label="breadcrumb" class="navbar-brand mb-0">
+                <ol class="breadcrumb breadcrumb-modern mb-0 bg-transparent p-0 align-items-center">
+                    <li class="breadcrumb-item breadcrumb-home-item">
+                        <a th:href="@{/dashboard}" class="text-decoration-none breadcrumb-link breadcrumb-link-home">
+                            <span class="breadcrumb-home-icon">
+                                <i class="fas fa-home"></i>
+                            </span>
+                            <span>Home</span>
                         </a>
                     </li>
-                    <li class="breadcrumb-item" th:unless="${activePage == 'dashboard' or activePage == 'table' or activePage == 'quarters' or activePage == 'report'}">
-                        <a th:href="@{/table}" class="text-primary text-decoration-none">
+                    <li class="breadcrumb-item" th:if="${activePage == 'profile'}">
+                        <a th:href="@{/table}" class="text-decoration-none breadcrumb-link">
                             <i class="fas fa-map-marked-alt"></i> Postal Office Locator
                         </a>
                     </li>
-                    <li class="breadcrumb-item" th:unless="${activePage == 'dashboard' or activePage == 'table' or activePage == 'quarters' or activePage == 'report'}">
-                        <a th:href="@{/quarters}" class="text-primary text-decoration-none">
+                    <li class="breadcrumb-item" th:if="${activePage == 'profile'}">
+                        <a th:href="@{/quarters}" class="text-decoration-none breadcrumb-link">
                             <i class="fas fa-wifi"></i> Connectivity
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page" 
+                    <li class="breadcrumb-item active breadcrumb-current" aria-current="page" 
                         th:text="${activePage == 'dashboard' ? 'Dashboard' : 
                                 activePage == 'table' ? 'Postal Office Locator' :
                                 activePage == 'quarters' ? 'Connectivity' :
                                 activePage == 'report' ? 'Report' :
                                 activePage == 'insert' ? 'Add New Office' :
                                 activePage == 'users' ? 'User Management' :
+                                activePage == 'notifications' ? 'Notifications' :
                                 activePage == 'archive' ? 'Archive' :
                                 activePage == 'profile' ? 'Profile' : 'Page'}">
-                        Page
+                       
                     </li>
                 </ol>
             </nav>
@@ -46,10 +50,10 @@
             <!-- RIGHT SIDE -->
             <ul class="navbar-nav ml-auto align-items-center">
 
-                <!-- Notification Bell — Admin only -->
+                <!-- Notification Bell -->
                 <li class="nav-item dropdown mr-3 position-relative"
                     id="notifBellLi"
-                    sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN','SRD_OPERATION')">
+                    sec:authorize="hasAnyRole('ADMIN','AREA_ADMIN','USER','SRD_OPERATION')">
 
                     <!-- Bell button -->
                     <a class="nav-link text-muted p-2"
@@ -142,6 +146,89 @@
     </nav>
 
     <style>
+        .breadcrumb-modern {
+            font-size: 14px;
+            font-weight: 500;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0 !important;
+            box-shadow: none;
+            white-space: nowrap;
+        }
+
+        .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
+            content: "\f105";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #a9b9d1;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0 8px 0 4px;
+        }
+
+        .breadcrumb-link {
+            color: #355070;
+            border-radius: 0;
+            padding: 2px 4px;
+            transition: background-color .15s ease, color .15s ease;
+        }
+
+        .breadcrumb-link:hover {
+            background: transparent;
+            color: #1f3b5d;
+        }
+
+        .breadcrumb-link-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #2f4866;
+            font-weight: 600;
+        }
+
+        .breadcrumb-home-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eaf0f7;
+            color: #355070;
+            box-shadow: none;
+        }
+
+        .breadcrumb-current {
+            background: transparent;
+            color: #2b4a6f;
+            border-radius: 0;
+            padding: 2px 4px;
+            line-height: 1.4;
+            box-shadow: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 767.98px) {
+            .breadcrumb-modern {
+                padding: 0 !important;
+                font-size: 12px;
+                overflow-x: auto;
+                max-width: 62vw;
+            }
+
+            .breadcrumb-home-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
+                font-size: 14px;
+                padding: 0 6px 0 3px;
+            }
+        }
+
         #notifBadge { transition: transform .15s ease, opacity .15s ease; }
 
         .notification-dropdown { max-height: 420px; }
@@ -167,85 +254,6 @@
         }
         .bell-shake .fa-bell { animation: bellShake .5s ease; }
     </style>
-
-    <script>
-    (function () {
-
-        var bellLi       = document.getElementById('notifBellLi');
-        var badge        = document.getElementById('notifBadge');
-        var notifContent = document.getElementById('notifContent');
-
-        if (!bellLi || !notifContent) return;
-
-        var es;
-        var retryDelay = 3000;
-
-        function connect() {
-            es = new EventSource('/api/notifications/stream');
-
-            es.addEventListener('badge', function (e) {
-                var count = (e.data || '').trim();
-                if (count !== '' && count !== '0') {
-                    badge.textContent   = count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.textContent   = '';
-                    badge.style.display = 'none';
-                }
-            });
-
-            es.addEventListener('notification', function (e) {
-                var html = (e.data || '').trim();
-                if (!html) return;
-
-                notifContent.innerHTML = html;
-                bindMarkRead();
-
-                bellLi.classList.remove('bell-shake');
-                void bellLi.offsetWidth;
-                bellLi.classList.add('bell-shake');
-            });
-
-            es.onerror = function () {
-                es.close();
-                setTimeout(connect, retryDelay);
-                retryDelay = Math.min(retryDelay * 2, 30000);
-            };
-
-            es.onopen = function () {
-                retryDelay = 3000;
-            };
-        }
-
-        function bindMarkRead() {
-            notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
-                el.replaceWith(el.cloneNode(true));
-            });
-            notifContent.querySelectorAll('[data-notif-id]').forEach(function (el) {
-                el.addEventListener('click', function () {
-                    fetch('/api/notifications/mark-read/' + this.getAttribute('data-notif-id'),
-                          { method: 'POST' });
-                });
-            });
-
-            var markAllBtn = notifContent.querySelector('[data-mark-all-read]');
-            if (markAllBtn) {
-                markAllBtn.addEventListener('click', function (ev) {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    fetch('/api/notifications/mark-all-read', { method: 'POST' });
-                });
-            }
-        }
-
-        connect();
-
-        window._sseClose = function () {
-            if (es) { es.close(); es = null; }
-        };
-
-    })();
-    </script>
 
 </div>
 </html>

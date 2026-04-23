@@ -2,6 +2,8 @@ package com.pps.profilesystem.DTO;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Lightweight in-memory notification record for connectivity changes.
@@ -26,21 +28,33 @@ public class ConnectivityNotification {
     private final Integer officeId;
     private final String changedBy;        // username of the actor
     private final String detail;           // e.g. provider name, plan, etc.
+    private final String recipientEmail;   // null = visible to all, otherwise only this user
     private final LocalDateTime timestamp;
-    private boolean read = false;
+    private final Set<String> readByEmails = ConcurrentHashMap.newKeySet();
 
     // ── Constructor ─────────────────────────────────────────────────────────
 
     public ConnectivityNotification(long id, Type type,
                                     String officeName, Integer officeId,
-                                    String changedBy, String detail) {
+                                    String changedBy, String detail,
+                                    String recipientEmail) {
+        this(id, type, officeName, officeId, changedBy, detail, recipientEmail, LocalDateTime.now());
+    }
+
+    /** Full constructor (used when hydrating from persistent storage). */
+    public ConnectivityNotification(long id, Type type,
+                                    String officeName, Integer officeId,
+                                    String changedBy, String detail,
+                                    String recipientEmail,
+                                    LocalDateTime timestamp) {
         this.id         = id;
         this.type       = type;
         this.officeName = officeName;
         this.officeId   = officeId;
         this.changedBy  = changedBy;
         this.detail     = detail;
-        this.timestamp  = LocalDateTime.now();
+        this.recipientEmail = recipientEmail;
+        this.timestamp  = timestamp != null ? timestamp : LocalDateTime.now();
     }
 
     // ── Derived helpers ──────────────────────────────────────────────────────
@@ -79,6 +93,19 @@ public class ConnectivityNotification {
     }
 
     public String getTimestampFormatted() { return timestamp.format(FMT); }
+    public String getRecipientEmail() { return recipientEmail; }
+    public boolean isVisibleTo(String email) {
+        return recipientEmail == null || recipientEmail.isBlank()
+                || (email != null && recipientEmail.equalsIgnoreCase(email));
+    }
+    public boolean isReadBy(String email) {
+        return email != null && readByEmails.stream().anyMatch(e -> e.equalsIgnoreCase(email));
+    }
+    public void markReadBy(String email) {
+        if (email != null && !email.isBlank()) {
+            readByEmails.add(email.toLowerCase());
+        }
+    }
 
     // ── Getters ──────────────────────────────────────────────────────────────
 
@@ -89,6 +116,4 @@ public class ConnectivityNotification {
     public String        getChangedBy()  { return changedBy; }
     public String        getDetail()     { return detail; }
     public LocalDateTime getTimestamp()  { return timestamp; }
-    public boolean       isRead()        { return read; }
-    public void          markRead()      { this.read = true; }
 }

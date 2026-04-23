@@ -1,7 +1,26 @@
 /**
  * profile.js
  * Loaded by main-layout.html AFTER jQuery — activePage == 'profile’
+ *
+ * Edit: handled by edit-modal.js (#profileEditBtn → API + openModal).
  */
+
+function profilePostArchiveRedirect() {
+    var src = window.PROFILE_PAGE_SOURCE || 'table';
+    if (src === 'quarters') {
+        var u = sessionStorage.getItem('quartersReturnUrl');
+        sessionStorage.removeItem('quartersReturnUrl');
+        window.location.href = u || '/quarters';
+        return;
+    }
+    if (src === 'dashboard') {
+        var d = sessionStorage.getItem('dashboardReturnUrl');
+        sessionStorage.removeItem('dashboardReturnUrl');
+        window.location.href = d || '/dashboard';
+        return;
+    }
+    window.location.href = '/table';
+}
 
 $(document).ready(function () {
 
@@ -29,43 +48,15 @@ $(document).ready(function () {
         });
     }
 
-    // ── Edit Profile ──────────────────────────────────────────
     var o = window.OFFICE_DATA;
     if (!o) {
         console.warn('profile.js: window.OFFICE_DATA not found');
-        return;
     }
-
-    $('#profileEditBtn').on('click', function () {
-        $('#editOfficeId').val(o.id                              || '');
-        $('#editName').val(o.name                                || '');
-        $('#editPostmaster').val(o.postmaster                    || '');
-        $('#editAddress').val(o.address                          || '');
-        $('#editZipCode').val(o.zipCode                          || '');
-        $('#editStatus').val(o.connectionStatus ? 'true' : 'false');
-        $('#editISP').val(o.internetServiceProvider              || '');
-        $('#editTypeOfConnection').val(o.typeOfConnection        || '');
-        $('#editSpeed').val(o.speed                              || '');
-        $('#editStaticIP').val(o.staticIpAddress                 || '');
-        $('#editNoOfEmployees').val(o.noOfEmployees              || '');
-        $('#editNoOfTellers').val(o.noOfPostalTellers            || '');
-        $('#editNoOfCarriers').val(o.noOfLetterCarriers          || '');
-        $('#editContactPerson').val(o.postalOfficeContactPerson  || '');
-        $('#editContactNumber').val(o.postalOfficeContactNumber  || '');
-        $('#editISPContactPerson').val(o.ispContactPerson        || '');
-        $('#editISPContactNumber').val(o.ispContactNumber        || '');
-        $('#editLatitude').val(o.latitude                        || '');
-        $('#editLongitude').val(o.longitude                      || '');
-
-        if ($('#editOfficeModal').length) {
-            $('#editOfficeModal').modal('show');
-        } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Edit modal not found. Please refresh.' });
-        }
-    });
 
     // ── Archive ───────────────────────────────────────────────
     $('#profileArchiveBtn').on('click', function () {
+        if (!window.OFFICE_DATA || !window.OFFICE_DATA.id) return;
+        o = window.OFFICE_DATA;
         var name = o.name || 'this office';
 
         Swal.fire({
@@ -119,7 +110,7 @@ $(document).ready(function () {
                         icon: 'success', title: 'Archived!',
                         text: 'Office archived successfully.',
                         timer: 1800, showConfirmButton: false
-                    }).then(function () { window.location.href = '/table'; });
+                    }).then(function () { profilePostArchiveRedirect(); });
                 } else {
                     Swal.fire('Error', res.message || 'Archive failed.', 'error');
                 }

@@ -28,11 +28,15 @@ public class UsersController {
         User currentUser = userRepository.findByEmail(auth.getName()).orElse(null);
 
         boolean isSystemAdmin = currentUser != null && Integer.valueOf(1).equals(currentUser.getRole());
+        boolean isAreaAdmin   = currentUser != null && Integer.valueOf(2).equals(currentUser.getRole());
+        boolean isSrdOperation = currentUser != null && Integer.valueOf(4).equals(currentUser.getRole());
         Integer areaId        = currentUser != null ? currentUser.getAreaId() : null;
 
-        model.addAttribute("activePage",     "users");
-        model.addAttribute("isSystemAdmin",  isSystemAdmin);
-        model.addAttribute("currentAreaId",  areaId);
+        model.addAttribute("activePage",       "users");
+        model.addAttribute("isSystemAdmin",    isSystemAdmin);
+        model.addAttribute("isAreaAdmin",      isAreaAdmin);
+        model.addAttribute("isSrdOperation",   isSrdOperation);
+        model.addAttribute("currentAreaId",    areaId);
 
         return "users-management";
     }

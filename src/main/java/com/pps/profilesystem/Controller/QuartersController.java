@@ -91,7 +91,7 @@ public class QuartersController {
 
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
-        model.addAttribute("areas", getAreas());
+        model.addAttribute("areas", getAreas(roleId, userAreaId));
 
         // Pass filter-aware stats and latest quarter data
         model.addAttribute("connectivityStats",
@@ -111,6 +111,13 @@ public class QuartersController {
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
         model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
         model.addAttribute("userAreaId", userAreaId);
+
+        boolean isSrdOperation = roleId != null && roleId == 4;
+        model.addAttribute("isSrdOperation", isSrdOperation);
+        // Quarters table actions: all roles except SRD Operation may request edits (USER goes through approval in API).
+        model.addAttribute("canQuarterEdit", roleId != null && !isSrdOperation);
+        // Matches SecurityConfig: /api/archive/** allows ADMIN, AREA_ADMIN, SRD_OPERATION only (not ROLE_USER).
+        model.addAttribute("canQuarterArchive", roleId != null && (roleId == 1 || roleId == 2 || roleId == 4));
 
         return "quarters";
     }
@@ -384,8 +391,15 @@ public class QuartersController {
         return info;
     }
 
-    private List<Area> getAreas() {
-        try { return areaRepository.findAll(); }
+    private List<Area> getAreas(Integer roleId, Integer userAreaId) {
+        try {
+            List<Area> all = areaRepository.findAll();
+            if (roleId != null && (roleId == 1 || roleId == 4)) return all;
+            if (userAreaId == null) return new ArrayList<>();
+            return all.stream()
+                    .filter(a -> userAreaId.equals(a.getId()))
+                    .toList();
+        }
         catch (Exception e) { return new ArrayList<>(); }
     }
 }

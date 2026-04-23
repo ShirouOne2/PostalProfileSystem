@@ -1,5 +1,6 @@
 package com.pps.profilesystem.Controller;
 
+import com.pps.profilesystem.Entity.Area;
 import com.pps.profilesystem.Entity.PostalOffice;
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
@@ -82,17 +83,39 @@ public class DashboardController {
         model.addAttribute("closedCount",   closedCount);
         model.addAttribute("areaCount",     postalOfficeRepository.countDistinctAreasNonArchived());
 
-        // For modal dropdowns
-        model.addAttribute("areas",   locationService.getAllAreas());
+        // For modal dropdowns and filters
+        List<Area> visibleAreas = locationService.getAllAreas();
+        if (!(roleId != null && (roleId == 1 || roleId == 4))) {
+            visibleAreas = visibleAreas.stream()
+                    .filter(a -> areaId != null && areaId.equals(a.getId()))
+                    .collect(Collectors.toList());
+        }
+        model.addAttribute("areas",   visibleAreas);
         model.addAttribute("regions", locationService.getAllRegions());
 
         model.addAttribute("activePage",    "dashboard");
         model.addAttribute("isSystemAdmin", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
-        
+        boolean isSrdOperation = roleId != null && roleId == 4;
+        model.addAttribute("isSrdOperation", isSrdOperation);
+
+        // Dashboard table actions (dashboard.js reads #dashboardRoleFlags)
+        model.addAttribute("canDashboardEdit", roleId != null && !isSrdOperation);
+        model.addAttribute("canDashboardArchive", roleId != null && (roleId == 1 || roleId == 2 || roleId == 4));
+
         // For edit modal JavaScript
         model.addAttribute("loggedInRoleId", roleId);
         model.addAttribute("loggedInAreaId", areaId);
+
+        String assignedAreaName = null;
+        if (roleId != null && roleId == 2 && areaId != null) {
+            assignedAreaName = locationService.getAllAreas().stream()
+                    .filter(a -> areaId.equals(a.getId()))
+                    .findFirst()
+                    .map(Area::getAreaName)
+                    .orElse(null);
+        }
+        model.addAttribute("assignedAreaName", assignedAreaName);
 
         return "dashboard";
     }

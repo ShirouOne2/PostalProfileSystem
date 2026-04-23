@@ -66,6 +66,8 @@ body.sidebar-is-collapsed .main-content {
 .main-body {
     flex: 1;
     padding: 1.5rem;
+    min-width: 0; /* allow flex child to shrink so inner tables/cards can scroll */
+    max-width: 100%;
 }
 
 .main-footer {

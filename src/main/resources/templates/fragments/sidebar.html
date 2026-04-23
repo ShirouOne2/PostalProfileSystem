@@ -89,14 +89,14 @@
             <hr class="sidebar-divider">
             <div class="sidebar-heading">Admin</div>
 
-            <!-- User Management - Hidden -->
-            <!-- <a th:href="@{/users}" class="sidebar-link"
+            <!-- Manage Users - System Admin only -->
+            <a th:href="@{/users}" class="sidebar-link"
                th:classappend="${activePage == 'users'} ? 'active' : ''"
                data-page="users"
-               sec:authorize="hasRole('ADMIN') or hasRole('SRD_OPERATION')">
+               sec:authorize="hasRole('ADMIN')">
                 <i class="fas fa-users-cog"></i>
-                <span>User Management</span>
-            </a> -->
+                <span>Manage Users</span>
+            </a>
 
             <a th:href="@{/notifications}" class="sidebar-link" 
                th:classappend="${activePage == 'notifications'} ? 'active' : ''"
