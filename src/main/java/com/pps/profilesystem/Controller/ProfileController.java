@@ -4,6 +4,7 @@ import com.pps.profilesystem.Entity.PostalOffice;
 import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
 import com.pps.profilesystem.Repository.UserRepository;
+import com.pps.profilesystem.Service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,9 @@ public class ProfileController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private InventoryService inventoryService;
 
     /**
      * View profile by ID - accessible via /profile/{id}
@@ -51,6 +55,7 @@ public class ProfileController {
 
         model.addAttribute("office",    office);
         model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("inventoryList", inventoryService.getByPostalOfficeId(id));
         model.addAttribute("activePage", "profile");
         model.addAttribute("source",    source);
         addProfileActionFlags(model, currentUser);
@@ -82,6 +87,7 @@ public class ProfileController {
 
         model.addAttribute("office",    office);
         model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("inventoryList", inventoryService.getByPostalOfficeId(id));
         model.addAttribute("activePage", "profile");
         model.addAttribute("source", "table");
         addProfileActionFlags(model, currentUser);

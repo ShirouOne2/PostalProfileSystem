@@ -1,0 +1,27 @@
+<!-- Add Computer Modal Fragment -->
+<div th:fragment="modal">
+    <div class="modal-overlay" id="computerModalOverlay" onclick="handleComputerOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title">Add Computer</div>
+                    <div class="modal-sub">Register a new computer asset</div>
+                </div>
+                <button class="modal-x" type="button" onclick="closeComputerModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label class="form-label">Computer Name</label>
+                        <input class="form-input" id="f-pcname" type="text" placeholder="e.g. PC-FIN-01"/>
+                    </div>
+                    <!-- Add other fields as needed -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeComputerModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveComputer()">💾 Save</button>
+            </div>
+        </div>
+    </div>
+</div>

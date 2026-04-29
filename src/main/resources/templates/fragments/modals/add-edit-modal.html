@@ -1,0 +1,70 @@
+<!-- Add/Edit Modal Fragment -->
+<div th:fragment="modal">
+  <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle">Add New Item</div>
+          <div class="modal-sub" id="modalSub">Fill in the asset details below</div>
+        </div>
+        <button class="modal-x" type="button" onclick="closeModal()">✕</button>
+      </div>
+      <form id="itemForm" th:action="@{/inventory/save}" method="post">
+        <input type="hidden" id="f-id" name="inventoryId"/>
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">Item Name <span style="color:var(--accent)">*</span></label>
+              <input class="form-input" id="f-name" name="name" type="text"
+                     placeholder="e.g. Dell Laptop XPS 15" required/>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="f-desc" name="description"
+                        placeholder="Brief description of the asset…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category <span style="color:var(--accent)">*</span></label>
+              <select class="form-select" id="f-cat" name="category" required>
+                <option value="">Select category…</option>
+                <option value="OFFICE_EQUIPMENT">🗂️ Office Equipment</option>
+                <option value="IT_EQUIPMENT">💻 IT Equipment</option>
+                <option value="VEHICLE">🚗 Vehicle</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Serviceable Status</label>
+              <select class="form-select" id="f-svc" name="isServiceable">
+                <option value="yes">✅ Serviceable</option>
+                <option value="no">❌ Not Serviceable</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Employee ID</label>
+              <input class="form-input" id="f-emp" name="employeeId" type="text"
+                     placeholder="e.g. EMP-0042"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date Acquired</label>
+              <input class="form-input" id="f-date" name="dateAcquired" type="date"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount (₱) <span style="color:var(--accent)">*</span></label>
+              <input class="form-input" id="f-amount" name="amount"
+                     type="number" step="0.01" min="0" placeholder="0.00" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Created By <span style="color:var(--accent)">*</span></label>
+              <input class="form-input" id="f-createdBy" name="createdBy" type="text"
+                     placeholder="e.g. admin" required/>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">💾 Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

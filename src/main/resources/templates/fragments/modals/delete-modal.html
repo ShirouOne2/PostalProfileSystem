@@ -1,0 +1,17 @@
+<!-- Delete Confirmation Modal Fragment -->
+<div th:fragment="content">
+<!-- ── DELETE CONFIRM MODAL ── -->
+<div class="modal-overlay" id="delModal" onclick="if(event.target===this)closeDelModal()">
+  <div class="modal" style="width:400px">
+    <div class="modal-body" style="padding:32px 28px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">🗑️</div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:6px">Delete Computer?</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5" id="delConfirmSub">This asset will be permanently removed.</div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:12px">
+      <button class="btn btn-outline" onclick="closeDelModal()">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelete()">🗑️ Delete</button>
+    </div>
+  </div>
+</div>
+</div>

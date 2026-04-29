@@ -1,0 +1,39 @@
+/* Modal Styles for Separated Fragments */
+
+/* Animation for loading spinner */
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Scale tag-wrapper nicely inside modal preview */
+#printTagContent .tag-wrapper {
+    transform-origin: top center;
+    margin: 0 auto;
+    transform: scale(0.9);
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure modal body doesn't overflow */
+.modal-body {
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+}
+
+/* Fix modal footer positioning */
+.modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Ensure buttons are properly styled */
+.modal-footer .btn {
+    min-width: 80px;
+}

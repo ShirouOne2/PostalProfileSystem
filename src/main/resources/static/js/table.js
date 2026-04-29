@@ -42,7 +42,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var trNode = table.row(meta.row).node();
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
             var safeName = data.replace(/'/g, "\\'");
-            return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
+            return '<div class="d-flex align-items-center gap-2">' +
+                   '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>' +
+                   '<button type="button" class="btn btn-sm btn-outline-primary" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')" title="View Profile">' +
+                   '<i class="fas fa-eye"></i> View' +
+                   '</button>' +
+                   '</div>';
         }},
         { targets: 2, data: 'area', orderable: true, defaultContent: 'N/A' },   // Area
         { targets: 3, data: 'region', orderable: true, defaultContent: 'N/A' },   // Region
@@ -63,7 +68,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var trNode = table.row(meta.row).node();
             var officeId = trNode ? trNode.getAttribute('data-office-id') : '';
             var safeName = data.replace(/'/g, "\\'");
-            return '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>';
+            return '<div class="d-flex align-items-center gap-2">' +
+                   '<a href="javascript:void(0)" class="office-name-link" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')">' + data + '</a>' +
+                   '<button type="button" class="btn btn-sm btn-outline-primary" onclick="openOfficeProfilePopup(\'' + officeId + '\', \'' + safeName + '\')" title="View Profile">' +
+                   '<i class="fas fa-eye"></i> View' +
+                   '</button>' +
+                   '</div>';
         }},   // Postal Office
         { targets: 2, data: 'connectionStatus', width: '140px', orderable: true, className: 'dt-center', defaultContent: 'N/A' }, // Connection
         { targets: 3, data: 'speed', width: '120px', orderable: true, defaultContent: 'N/A' },  // Speed
