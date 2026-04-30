@@ -36,6 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             case 2: return "AREA_ADMIN";
             case 3: return "USER";
             case 4: return "SRD_OPERATION";   // NEW — SRD Operation role
+            case 5: return "ASSET";
             default: return "USER";
         }
     }

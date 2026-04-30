@@ -948,33 +948,6 @@ function performDelete(officeId, officeName) {
         .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred.' }));
 }
 
-// ── Unified Office Profile Popup ──────────────────────────────────────────────
-function openOfficeProfilePopup(officeId, officeName) {
-    if (!officeId) return;
-
-    // Detect current page and set appropriate source parameter
-    var currentPath = window.location.pathname;
-    var sourceParam = 'table'; // default for table page
-    if (currentPath.includes('/dashboard')) {
-        sourceParam = 'dashboard';
-        // Store dashboard return URL
-        sessionStorage.setItem('dashboardReturnUrl', currentPath + window.location.search);
-    } else if (currentPath.includes('/quarters')) {
-        sourceParam = 'quarters';
-        // Store quarters return URL
-        sessionStorage.setItem('quartersReturnUrl', currentPath + window.location.search);
-    } else if (currentPath.includes('/table')) {
-        sourceParam = 'table';
-        // Store table return URL
-        sessionStorage.setItem('tableReturnUrl', currentPath + window.location.search);
-    } else if (currentPath.includes('/report')) {
-        sourceParam = 'report';
-        // Store report return URL
-        sessionStorage.setItem('reportReturnUrl', currentPath + window.location.search);
-    }
-    
-    window.location.href = '/profile/' + officeId + '?source=' + sourceParam;
-}
 
 // ═══════════════════════════════════════════════════════════════
 //  EXPORT AND PRINT FUNCTIONS

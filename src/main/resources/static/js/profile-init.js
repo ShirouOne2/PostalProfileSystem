@@ -26,6 +26,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Tab switching
     document.querySelectorAll('.profile-tabs .tab-item').forEach(function (btn) {
         btn.addEventListener('click', function () {
+            if (btn.dataset.tab === 'assets') {
+                var roleFlags = document.getElementById('profileRoleFlags');
+                var isAsset = roleFlags ? roleFlags.dataset.isAsset === 'true' : false;
+                if (!isAsset) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Access Denied',
+                            text: 'For User Asset Only'
+                        });
+                    } else {
+                        alert('For User Asset Only');
+                    }
+                    return;
+                }
+            }
+
             document.querySelectorAll('.profile-tabs .tab-item').forEach(function (b) { 
                 b.classList.remove('active'); 
             });

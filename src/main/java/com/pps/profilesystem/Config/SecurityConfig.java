@@ -84,6 +84,8 @@ public class SecurityConfig {
                 .requestMatchers("/approvals/**").hasAnyRole("AREA_ADMIN", "SRD_OPERATION")
                 // All authenticated users can receive approval/connectivity notifications.
                 .requestMatchers("/api/notifications/**").authenticated()
+                // Asset login/page restriction
+                .requestMatchers("/inventory", "/inventory/**").hasAnyRole("ADMIN", "ASSET")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

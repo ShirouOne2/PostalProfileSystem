@@ -12,7 +12,8 @@
     <div id="profileRoleFlags" class="d-none" aria-hidden="true"
          th:data-can-profile-edit="${canProfileEdit}"
          th:data-can-profile-archive="${canProfileArchive}"
-         th:data-can-profile-photo="${canProfilePhotoUpload}"></div>
+         th:data-can-profile-photo="${canProfilePhotoUpload}"
+         th:data-is-asset="${#authorization.expression('hasAnyRole(''ADMIN'', ''ASSET'')')}"></div>
 
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 
@@ -360,7 +361,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="item : ${inventoryList}">
+                                <tr th:each="item : ${inventoryList}"
+                                    style="cursor: pointer;"
+                                    title="Click to view in inventory"
+                                    th:data-search="${!#strings.isEmpty(item.trackingNumber) ? item.trackingNumber : item.name}"
+                                    onclick="window.location.href='/inventory?q=' + encodeURIComponent(this.getAttribute('data-search'))">
                                     <td>
                                         <span class="badge badge-secondary" th:text="${item.trackingNumber ?: 'N/A'}">N/A</span>
                                     </td>

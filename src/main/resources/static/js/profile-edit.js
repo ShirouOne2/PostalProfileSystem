@@ -24,7 +24,14 @@ $(function () {
         );
         $('#editISP').val(d.internetServiceProvider || '');
         $('#editSpeed').val(d.speed || '');
-        $('#editTypeOfConnection').val(d.typeOfConnection || '');
+        
+        // Handle typeOfConnection - add to dropdown if not exists
+        var typeOfConn = d.typeOfConnection || '';
+        if (typeOfConn && $('#editTypeOfConnection option[value="' + typeOfConn + '"]').length === 0) {
+            $('#editTypeOfConnection').append('<option value="' + typeOfConn + '">' + typeOfConn + '</option>');
+        }
+        $('#editTypeOfConnection').val(typeOfConn);
+        
         $('#editStaticIP').val(d.staticIpAddress || '');
         $('#editNoOfEmployees').val(d.noOfEmployees != null ? d.noOfEmployees : 0);
         $('#editNoOfTellers').val(d.noOfPostalTellers != null ? d.noOfPostalTellers : 0);
@@ -61,7 +68,7 @@ function saveOfficeChanges() {
         connectionStatus:          $('#editStatus').val() === 'true',
         internetServiceProvider:   $('#editISP').val().trim(),
         speed:                     $('#editSpeed').val().trim(),
-        typeOfConnection:          $('#editTypeOfConnection').val().trim(),
+        typeOfConnection:          $('#editTypeOfConnection').val().trim() || null,
         staticIpAddress:           $('#editStaticIP').val().trim(),
         noOfEmployees:             parseInt($('#editNoOfEmployees').val()) || 0,
         noOfPostalTellers:         parseInt($('#editNoOfTellers').val()) || 0,

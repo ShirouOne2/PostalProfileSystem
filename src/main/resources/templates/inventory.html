@@ -11,7 +11,8 @@
     <link rel="stylesheet" th:href="@{/css/inventory-styles.css}"/>
 
     <!-- ── Flash Messages ── -->
-    <div id="flashArea">
+    <div class="page-body">
+        <div id="flashArea">
         <div th:if="${successMsg}" class="flash flash-success">
             ✅ <span th:text="${successMsg}"></span>
         </div>
@@ -250,28 +251,26 @@
                             <button type="button"
                                     class="act-btn edit"
                                     title="Edit"
-                                    th:attr="onclick=|openEdit(
-                                        ${item.inventoryId},
-                                        '${item.name}',
-                                        '${item.description != null ? item.description : &quot;&quot;}',
-                                        '${item.category != null ? item.category.name() : &quot;&quot;}',
-                                        '${item.isServiceable != null ? item.isServiceable.name() : &quot;yes&quot;}',
-                                        '${item.employeeId != null ? item.employeeId : &quot;&quot;}',
-                                        '${item.dateAcquired != null ? item.dateAcquired : &quot;&quot;}',
-                                        ${item.amount != null ? item.amount : 0},
-                                        '${item.createdBy != null ? item.createdBy : &quot;&quot;}'
-                                    )|">✏️</button>
+                                    th:data-id="${item.inventoryId}"
+                                    th:data-name="${item.name}"
+                                    th:data-desc="${item.description}"
+                                    th:data-cat="${item.category != null ? item.category.name() : ''}"
+                                    th:data-svc="${item.isServiceable != null ? item.isServiceable.name() : 'yes'}"
+                                    th:data-emp="${item.employeeId}"
+                                    th:data-date="${item.dateAcquired}"
+                                    th:data-amt="${item.amount != null ? item.amount : 0}"
+                                    th:data-by="${item.createdBy}"><i class="fas fa-edit"></i></button>
                             <!-- Print Tag -->
                             <button type="button"
                                     class="act-btn print"
                                     title="Print Property Tag"
-                                    th:attr="onclick=|openPrintTagModal(${item.inventoryId})|">🏷️</button>
+                                    th:data-id="${item.inventoryId}"><i class="fas fa-print"></i></button>
                             <!-- Delete -->
                             <form th:action="@{/inventory/{id}/delete(id=${item.inventoryId})}"
                                   method="post"
                                   style="display:inline"
                                   onsubmit="return confirm('Delete this item permanently?')">
-                                <button type="submit" class="act-btn del" title="Delete">🗑</button>
+                                <button type="submit" class="act-btn del" title="Delete"><i class="fas fa-trash-alt"></i></button>
                             </form>
                         </div>
                     </td>
@@ -316,6 +315,7 @@
         </div>
 
     </div><!-- end .inventory-card -->
+    </div><!-- end .page-body -->
 
     <!-- ══════════════════════════════════════
          ADD / EDIT MODAL
@@ -388,26 +388,14 @@
         </div>
     </div>
 
+    <!-- Print Tag Modal Fragment -->
+    <div th:replace="~{fragments/modals/print-tag-modal :: content}"></div>
+
     <!-- Page-specific scripts -->
     <th:block th:replace="~{::script}"></th:block>
     <script th:src="@{/js/inventory-page.js}"></script>
     <script th:src="@{/js/print-tag-modal-script.js}"></script>
 
-    <!-- Inline style for tracking number badge -->
-    <style>
-        .tracking-badge {
-            display: inline-block;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            color: #1a1a18;
-            background: #f0f0ed;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 3px 8px;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-    </style>
+
 </main>
 </html>

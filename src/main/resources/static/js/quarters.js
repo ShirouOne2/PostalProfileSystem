@@ -553,10 +553,55 @@ function initializeMap() {
                 if (!o.latitude || !o.longitude) return;
                 var active = o.connectionStatus === true || o.connectionStatus === 'true';
                 if (active) connected++; else disconnected++;
+                
+                var officeId = o.id;
+                var nameRaw = o.name || 'N/A';
+                var addressRaw = o.address || 'N/A';
+                var areaRaw = o.area || 'N/A';
+                var postmasterRaw = o.postmaster || 'N/A';
+                var speedRaw = o.speed || 'N/A';
+                var employeesRaw = o.noOfEmployees || 'N/A';
+                var contactPersonRaw = o.postalOfficeContactPerson || 'N/A';
+                var contactNumberRaw = o.postalOfficeContactNumber || 'N/A';
+                var coverPhotoSrc = o.coverPhotoUrl || '/images/no-image.png';
+                
+                var popupContent = `
+                    <div style="padding:8px;font-family:Segoe UI,Arial,sans-serif;">
+                        <div style="margin-bottom:6px;">
+                            <span style="color:#002868;font-weight:600;font-size:13px;">${nameRaw}</span><br>
+                            <span style="color:#7a869a;font-size:11px;">${areaRaw}</span>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <span style="color:#7a869a;">Postmaster</span><br>
+                            <strong style="color:#002868;">${postmasterRaw}</strong>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <span style="color:#7a869a;">Address</span><br>
+                            <span style="color:#4d5a73;font-size:11px;">${addressRaw}</span>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <span style="color:#7a869a;">Speed</span><br>
+                            <strong style="color:#002868;">${speedRaw}</strong>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <span style="color:#7a869a;">Employees</span><br>
+                            <strong style="color:#002868;">${employeesRaw}</strong>
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            <span style="color:#7a869a;">Contact</span><br>
+                            <strong style="color:#002868;">${contactPersonRaw}</strong><br>
+                            <span style="color:#4d5a73;">${contactNumberRaw}</span>
+                        </div>
+                        <div style="display:flex;gap:6px;margin-top:8px;">
+                            <button onclick="openOfficeProfilePopup('${officeId}', '${nameRaw.replace(/'/g, "\\'")}')" style="flex:1;background:#002868;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">View Profile</button>
+                        </div>
+                    </div>
+                `;
+                
                 L.circleMarker([o.latitude, o.longitude], {
                     radius: 9, fillColor: active ? '#28a745' : '#dc3545',
                     color: '#fff', weight: 2, fillOpacity: 0.85
-                }).bindPopup('<strong>' + (o.name || 'N/A') + '</strong><br><small>' + (o.address || '') + '</small>').addTo(map);
+                }).bindPopup(popupContent, { maxWidth: 280, maxHeight: 400 }).addTo(map);
             });
             $('#mapLegendConnected').text('Active (' + connected + ')');
             $('#mapLegendDisconnected').text('Inactive (' + disconnected + ')');
@@ -615,7 +660,23 @@ function editOffice(id) {
             $('#editClassification').val(o.classification || '');
             $('#editServiceProvided').val(o.serviceProvided || '');
             $('#editISP').val(o.internetServiceProvider || '');
-            $('#editTypeOfConnection').val(o.typeOfConnection || '');
+            
+            // Handle typeOfConnection - add to dropdown if not exists
+            var typeOfConn = o.typeOfConnection || '';
+            if (typeOfConn && $('#editTypeOfConnection option[value="' + typeOfConn + '"]').length === 0) {
+                $('#editTypeOfConnection').append('<option value="' + typeOfConn + '">' + typeOfConn + '</option>');
+            }
+            $('#editTypeOfConnection').val(typeOfConn);
+            
+            // Handle IP Address Type
+            if (o.staticIpAddress === 'Static') {
+                $('#editIPAddressType').val('static');
+            } else if (o.staticIpAddress === 'Dynamic' || o.staticIpAddress === null) {
+                $('#editIPAddressType').val('dynamic');
+            } else {
+                $('#editIPAddressType').val('');
+            }
+            
             window._quartersEditOriginal = {
                 connectionStatus: !!o.connectionStatus,
                 officeStatus: o.officeStatus || null,

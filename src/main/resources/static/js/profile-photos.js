@@ -1,7 +1,12 @@
 /* ── Profile Page Photo Upload Management ─────────────────────── */
 
+let profilePhotosInitialized = false;
+
 document.addEventListener('DOMContentLoaded', function() {
-    initializeProfilePhotoUploads();
+    if (!profilePhotosInitialized) {
+        initializeProfilePhotoUploads();
+        profilePhotosInitialized = true;
+    }
 });
 
 function initializeProfilePhotoUploads() {

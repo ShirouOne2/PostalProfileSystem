@@ -31,6 +31,47 @@ function editModalUploadPhoto(input, photoType, slot) {
         };
 
         reader.readAsDataURL(file);
+
+        // Upload to server immediately
+        var officeId = $('#editOfficeId').val();
+        if (!officeId) {
+            Swal.fire('Error', 'Cannot upload photo: Office ID is missing.', 'error');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('file', file);
+        var url = '/api/postal-office/' + officeId + '/' + (photoType === 'profile' ? 'profile-photo' : 'cover-photo/' + slot);
+
+        Swal.fire({
+            title: 'Uploading...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Uploaded!',
+                        text: 'Photo uploaded successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', res.message || 'Upload failed.', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Failed to upload photo.', 'error');
+            }
+        });
     }
 }
 
@@ -79,18 +120,78 @@ function editModalLoadPhotos(officeId) {
 if (typeof $ !== 'undefined') {
     $(document).on('click', '.edit-photo-delete-btn', function () {
         var $btn = $(this);
+        var type = $btn.data('type');
+        var slot = $btn.data('slot') || 0;
+        var officeId = $('#editOfficeId').val();
+
         var $box = $btn.closest('.edit-photo-box');
         var $preview = $box.find('.edit-photo-preview');
         var $placeholder = $box.find('.edit-photo-placeholder');
         var $input = $box.siblings('input[type="file"]');
 
-        $preview.attr('src', '').hide();
-        $placeholder.show();
-        $box.removeClass('loaded');
-        $btn.hide();
+        Swal.fire({
+            title: 'Delete Photo?',
+            text: "Are you sure you want to delete this photo?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74a3b',
+            cancelButtonColor: '#858796',
+            confirmButtonText: '<i class="fas fa-trash"></i> Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If the user selected a new file but hasn't uploaded it, just clear the UI
+                if ($input[0] && $input[0].files && $input[0].files.length > 0) {
+                    $input.val('');
+                    $preview.attr('src', '').hide();
+                    $placeholder.show();
+                    $box.removeClass('loaded');
+                    $btn.hide();
+                    return;
+                }
 
-        if ($input.length) {
-            $input.val('');
-        }
+                // If office ID exists, it's an existing photo on the server, so call the DELETE API
+                if (officeId) {
+                    var url = '/api/postal-office/' + officeId + '/' + (type === 'profile' ? 'profile-photo' : 'cover-photo/' + slot);
+                    
+                    // Show a small loading spinner in Swal
+                    Swal.fire({
+                        title: 'Deleting...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: function(res) {
+                            if (res.success) {
+                                $preview.attr('src', '').hide();
+                                $placeholder.show();
+                                $box.removeClass('loaded');
+                                $btn.hide();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'Photo has been deleted.',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                Swal.fire('Error', res.message || 'Delete failed.', 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to delete photo. Please try again.', 'error');
+                        }
+                    });
+                } else {
+                    // Fallback if no office ID
+                    $preview.attr('src', '').hide();
+                    $placeholder.show();
+                    $box.removeClass('loaded');
+                    $btn.hide();
+                }
+            }
+        });
     });
 }

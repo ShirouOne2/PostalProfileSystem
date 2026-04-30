@@ -14,30 +14,30 @@
     'use strict';
 
     // ── Configuration ────────────────────────────────────────────────────────
-    const SESSION_DURATION_MS = 30 * 60 * 1000;   // 30 minutes
-    const WARNING_BEFORE_MS  =  5 * 60 * 1000;    //  5 minutes before expiry
-    const LOGOUT_URL         = '/login?timeout=true';
-    const KEEP_ALIVE_URL     = '/api/keep-alive';
+    const SESSION_DURATION_MS = 15 * 60 * 1000;   // 15 minutes
+    const WARNING_BEFORE_MS = 2 * 60 * 1000;    //  2 minutes before expiry
+    const LOGOUT_URL = '/login?timeout=true';
+    const KEEP_ALIVE_URL = '/api/keep-alive';
 
     // ── Security: Prevent back navigation to login when authenticated ────────
     function preventLoginPageAccess() {
         // Check if we're on the login page and have a valid session
         if (window.location.pathname === '/login' || window.location.pathname.includes('login')) {
-            fetch('/api/user/current', { 
-                method: 'GET', 
+            fetch('/api/user/current', {
+                method: 'GET',
                 credentials: 'same-origin',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(response => {
-                if (response.ok) {
-                    // User is still authenticated, redirect to main app
-                    window.location.href = '/table';
-                }
-            })
-            .catch(() => {
-                // If request fails, allow staying on login page
-                console.log('[SessionTimeout] Could not verify session status');
-            });
+                .then(response => {
+                    if (response.ok) {
+                        // User is still authenticated, redirect to main app
+                        window.location.href = '/table';
+                    }
+                })
+                .catch(() => {
+                    // If request fails, allow staying on login page
+                    console.log('[SessionTimeout] Could not verify session status');
+                });
         }
     }
 
@@ -48,19 +48,19 @@
     window.addEventListener('popstate', preventLoginPageAccess);
 
     // ── Internal state ───────────────────────────────────────────────────────
-    let warningTimer      = null;
-    let logoutTimer       = null;
-    let warningOpen       = false;
+    let warningTimer = null;
+    let logoutTimer = null;
+    let warningOpen = false;
     let countdownInterval = null;
-    let logoutPending     = false;   // guard against double-logout
+    let logoutPending = false;   // guard against double-logout
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     function clearAllTimers() {
         clearTimeout(warningTimer);
         clearTimeout(logoutTimer);
         clearInterval(countdownInterval);
-        warningTimer      = null;
-        logoutTimer       = null;
+        warningTimer = null;
+        logoutTimer = null;
         countdownInterval = null;
     }
 
@@ -98,18 +98,18 @@
         let secondsLeft = Math.floor(WARNING_BEFORE_MS / 1000);
 
         Swal.fire({
-            icon:               'warning',
-            title:              'Session Expiring Soon',
-            html:               `Your session will expire in <strong id="swal-countdown">${formatTime(secondsLeft)}</strong>.<br>Do you want to stay logged in?`,
-            showCancelButton:   true,
-            confirmButtonText:  'Stay Logged In',
-            cancelButtonText:   'Logout Now',
+            icon: 'warning',
+            title: 'Session Expiring Soon',
+            html: `Your session will expire in <strong id="swal-countdown">${formatTime(secondsLeft)}</strong>.<br>Do you want to stay logged in?`,
+            showCancelButton: true,
+            confirmButtonText: 'Stay Logged In',
+            cancelButtonText: 'Logout Now',
             confirmButtonColor: '#002868',
-            cancelButtonColor:  '#d33',
-            allowOutsideClick:  false,
-            allowEscapeKey:     false,
-            timerProgressBar:   true,
-            timer:              WARNING_BEFORE_MS,
+            cancelButtonColor: '#d33',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            timerProgressBar: true,
+            timer: WARNING_BEFORE_MS,
             didOpen: () => {
                 countdownInterval = setInterval(() => {
                     secondsLeft = Math.max(0, secondsLeft - 1);

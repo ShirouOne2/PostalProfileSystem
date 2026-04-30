@@ -65,6 +65,12 @@ public class ProfilePhotoController {
         return handleServe(id, "profile", 0);
     }
 
+    @DeleteMapping("/{id}/profile-photo")
+    @Transactional
+    public ResponseEntity<?> deleteProfilePhoto(@PathVariable Integer id) {
+        return handleDelete(id, "profile", 0);
+    }
+
     // ── Cover photo — slot-based (1 / 2 / 3) ─────────────────
 
     @PostMapping("/{id}/cover-photo/{slot}")
@@ -86,6 +92,13 @@ public class ProfilePhotoController {
             return ResponseEntity.notFound().build();
         }
         return handleServe(id, "cover", slot);
+    }
+
+    @DeleteMapping("/{id}/cover-photo/{slot}")
+    @Transactional
+    public ResponseEntity<?> deleteCoverPhotoSlot(@PathVariable Integer id, @PathVariable Integer slot) {
+        if (slot < 1 || slot > 3) return error(400, "Invalid slot.");
+        return handleDelete(id, "cover", slot);
     }
 
     // ── Photo listing ─────────────────────────────────────────
@@ -222,6 +235,23 @@ public class ProfilePhotoController {
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private ResponseEntity<?> handleDelete(Integer id, String type, int slot) {
+        Optional<PostalOffice> opt = postalOfficeRepository.findById(id);
+        if (opt.isEmpty()) return error(404, "Office not found.");
+        
+        PostalOffice office = opt.get();
+        String oldPath = getStoredPath(office, type, slot);
+        
+        if (hasPath(oldPath)) {
+            deleteOldFile(oldPath);
+            setStoredPath(office, type, slot, null);
+            postalOfficeRepository.save(office);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Photo deleted successfully."));
+        } else {
+            return ResponseEntity.ok(Map.of("success", true, "message", "No photo to delete."));
         }
     }
 

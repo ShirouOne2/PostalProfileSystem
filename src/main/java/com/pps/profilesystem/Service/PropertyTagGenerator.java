@@ -192,7 +192,7 @@ public class PropertyTagGenerator {
 
         content.append("  <div class=\"tag-wrapper\">\n");
         content.append("    <div class=\"tag-header\">\n");
-        content.append("      <img src=\"/assest/images/asd.jpg\" alt=\"PHLPOST\" style=\"width:120px;height:auto;display:block;margin:0 auto;\"/>\n");
+        content.append("      <img src=\"/images/asd.jpg\" alt=\"PHLPOST\" style=\"width:120px;height:auto;display:block;margin:0 auto;\"/>\n");
         content.append("      <div class=\"org-tagline\">Your Parcel. Your Heritage.</div>\n");
         content.append("      <div class=\"tag-title\">Property Tag</div>\n");
         content.append("      <div class=\"tracking-number\" style=\"font-size:14px;font-weight:700;color:#1a1a18;margin-top:4px;\">").append(barcode.getRefNum() != null ? barcode.getRefNum() : "N/A").append("</div>\n");

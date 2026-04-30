@@ -34,7 +34,7 @@ function openPrintTagModal(inventoryId) {
     document.body.style.overflow = 'hidden';
 
     // Fetch the rendered tag page from the server
-    fetch(`/print-tag/${inventoryId}`)
+    fetch(`/inventory/print-tag/${inventoryId}`)
         .then(res => {
             if (!res.ok) throw new Error(`Server returned ${res.status}`);
             return res.text();
@@ -47,10 +47,7 @@ function openPrintTagModal(inventoryId) {
             const tagEl  = doc.querySelector('.tag-wrapper');
 
             if (tagEl) {
-                // Scale down for modal preview
-                tagEl.style.transform       = 'scale(0.85)';
-                tagEl.style.transformOrigin = 'top center';
-                tagEl.style.marginBottom    = '-40px';
+                tagEl.style.margin = '0 auto';
 
                 // Fix flexbox on tag-bottom so QR shows in preview
                 const tagBottom = tagEl.querySelector('.tag-bottom');
@@ -59,6 +56,7 @@ function openPrintTagModal(inventoryId) {
                     tagBottom.style.alignItems = 'flex-end';
                 }
 
+                content.innerHTML = ''; // Prevent duplicates from multiple fast clicks
                 content.appendChild(tagEl);
 
                 // Handle broken QR images

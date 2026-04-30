@@ -204,8 +204,22 @@ public class MapController {
         dto.put("noOfEmployees",               office.getNoOfEmployees());
         dto.put("postalOfficeContactPerson",   office.getPostalOfficeContactPerson());
         dto.put("postalOfficeContactNumber",   office.getPostalOfficeContactNumber());
-        dto.put("latitude",                    office.getLatitude());
-        dto.put("longitude",                   office.getLongitude());
+        
+        // Fix swapped coordinates before sending to map
+        Double lat = office.getLatitude();
+        Double lng = office.getLongitude();
+        if (lat != null && lng != null) {
+            // Latitude must be between -90 and 90, Longitude between -180 and 180
+            if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+                // Coordinates appear to be swapped, fix them
+                System.out.println("Map: Swapped coordinates detected for office " + office.getId() + " - fixing");
+                Double temp = lat;
+                lat = lng;
+                lng = temp;
+            }
+        }
+        dto.put("latitude",                    lat);
+        dto.put("longitude",                   lng);
         dto.put("connectionStatus",            office.getConnectionStatus());
         dto.put("status",                      office.getConnectionStatus());
         dto.put("speed",                       office.getSpeed());

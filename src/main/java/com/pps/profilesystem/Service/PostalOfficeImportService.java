@@ -240,8 +240,30 @@ public class PostalOfficeImportService {
                 if (office != null) {
                     applyIfNotBlank(dto.getPostmaster(),                office::setPostmaster);
                     applyIfNotNull(dto.getNoOfEmployees(),              office::setNoOfEmployees);
-                    applyIfNotNull(dto.getLongitude(),                  office::setLongitude);
-                    applyIfNotNull(dto.getLatitude(),                   office::setLatitude);
+                    
+                    // Fix swapped coordinates: validate and swap if needed
+                    Double lng = dto.getLongitude();
+                    Double lat = dto.getLatitude();
+                    if (lng != null && lat != null) {
+                        // Latitude must be between -90 and 90, Longitude between -180 and 180
+                        if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+                            // Coordinates appear to be swapped, fix them
+                            System.out.println("Row " + rowNum + ": Swapped coordinates detected - fixing");
+                            Double temp = lat;
+                            lat = lng;
+                            lng = temp;
+                        }
+                        // Additional validation: Philippines coordinates
+                        // Latitude: ~4°N to ~21°N, Longitude: ~116°E to ~127°E
+                        if (lat < 4 || lat > 21 || lng < 116 || lng > 127) {
+                            System.out.println("Row " + rowNum + ": Invalid coordinates - lat=" + lat + ", lng=" + lng + " - skipping");
+                            lat = null;
+                            lng = null;
+                        }
+                    }
+                    applyIfNotNull(lng, office::setLongitude);
+                    applyIfNotNull(lat, office::setLatitude);
+                    
                     applyIfNotBlank(dto.getZipCode(),                   office::setZipCode);
                     applyIfNotBlank(dto.getAddress(),                   office::setAddress);
                     applyIfNotBlank(dto.getServiceProvided(),           office::setServiceProvided);

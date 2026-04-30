@@ -41,7 +41,7 @@ public class InventoryWebController {
     /* ──────────────────────────────────────────
        GET  /inventory   → list page
        ────────────────────────────────────────── */
-    @GetMapping("/")
+    @GetMapping({"", "/"})
     public String list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String category,

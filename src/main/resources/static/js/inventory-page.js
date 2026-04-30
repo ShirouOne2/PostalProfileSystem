@@ -88,6 +88,32 @@ document.addEventListener('DOMContentLoaded', function() {
     if (cancelButton) {
         cancelButton.addEventListener('click', closeModal);
     }
+
+    // Handle Edit button clicks
+    document.querySelectorAll('.act-btn.edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openEdit(
+                this.getAttribute('data-id'),
+                this.getAttribute('data-name'),
+                this.getAttribute('data-desc'),
+                this.getAttribute('data-cat'),
+                this.getAttribute('data-svc'),
+                this.getAttribute('data-emp'),
+                this.getAttribute('data-date'),
+                this.getAttribute('data-amt'),
+                this.getAttribute('data-by')
+            );
+        });
+    });
+
+    // Handle Print Tag button clicks
+    document.querySelectorAll('.act-btn.print').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (typeof openPrintTagModal === 'function') {
+                openPrintTagModal(this.getAttribute('data-id'));
+            }
+        });
+    });
 });
 
 // Debounce function for search

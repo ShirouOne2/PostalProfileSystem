@@ -310,7 +310,14 @@ function _fillModal(d) {
     $('#editFrequencyOfDelivery').val(d.frequencyOfDelivery || '');
     
     $('#editISP').val(d.internetServiceProvider || '');
-    $('#editTypeOfConnection').val(d.typeOfConnection || '');
+    
+    // Handle typeOfConnection - add to dropdown if not exists
+    var typeOfConn = d.typeOfConnection || '';
+    if (typeOfConn && $('#editTypeOfConnection option[value="' + typeOfConn + '"]').length === 0) {
+        $('#editTypeOfConnection').append('<option value="' + typeOfConn + '">' + typeOfConn + '</option>');
+    }
+    $('#editTypeOfConnection').val(typeOfConn);
+    
     _setField('#editSpeed',    d.speed);
     $('#editIPAddressType').val(d.staticIpAddress === 'Static' ? 'static' : '');
 
