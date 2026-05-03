@@ -8,6 +8,12 @@ $(document).ready(function () {
     initializePrint();
     initializeExportExcel();
     initializeReportTable();
+    
+    // Show back button if coming from profile page
+    const profileReturnUrl = sessionStorage.getItem('profileReturnUrl');
+    if (profileReturnUrl) {
+        $('#backToProfileRow').show();
+    }
 });
 
 /* ── Toggle expandable office list in QB cards ── */
@@ -39,6 +45,12 @@ function goToProfile(el) {
     // Save current URL (with filters) so the Back button on profile works
     sessionStorage.setItem('reportReturnUrl', window.location.href);
     window.location.href = '/profile/' + id.trim() + '?source=report';
+}
+
+function goBackToProfile() {
+    const url = sessionStorage.getItem('profileReturnUrl');
+    sessionStorage.removeItem('profileReturnUrl');
+    window.location.href = url || '/report';
 }
 
 /* =====================================================

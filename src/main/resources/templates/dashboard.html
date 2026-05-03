@@ -277,12 +277,10 @@
                                 <td th:text="${not #strings.isEmpty(office.province) ? office.province : 'N/A'}">Province</td>
                                 <td th:text="${not #strings.isEmpty(office.cityMunicipality) ? office.cityMunicipality : 'N/A'}">City/Municipality</td>
                                 <td class="text-center">
-                                    <span th:if="${office.connectionStatus == true}"
-                                          class="badge badge-success">
+                                    <span th:if="${office.connectionStatus}" class="badge badge-success">
                                         <i class="fas fa-check-circle mr-1"></i>Active
                                     </span>
-                                    <span th:unless="${office.connectionStatus == true}"
-                                          class="badge badge-danger">
+                                    <span th:unless="${office.connectionStatus}" class="badge badge-danger">
                                         <i class="fas fa-times-circle mr-1"></i>Inactive
                                     </span>
                                 </td>

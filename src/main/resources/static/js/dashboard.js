@@ -126,14 +126,10 @@ function applyTableFilters() {
         }
         table.column(6).search(officeStatusValue ? officeStatusValue : '');
     } else {
-        // Non-admin filtering logic
+        // Non-admin filtering logic - Area filter not available for Area Admins and Regular Users
         if (IS_AREA_ADMIN) {
             // Area Admin: #(0) | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
-            if (document.getElementById('filterArea')) {
-                table.column(2).search(areaValue ? areaValue : '');
-            } else {
-                table.column(2).search('');
-            }
+            // Area filter is hidden, so no area filtering applied
             table.column(6).search(officeStatusValue ? officeStatusValue : '');
         } else {
             // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
@@ -141,8 +137,16 @@ function applyTableFilters() {
         }
     }
 
+    // Clear any existing custom connectivity search first
+    $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
+        return !searchFunc.toString().includes('connectivityColumnIndex');
+    });
+
     // Apply connectivity filter using custom search function
-    const connectivityColumnIndex = IS_ADMIN ? 5 : (IS_AREA_ADMIN ? 5 : 4);
+    // For Area Admin: #(0), Name(1), Area(2), Province(3), City(4), Connectivity(5), Office(6)
+    // But debug shows column 5 has Office Status, so Connectivity might be at column 4
+    const connectivityColumnIndex = IS_ADMIN ? 5 : (IS_AREA_ADMIN ? 4 : 4);
+    console.log('Connectivity filter:', { connectivityValue, connectivityColumnIndex, IS_ADMIN, IS_AREA_ADMIN });
     if (connectivityValue) {
         // Apply custom search for connectivity based on actual connectionStatus value
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
@@ -152,20 +156,31 @@ function applyTableFilters() {
             
             if (!isCorrectTable) return true;
             
-            const connectivityCell = table.row(dataIndex).node().cells[connectivityColumnIndex];
+            // Get the table instance for this specific settings
+            const currentTable = $(settings.nTable).DataTable();
+            const rowNode = currentTable.row(dataIndex).node();
+            
+            if (!rowNode || !rowNode.cells) return true;
+            
+            const connectivityCell = rowNode.cells[connectivityColumnIndex];
+            if (!connectivityCell) return true;
+            
             const badgeElement = connectivityCell.querySelector('.badge');
+            console.log('Filter check:', { 
+                dataIndex, 
+                connectivityColumnIndex, 
+                cellContent: connectivityCell.innerHTML,
+                badgeFound: !!badgeElement,
+                badgeClasses: badgeElement ? badgeElement.className : null
+            });
             
             if (!badgeElement) return true;
             
             const isActive = badgeElement.classList.contains('badge-success');
             const filterForActive = connectivityValue === 'true';
+            console.log('Filter result:', { isActive, filterForActive, shouldShow: isActive === filterForActive });
             
             return isActive === filterForActive;
-        });
-    } else {
-        // Clear any existing custom connectivity search
-        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
-            return !searchFunc.toString().includes('connectivityColumnIndex');
         });
     }
 

@@ -115,6 +115,17 @@
 
         <!-- Action Buttons -->
         <div class="text-center mb-3">
+            <!-- Back Button - shown when coming from report page -->
+            <button type="button" class="btn btn-secondary btn-sm mr-1" id="backToReportBtn"
+                    th:if="${source == 'report'}" onclick="goBackToReport()">
+                <i class="fas fa-arrow-left"></i> Back to Report
+            </button>
+            
+            <!-- View Report Button - always shown for navigation to report -->
+            <button type="button" class="btn btn-success btn-sm mr-1" onclick="goToReportFromProfile()">
+                <i class="fas fa-chart-bar"></i> View Report
+            </button>
+            
             <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn"
                     th:if="${canProfileEdit}">
                 <i class="fas fa-edit"></i> Edit Profile
@@ -143,6 +154,11 @@
             const url = sessionStorage.getItem('dashboardReturnUrl');
             sessionStorage.removeItem('dashboardReturnUrl');
             window.location.href = url || '/dashboard';
+        }
+        function goToReportFromProfile() {
+            // Save current profile URL so the Back button on report works
+            sessionStorage.setItem('profileReturnUrl', window.location.href);
+            window.location.href = '/report';
         }
         </script>
 
