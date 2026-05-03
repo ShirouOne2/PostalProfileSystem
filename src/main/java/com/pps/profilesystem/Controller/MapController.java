@@ -59,6 +59,9 @@ public class MapController {
             } else {
                 // Area Admin and regular users see only offices in their assigned area
                 offices = postalOfficeRepository.findAllWithAreaForMapNonArchived()
+            System.out.println("[MapController] Attempting to fetch post offices...");
+            List<Map<String, Object>> result =
+                postalOfficeRepository.findAllWithAreaForMapNonArchived()
                     .stream()
                     .filter(po -> {
                         if (areaId == null) return false;
@@ -71,13 +74,31 @@ public class MapController {
                 .map(this::convertToMapDTO)
                 .collect(Collectors.toList());
             
+            System.out.println("[MapController] Successfully fetched " + result.size() + " offices");
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             // Log the real error so you can see it in the console
             System.err.println("[MapController] /api/post-offices ERROR: " + e.getMessage());
+            System.err.println("[MapController] Error type: " + e.getClass().getSimpleName());
             e.printStackTrace();
-            // Return empty list — JS map will just show no markers (no crash)
-            return ResponseEntity.ok(Collections.emptyList());
+            
+            // Try fallback method if main query fails
+            try {
+                System.out.println("[MapController] Trying fallback method...");
+                List<Map<String, Object>> fallbackResult =
+                    postalOfficeRepository.findAllNonArchivedWithConnectivity()
+                        .stream()
+                        .filter(po -> po.getLatitude() != null && po.getLongitude() != null)
+                        .map(this::convertToMapDTO)
+                        .collect(Collectors.toList());
+                System.out.println("[MapController] Fallback method fetched " + fallbackResult.size() + " offices");
+                return ResponseEntity.ok(fallbackResult);
+            } catch (Exception fallbackError) {
+                System.err.println("[MapController] Fallback also failed: " + fallbackError.getMessage());
+                fallbackError.printStackTrace();
+                // Return empty list — JS map will just show no markers (no crash)
+                return ResponseEntity.ok(Collections.emptyList());
+            }
         }
     }
 
@@ -96,6 +117,47 @@ public class MapController {
             System.err.println("[MapController] /api/post-offices/all ERROR: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.ok(Collections.emptyList());
+        }
+    }
+
+    // ── /api/post-offices/debug  (debug endpoint) ───────────────────────────────
+
+    @GetMapping("/post-offices/debug")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Map<String, Object>> debugPostOffices() {
+        Map<String, Object> debug = new java.util.HashMap<>();
+        try {
+            // Check total count
+            long totalCount = postalOfficeRepository.count();
+            debug.put("total_offices", totalCount);
+            
+            // Check non-archived count
+            long nonArchivedCount = postalOfficeRepository.countNonArchived();
+            debug.put("non_archived_offices", nonArchivedCount);
+            
+            // Check offices with coordinates
+            List<Map<String, Object>> withCoords = postalOfficeRepository.findAllNonArchivedWithConnectivity()
+                .stream()
+                .filter(po -> po.getLatitude() != null && po.getLongitude() != null)
+                .map(po -> {
+                    Map<String, Object> basic = new java.util.HashMap<>();
+                    basic.put("id", po.getId());
+                    basic.put("name", po.getName());
+                    basic.put("lat", po.getLatitude());
+                    basic.put("lng", po.getLongitude());
+                    basic.put("area", po.getArea() != null ? po.getArea().getAreaName() : null);
+                    return basic;
+                })
+                .limit(5) // Limit to first 5 for debugging
+                .collect(Collectors.toList());
+            debug.put("offices_with_coordinates", withCoords);
+            debug.put("offices_with_coordinates_count", withCoords.size());
+            
+            return ResponseEntity.ok(debug);
+        } catch (Exception e) {
+            debug.put("error", e.getMessage());
+            debug.put("error_type", e.getClass().getSimpleName());
+            return ResponseEntity.ok(debug);
         }
     }
 
@@ -121,6 +183,27 @@ public class MapController {
             System.err.println("[MapController] /api/postal-office/" + id + "/profile ERROR: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // ── /api/post-offices/search ───────────────────────────────────────────────
+
+    @GetMapping("/post-offices/search")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Map<String, Object>>> searchPostOffices(@RequestParam String q) {
+        try {
+            List<Map<String, Object>> result = postalOfficeRepository.findAllNonArchivedWithConnectivity()
+                    .stream()
+                    .filter(office -> office.getName() != null && 
+                            office.getName().toLowerCase().contains(q.toLowerCase()))
+                    .map(this::convertToMapDTO)
+                    .limit(10) // Limit to 10 results for performance
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            System.err.println("[MapController] /api/post-offices/search ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.ok(Collections.emptyList());
         }
     }
 
