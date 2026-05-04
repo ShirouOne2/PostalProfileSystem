@@ -21,18 +21,21 @@ public class SessionTimeoutConfig {
     // ✅ Change this value to adjust session timeout (in seconds)
     public static final int SESSION_TIMEOUT_SECONDS = 30 * 60; // 30 minutes
 
+    // Named inner class to avoid NoClassDefFoundError with anonymous classes
+    private static class CustomHttpSessionListener implements HttpSessionListener {
+        @Override
+        public void sessionCreated(HttpSessionEvent event) {
+            event.getSession().setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
+        }
+
+        @Override
+        public void sessionDestroyed(HttpSessionEvent event) {
+            // Optional: log or clean up when session is destroyed
+        }
+    }
+
     @Bean
     public ServletListenerRegistrationBean<HttpSessionListener> sessionListener() {
-        return new ServletListenerRegistrationBean<>(new HttpSessionListener() {
-            @Override
-            public void sessionCreated(HttpSessionEvent event) {
-                event.getSession().setMaxInactiveInterval(SESSION_TIMEOUT_SECONDS);
-            }
-
-            @Override
-            public void sessionDestroyed(HttpSessionEvent event) {
-                // Optional: log or clean up when session is destroyed
-            }
-        });
+        return new ServletListenerRegistrationBean<>(new CustomHttpSessionListener());
     }
 }

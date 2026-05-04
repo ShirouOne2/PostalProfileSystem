@@ -212,7 +212,7 @@
 .users-page table.dataTable {
     border-collapse: separate;
     border-spacing: 0;
-    min-width: 800px;
+    min-width: 600px;  /* reduced so tablet doesn't over-scroll */
     width: 100% !important;
 }
 
@@ -232,30 +232,33 @@
 }
 
 .users-page table.dataTable thead th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #002868 0%, #1a3a7a 100%); /* PHLPost Navy gradient */
     color: white;
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
     font-size: 12px;
-    padding: 15px;
+    padding: 12px 15px;
     border: none;
 }
 
 .users-page table.dataTable tbody td {
-    padding: 15px;
+    padding: 10px 15px;
     vertical-align: middle;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f2f5;
+    color: #495057;
+    transition: background-color 0.2s ease;
 }
 
 .users-page table.dataTable tbody tr:hover {
-    background-color: #f8f9fc;
+    background-color: #f8f9ff !important;
 }
 
 /* Badge Styles */
 .users-page .badge {
-    padding: 6px 12px;
+    padding: 4px 10px;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10px;
     border-radius: 20px;
 }
 
@@ -277,14 +280,15 @@
 /* Action Buttons */
 .users-page .action-buttons {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: center;
 }
 
 .users-page .btn-action {
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     border: none;
     cursor: pointer;
@@ -432,6 +436,25 @@
     border-left: 2px solid var(--primary-color);
 }
 
+/* Eye-toggle button inside input-group (show/hide password) */
+.users-page #userModal .input-group .form-control:not(:last-child) {
+    border-radius: 8px 0 0 8px;
+}
+
+.users-page #userModal .input-group .input-group-append .btn {
+    border: 2px solid #e0e0e0;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    background: #f8f9fc;
+    color: #6c757d;
+    transition: background 0.2s, color 0.2s;
+}
+
+.users-page #userModal .input-group .input-group-append .btn:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
 /* Modal Buttons (legacy user.html modal + shared naming) */
 .users-page #userModal .btn-modal-save {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -501,8 +524,8 @@
 
 /* User Avatar */
 .users-page .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -510,7 +533,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .users-page .user-info {
@@ -607,7 +630,7 @@
 
     .users-page .page-header-actions {
         width: 100%;
-        justify-content: stretch;
+        justify-content: flex-start; /* 'stretch' is invalid — use flex-start */
     }
 
     .users-page .page-header-actions .btn-add-user,
@@ -625,20 +648,26 @@
         padding: 1rem 1.25rem;
     }
 
+    .users-page #userModal .modal-footer {
+        padding: 0.75rem 1.25rem;
+    }
+
     .users-page .table-responsive {
         font-size: 14px;
     }
 
+    /* Keep user-info as a row on tablet — only collapse on very small screens */
     .users-page .user-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
     }
 
     .users-page .user-avatar {
         width: 35px;
         height: 35px;
         font-size: 14px;
+        flex-shrink: 0;
     }
 }
 
@@ -716,10 +745,27 @@
         min-width: 20rem;
     }
 
-    /* Hide less important columns on very small screens (DataTables) */
+    /* Collapse user-info to column only on very small screens */
+    .users-page .user-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    /* Hide Area ID column on very small screens */
     .users-page table.dataTable th:nth-child(5),
     .users-page table.dataTable td:nth-child(5) {
         display: none;
+    }
+
+    /* Tighter modal on very small screens */
+    .users-page #userModal .modal-body {
+        padding: 0.75rem 1rem;
+    }
+
+    .users-page #userModal .modal-dialog {
+        margin: 0.25rem;
+        max-width: calc(100vw - 0.5rem);
     }
 }
 

@@ -65,8 +65,23 @@
                             Password
                             <span id="passwordRequired" class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control" id="password"
-                               placeholder="Enter password">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password"
+                                   placeholder="Enter password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="togglePassword" tabindex="-1"
+                                        title="Show/hide password"
+                                        onclick="(function(btn){
+                                            var inp = document.getElementById('password');
+                                            var ico = btn.querySelector('i');
+                                            if(inp.type==='password'){inp.type='text';ico.classList.replace('fa-eye','fa-eye-slash');}
+                                            else{inp.type='password';ico.classList.replace('fa-eye-slash','fa-eye');}
+                                        })(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                         <small id="passwordHint" class="form-text text-muted" style="display:none;">
                             Leave blank to keep current password
                         </small>
@@ -79,8 +94,23 @@
                             Confirm Password
                             <span id="confirmRequired" class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control" id="confirmPassword"
-                               placeholder="Confirm password">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirmPassword"
+                                   placeholder="Confirm password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="toggleConfirmPassword" tabindex="-1"
+                                        title="Show/hide password"
+                                        onclick="(function(btn){
+                                            var inp = document.getElementById('confirmPassword');
+                                            var ico = btn.querySelector('i');
+                                            if(inp.type==='password'){inp.type='text';ico.classList.replace('fa-eye','fa-eye-slash');}
+                                            else{inp.type='password';ico.classList.replace('fa-eye-slash','fa-eye');}
+                                        })(this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div id="passwordStrengthText" class="mt-1" style="font-size:0.8rem;"></div>
                         <div class="progress mt-1" style="height:5px;">
                             <div id="passwordStrengthBar" class="progress-bar" style="width:0;"></div>

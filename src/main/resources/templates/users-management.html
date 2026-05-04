@@ -4,6 +4,9 @@
 
 <title th:fragment="title">User Management - PHLPost Profile System</title>
 
+<!-- User Modal Styles -->
+<div th:replace="~{fragments/modals/User-modal :: userModalStyles}"></div>
+
 <div th:fragment="content">
     <div class="users-page container-fluid"
          th:data-is-system-admin="${isSystemAdmin}"
@@ -32,12 +35,10 @@
                     <thead>
                         <tr>
                             <th>User</th>
-                            <th>Username</th>
-                            <th>Email</th>
                             <th>Role</th>
-                            <th>Area ID</th>
+                            <th>Access Level</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

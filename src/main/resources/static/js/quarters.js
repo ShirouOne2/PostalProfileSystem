@@ -351,7 +351,7 @@ function initializeTable() {
                     targets: 7,
                     data: null,
                     orderable: false,
-                    width: '90px',
+                    width: '100px',
                     className: (function() {
                         const isSrdOperation = quartersRoleAttr('is-srd-operation');
                         return isSrdOperation ? 'd-none' : 'dt-center';
@@ -367,13 +367,11 @@ function initializeTable() {
                             const canQuarterArchive = quartersRoleAttr('can-quarter-archive');
 
                             if (isSrdOperation) return '';
-                            let btns = '';
+                            let btns = '<div class="action-buttons">';
                             if (canQuarterEdit) {
                                 btns += '<button class="btn btn-sm btn-warning edit-btn" data-id="' + row.id + '" title="Edit"><i class="fas fa-edit"></i></button>';
                             }
-                            if (canQuarterArchive) {
-                                btns += (btns ? ' ' : '') + '<button class="btn btn-sm btn-archive-quarter" style="background:#fd7e14;color:white;" data-id="' + row.id + '" data-name="' + (row.name || 'Office').replace(/"/g, '&quot;') + '" title="Archive"><i class="fas fa-archive"></i></button>';
-                            }
+                            btns += '</div>';
                             return btns;
                         } catch(e) {
                             console.error('Error rendering action buttons:', e);

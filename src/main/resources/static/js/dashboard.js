@@ -113,38 +113,23 @@ function applyTableFilters() {
     const connectivityValue = document.getElementById('filterConnectivity')?.value || '';
     const officeStatusValue = document.getElementById('filterOfficeStatus')?.value || '';
 
-    // Apply search
+    // Clear all existing custom search functions
+    $.fn.dataTable.ext.search = [];
+
+    // Apply global search
     table.search(searchValue);
 
-    // Apply area and office status filters
-    if (IS_ADMIN) {
-        // Admin (updated): # | Area(1) | Name(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
-        if (document.getElementById('filterArea')) {
-            table.column(1).search(areaValue ? areaValue : '');
-        } else {
-            table.column(1).search('');
-        }
-        table.column(6).search(officeStatusValue ? officeStatusValue : '');
-    } else {
-        // Non-admin filtering logic
-        if (IS_AREA_ADMIN) {
-            // Area Admin: #(0) | Name(1) | Area(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
-            if (document.getElementById('filterArea')) {
-                table.column(2).search(areaValue ? areaValue : '');
-            } else {
-                table.column(2).search('');
-            }
-            table.column(6).search(officeStatusValue ? officeStatusValue : '');
-        } else {
-            // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
-            table.column(5).search(officeStatusValue ? officeStatusValue : '');
-        }
+    // Apply area filter for System Admin only
+    if (IS_ADMIN && document.getElementById('filterArea')) {
+        table.column(1).search(areaValue);
     }
 
-    // Apply connectivity filter using custom search function
-    const connectivityColumnIndex = IS_ADMIN ? 5 : (IS_AREA_ADMIN ? 5 : 4);
+    // Apply office status filter
+    const officeStatusColumnIndex = IS_ADMIN ? 6 : (IS_AREA_ADMIN ? 6 : 5);
+    table.column(officeStatusColumnIndex).search(officeStatusValue);
+
+    // Apply connectivity filter with custom search for HTML badges
     if (connectivityValue) {
-        // Apply custom search for connectivity based on actual connectionStatus value
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
             const tableIdFromSettings = settings.nTable.id;
             const isCorrectTable = (IS_ADMIN && tableIdFromSettings === 'systemAdminTable') || 
@@ -152,20 +137,41 @@ function applyTableFilters() {
             
             if (!isCorrectTable) return true;
             
-            const connectivityCell = table.row(dataIndex).node().cells[connectivityColumnIndex];
+            // Get correct column index based on user role
+            // System Admin: #(0) | Area(1) | Name(2) | Province(3) | City(4) | Conn(5) | Office(6) | Actions(7)
+            //   → Area column IS in the DOM → Conn at DOM cell [5] ✓
+            // Area Admin: logical #(0)|Name(1)|Area(2)|Province(3)|City(4)|Conn(5)|Office(6)
+            //   → Area column hidden (visible:false = removed from DOM) → Conn shifts to DOM cell [4]
+            // Regular User: #(0) | Name(1) | Province(2) | City(3) | Conn(4) | Office(5) | Actions(6)
+            //   → No Area column → Conn at DOM cell [4]
+            const connectivityColumnIndex = IS_ADMIN ? 5 : 4;
+            const currentTable = IS_ADMIN ? 
+                $('#systemAdminTable').DataTable() : 
+                $('#officeTable').DataTable();
+            
+            const connectivityCell = currentTable.row(dataIndex).node().cells[connectivityColumnIndex];
             const badgeElement = connectivityCell.querySelector('.badge');
             
             if (!badgeElement) return true;
             
-            const isActive = badgeElement.classList.contains('badge-success');
-            const filterForActive = connectivityValue === 'true';
+            const badgeText = badgeElement.textContent || badgeElement.innerText || '';
+            // Remove icons and extra whitespace, then normalize
+            const cleanText = badgeText
+                .replace(/[\u25CF\u25CB●●]/g, '') // Remove bullet characters
+                .replace(/\s+/g, ' ')           // Normalize whitespace
+                .trim()
+                .toLowerCase();
             
-            return isActive === filterForActive;
-        });
-    } else {
-        // Clear any existing custom connectivity search
-        $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
-            return !searchFunc.toString().includes('connectivityColumnIndex');
+            console.log('Connectivity Badge Text:', badgeText, 'Clean Text:', cleanText, 'Filter Value:', connectivityValue, 'Role:', IS_ADMIN ? 'Admin' : (IS_AREA_ADMIN ? 'Area Admin' : 'User'));
+            
+            // Map filter values to badge text (use exact match — 'inactive'.includes('active') is true!)
+            if (connectivityValue === 'Active') {
+                return cleanText === 'active';
+            } else if (connectivityValue === 'Inactive') {
+                return cleanText === 'inactive';
+            }
+            
+            return true;
         });
     }
 
@@ -178,10 +184,8 @@ function resetTableFilters() {
     if (!$.fn.DataTable.isDataTable(tableId)) return;
     const table = $(tableId).DataTable();
     
-    // Clear custom connectivity search functions
-    $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter(function(searchFunc) {
-        return !searchFunc.toString().includes('connectivityColumnIndex');
-    });
+    // Clear all custom search functions
+    $.fn.dataTable.ext.search = [];
     
     // Reset all filters
     table.search('').columns().search('').draw();

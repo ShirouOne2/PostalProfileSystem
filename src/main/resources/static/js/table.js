@@ -700,7 +700,10 @@ function filterMapMarkers() {
 
         const matchesSearch = !searchTerm   || d.name.includes(searchTerm);
         const matchesArea   = selectedAreas.length > 0 ? selectedAreas.includes(d.areaId) : true; // If no checkboxes selected, show all areas
-        const matchesStatus = !statusFilter || d.status === statusFilter;
+        // For map filtering, check the actual connection status
+        const matchesStatus = !statusFilter || 
+            (statusFilter === 'Active' && d.isActive === true) || 
+            (statusFilter === 'Inactive' && d.isActive === false);
 
         const isMatch = matchesSearch && matchesArea && matchesStatus;
 
@@ -733,7 +736,7 @@ function applyFilters() {
     const searchInput  = document.getElementById('searchInput') || document.getElementById('tableSearchInput');
     const search       = (searchInput?.value  || '').trim();
     const connectivity = (document.getElementById('statusFilter')?.value || '').trim();
-    const connText     = connectivity === 'true' ? 'Active' : connectivity === 'false' ? 'Inactive' : '';
+    const connText     = connectivity;
 
     if (IS_ADMIN) {
         // Admin DataTable column layout (adminColumnDefs):
@@ -742,7 +745,7 @@ function applyFilters() {
         const selectedAreaIds = [];
         document.querySelectorAll('.area-checkbox:checked').forEach(cb => selectedAreaIds.push(cb.value));
         const areaRegex = selectedAreaIds.length
-            ? selectedAreaIds.map(id => 'Area\\s+' + id + '\\b').join('|')
+            ? selectedAreaIds.map(id => '^Area ' + id + '$').join('|')
             : '';
         table.column(2).search(areaRegex, true, false);   // Area column
         table.column(5).search(connText, false, false);   // Connection Status column

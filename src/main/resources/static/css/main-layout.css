@@ -42,6 +42,8 @@ h1, h2, h3, h4, h5, h6, p, span, div, a, label, th, td {
 /* Main content margin synced with sidebar width */
 .main-content {
     flex: 1;
+    min-width: 0;          /* CRITICAL: flex child must have min-width:0 to shrink past content size */
+    overflow-x: hidden;    /* prevent page-level horizontal scroll */
     margin-left: 260px;
     display: flex;
     flex-direction: column;

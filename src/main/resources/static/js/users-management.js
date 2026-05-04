@@ -31,8 +31,6 @@ $(document).ready(function () {
 });
 
 function initializeDataTable() {
-    // Destroy existing DataTable instance if present (prevents double-binding
-    // when navigating back to this page without a full browser reload).
     if ($.fn.DataTable.isDataTable('#usersTable')) {
         $('#usersTable').DataTable().destroy();
     }
@@ -52,7 +50,11 @@ function initializeDataTable() {
             emptyTable: "No users available"
         },
         columnDefs: [
-            { orderable: false, targets: 6 }
+            { targets: 0, width: '280px' }, // User info
+            { targets: 1, width: '130px' }, // Role
+            { targets: 2, width: '130px' }, // Access Level
+            { targets: 3, width: '100px', className: 'dt-center' }, // Status
+            { targets: 4, width: '120px', className: 'dt-center', orderable: false } // Actions
         ]
     });
 }
@@ -92,8 +94,6 @@ function displayUsers(users) {
         users.forEach(user => {
             usersTable.row.add([
                 createUserCell(user),
-                user.username,
-                user.email || 'N/A',
                 createRoleBadge(user.role),
                 getAreaLabel(user.role, user.areaId),
                 createStatusBadge(user.enabled),
@@ -118,28 +118,29 @@ function createUserCell(user) {
 
 function createRoleBadge(roleId) {
     const colors = { 
-        1: '#dc3545', // System Admin - Red
-        2: '#fd7e14', // Area Admin - Orange  
-        3: '#28a745', // User - Green
-        4: '#17a2b8', // SRD Operation - Blue
-        5: '#6f42c1'  // Asset - Purple
+        1: '#e74a3b', // System Admin
+        2: '#f6c23e', // Area Admin
+        3: '#1cc88a', // User
+        4: '#36b9cc', // SRD Operation
+        5: '#4e73df'  // Asset
     };
     const label  = ROLES[roleId] || 'Unknown';
-    const color  = colors[roleId] || '#6c757d';
-    return `<span class="badge" style="background:${color}; color:white; padding:4px 10px; border-radius:12px;">${label}</span>`;
+    const color  = colors[roleId] || '#858796';
+    return `<span class="badge" style="background:${color}; color:white; padding:3px 10px; border-radius:50px; font-weight:600; font-size:10px;">${label}</span>`;
 }
 
 function getAreaLabel(roleId, areaId) {
     if ((roleId === 1 || roleId === 4 || roleId === 5) && !areaId) {
-        return '<span class="badge" style="background:#17a2b8; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-shield-alt mr-1"></i> Full Access</span>';
+        return '<span class="badge shadow-sm" style="background:#f8f9fc; color:#4e73df; border:1px solid #4e73df; padding:3px 10px; border-radius:50px; font-weight:600; font-size:10px;"><i class="fas fa-shield-alt mr-1"></i> Full Access</span>';
     }
-    return areaId ? (AREAS[areaId] || 'Area ' + areaId) : 'N/A';
+    const label = areaId ? (AREAS[areaId] || 'Area ' + areaId) : 'N/A';
+    return `<span class="badge badge-light border" style="padding:3px 10px; border-radius:50px; font-weight:600; font-size:10px; color:#5a5c69;">${label}</span>`;
 }
 
 function createStatusBadge(enabled) {
     return enabled
-        ? '<span class="badge" style="background:#28a745; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-check-circle mr-1"></i> Active</span>'
-        : '<span class="badge" style="background:#e74a3b; color:white; padding:4px 10px; border-radius:12px;"><i class="fas fa-times-circle mr-1"></i> Inactive</span>';
+        ? '<span class="badge" style="background:#1cc88a; color:white; padding:4px 10px; border-radius:50px; font-weight:600; font-size:10px;"><i class="fas fa-check-circle mr-1"></i> Active</span>'
+        : '<span class="badge" style="background:#e74a3b; color:white; padding:4px 10px; border-radius:50px; font-weight:600; font-size:10px;"><i class="fas fa-times-circle mr-1"></i> Inactive</span>';
 }
 
 function createActionButtons(userId) {
