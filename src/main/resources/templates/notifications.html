@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+
+<head>
+    <title>Notifications - PHLPost</title>
+</head>
+
+<body>
+
+<div th:fragment="content">
+
+    <!-- Notification Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-left-primary shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-left-warning shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Unread</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="unreadCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-left-success shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Read</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="readCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-left-info shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="todayCount">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-filter mr-2"></i>Filters
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="filterStatus" class="form-label font-weight-bold">Status</label>
+                    <select id="filterStatus" class="form-control">
+                        <option value="">All Notifications</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="filterType" class="form-label font-weight-bold">Type</label>
+                    <select id="filterType" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="UPDATED">Updated</option>
+                        <option value="NEW">New</option>
+                        <option value="CONNECTED">Connected</option>
+                        <option value="DISCONNECTED">Disconnected</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="filterDateRange" class="form-label font-weight-bold">Date Range</label>
+                    <select id="filterDateRange" class="form-control">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label font-weight-bold">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button id="applyFiltersBtn" class="btn btn-primary btn-sm flex-fill">
+                            <i class="fas fa-search mr-1"></i>Apply
+                        </button>
+                        <button id="clearFiltersBtn" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-undo mr-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-gray-800">
+                    <i class="fas fa-list mr-2"></i>Notifications
+                </h6>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small" id="notificationSummary">Loading...</span>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary active" id="listViewBtn">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="gridViewBtn">
+                            <i class="fas fa-th"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading notifications...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5" style="display:none;">
+                <i class="fas fa-bell-slash fa-3x text-gray-300 mb-3"></i>
+                <h5 class="text-gray-600">No notifications found</h5>
+                <p class="text-muted">You're all caught up! No new notifications to display.</p>
+            </div>
+
+            <!-- Notifications Container -->
+            <div id="notificationsContainer" class="p-3" style="display:none;">
+                <!-- Notifications will be loaded here via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Notification Modal -->
+    <div class="modal fade" id="fullNotificationModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius:12px;overflow:hidden;">
+                <div class="modal-header py-3 px-4"
+                     style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;border:none;">
+                    <h5 class="modal-title font-weight-bold mb-0">
+                        <i class="fas fa-bell mr-2"></i>
+                        <span id="fullNotificationTitle">Notification Details</span>
+                    </h5>
+                    <button type="button" class="close text-white ml-2" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4" id="fullNotificationBody">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading notification details...</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#f8f9fa;">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="markAsReadFromModalBtn">
+                        <i class="fas fa-check mr-1"></i>Mark as Read
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

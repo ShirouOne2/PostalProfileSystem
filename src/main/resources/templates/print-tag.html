@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      lang="en" 
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::main})}">
+<title>Property Tag — <span th:text="${barcode.refNum}">REF</span></title>
+
+
+<main th:fragment="main">
+
+    <!-- Page-specific CSS -->
+<link rel="stylesheet" th:href="@{/css/print-tag.css}"/>
+    
+    <!-- Print Controls (hidden on actual print) -->
+    <div class="print-bar">
+      <a class="btn-back" th:href="@{/inventory}">← Back to Inventory</a>
+      <button class="btn-print" onclick="window.print()">🖨️ Print Property Tag</button>
+    </div>
+    
+    <!-- Error Messages -->
+    <div th:if="${errorMsg}" class="error-message">
+      <span th:text="${errorMsg}">Error occurred</span>
+    </div>
+    
+    <!-- Print Tag Content - Fragment file doesn't exist, content needs to be inline -->
+    <!-- <div th:replace="~{fragments/modal/print-tag-fragment :: content}"></div> -->
+
+    <!-- Page-specific scripts -->
+    <script th:src="@{/js/print-tag-script.js}"></script>
+  </main>
+</html>

@@ -24,7 +24,14 @@ $(function () {
         );
         $('#editISP').val(d.internetServiceProvider || '');
         $('#editSpeed').val(d.speed || '');
-        $('#editTypeOfConnection').val(d.typeOfConnection || '');
+        
+        // Handle typeOfConnection - add to dropdown if not exists
+        var typeOfConn = d.typeOfConnection || '';
+        if (typeOfConn && $('#editTypeOfConnection option[value="' + typeOfConn + '"]').length === 0) {
+            $('#editTypeOfConnection').append('<option value="' + typeOfConn + '">' + typeOfConn + '</option>');
+        }
+        $('#editTypeOfConnection').val(typeOfConn);
+        
         $('#editStaticIP').val(d.staticIpAddress || '');
         $('#editNoOfEmployees').val(d.noOfEmployees != null ? d.noOfEmployees : 0);
         $('#editNoOfTellers').val(d.noOfPostalTellers != null ? d.noOfPostalTellers : 0);
@@ -61,7 +68,7 @@ function saveOfficeChanges() {
         connectionStatus:          $('#editStatus').val() === 'true',
         internetServiceProvider:   $('#editISP').val().trim(),
         speed:                     $('#editSpeed').val().trim(),
-        typeOfConnection:          $('#editTypeOfConnection').val().trim(),
+        typeOfConnection:          $('#editTypeOfConnection').val().trim() || null,
         staticIpAddress:           $('#editStaticIP').val().trim(),
         noOfEmployees:             parseInt($('#editNoOfEmployees').val()) || 0,
         noOfPostalTellers:         parseInt($('#editNoOfTellers').val()) || 0,
@@ -85,7 +92,13 @@ function saveOfficeChanges() {
         success: function (res) {
             if (res.success) {
                 $('#editOfficeModal').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Saved!', text: 'Changes saved successfully.', timer: 1800, showConfirmButton: false })
+                Swal.fire({
+                    icon: 'success',
+                    title: res.requiresApproval ? 'Submitted!' : 'Saved!',
+                    text: res.message || (res.requiresApproval ? 'Your changes were submitted for approval.' : 'Changes saved successfully.'),
+                    timer: 1800,
+                    showConfirmButton: false
+                })
                     .then(function () { location.reload(); });
             } else {
                 Swal.fire('Error', res.message || 'Save failed.', 'error');
@@ -118,7 +131,7 @@ function uploadPhoto(input, type) {
     var formData = new FormData();
     formData.append('file', file);
 
-    var endpoint = '/api/postal-office/' + id + '/' + (type === 'cover' ? 'cover-photo' : 'profile-photo');
+    var endpoint = '/api/postal-office/' + id + '/' + (type === 'cover' ? 'cover-photo/1' : 'profile-photo');
 
     Swal.fire({
         title: 'Uploading...',

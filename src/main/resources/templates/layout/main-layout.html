@@ -33,8 +33,8 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
-    <!-- DataTables CSS - Only load on table / quarters / users / archive / dashboard pages -->
-    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
+    <!-- DataTables CSS -->
+    <link th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard' or activePage == 'report'}" 
           rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 
     <!-- Custom CSS -->
@@ -47,112 +47,9 @@
     <link th:if="${activePage == 'dashboard'}" rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table.css}">
     <link th:if="${activePage == 'table'}" rel="stylesheet" th:href="@{/css/table-custom.css}">
+    <link th:if="${activePage == 'notifications'}" rel="stylesheet" th:href="@{/css/notifications-inbox.css}">
     <link th:if="${activePage == 'users'}" rel="stylesheet" th:href="@{/css/users-management.css}">
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fc;
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        /* Main content margin synced with sidebar width */
-        .main-content {
-            flex: 1;
-            margin-left: 260px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            transition: margin-left 0.25s ease;
-        }
-
-        /* Applied by JS when sidebar is collapsed */
-        body.sidebar-is-collapsed .main-content {
-            margin-left: 64px;
-        }
-
-        .main-header {
-            background: #fff;
-            border-bottom: 1px solid #e3e6f0;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-
-        .main-body {
-            flex: 1;
-            padding: 1.5rem;
-        }
-
-        .main-footer {
-            background: #fff;
-            border-top: 1px solid #e3e6f0;
-            padding: 1rem 1.5rem;
-            margin-top: auto;
-        }
-
-        @media (max-width: 768px) {
-            .main-content { margin-left: 64px !important; }
-            .main-body { padding: 1rem; }
-        }
-
-        .text-gray-600 { color: #858796; }
-        .text-gray-800 { color: #5a5c69; }
-        .border-left-primary   { border-left: 4px solid #4e73df !important; }
-        .border-left-success   { border-left: 4px solid #1cc88a !important; }
-        .border-left-warning   { border-left: 4px solid #f6c23e !important; }
-        .border-left-info      { border-left: 4px solid #36b9cc !important; }
-
-        .spinner-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        .spinner-overlay.show { display: flex; }
-
-        /* ── Office Profile Popup Modal ─────────────────────────── */
-        #officeProfilePopup .modal-header {
-            background: linear-gradient(135deg, #002868 0%, #1a3a7a 100%);
-            color: #fff;
-        }
-        #officeProfilePopup .modal-header .close { color: #fff; opacity: 0.85; }
-        #officeProfilePopup .modal-dialog { max-width: 820px; }
-        #officeProfilePopup .modal-body { padding: 0; min-height: 300px; }
-        #officeProfilePopup iframe {
-            width: 100%; height: 75vh;
-            border: none; display: block;
-        }
-
-        /* Office name links in tables */
-        .office-name-link {
-            color: #002868;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            border-bottom: 1px dashed transparent;
-            transition: border-color 0.15s, color 0.15s;
-        }
-        .office-name-link:hover {
-            color: var(--phlpost-red, #C1272D);
-            border-bottom-color: var(--phlpost-red, #C1272D);
-            text-decoration: none;
-        }
-    </style>
-    
-    <th:block th:if="${activePage == 'users'}"
-              th:replace="~{fragments/modals/User-modal :: userModalStyles}">
-    </th:block>
+    <link rel="stylesheet" th:href="@{/css/main-layout.css}">
 
 </head>
 
@@ -190,18 +87,17 @@
             
         </div>
 
-    </div>
 
     <!-- Edit Postal Office Modal -->
     <div th:if="${activePage == 'table' or activePage == 'profile' or activePage == 'dashboard' or activePage == 'quarters'}" th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
     <!-- ── Office Profile Popup Modal (used by table & quarters name links) ── -->
-    <div class="modal fade" id="officeProfilePopup" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div class="modal fade" id="officeProfilePopupModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content" style="border-radius:12px;overflow:hidden;">
                 <div class="modal-header py-3 px-4"
                      style="background:linear-gradient(135deg,#002868,#1a3a7a);color:#fff;border:none;">
-                    <h5 class="modal-title font-weight-bold mb-0">
+                    <h5 class="modal-title mb-0">
                         <i class="fas fa-building mr-2"></i>
                         <span id="officeProfilePopupName">Office Profile</span>
                     </h5>
@@ -246,249 +142,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- 5. Sidebar toggle + main-content margin sync -->
-    <script>
-    (function () {
-        'use strict';
-        var COLLAPSED_KEY = 'sidebarCollapsed';
-
-        function syncBody() {
-            var collapsed = localStorage.getItem(COLLAPSED_KEY) === 'true';
-            if (collapsed) {
-                document.body.classList.add('sidebar-is-collapsed');
-            } else {
-                document.body.classList.remove('sidebar-is-collapsed');
-            }
-        }
-
-        // Run immediately (before paint) so there's no layout jump
-        syncBody();
-
-        // Listen for sidebar toggle from sidebar.html script
-        var observer = new MutationObserver(function (mutations) {
-            mutations.forEach(function (m) {
-                if (m.attributeName === 'class') syncBody();
-            });
-        });
-
-        window.addEventListener('DOMContentLoaded', function () {
-            var sidebar = document.getElementById('sidebar');
-            var sidebarOverlay = document.getElementById('sidebarOverlay');
-            var mobileToggle = document.getElementById('mobileSidebarToggle');
-            
-            if (sidebar) observer.observe(sidebar, { attributes: true });
-
-            // Mobile hamburger menu functionality
-            if (mobileToggle) {
-                mobileToggle.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    sidebar.classList.toggle('active');
-                    sidebarOverlay.classList.toggle('show');
-                });
-            }
-
-            // Close sidebar when clicking overlay
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', function () {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('show');
-                });
-            }
-
-            // Also wire legacy Bootstrap sidebar toggle if present
-            var toggleBtn = document.getElementById('sidebarToggle');
-            var toggleTop = document.getElementById('sidebarToggleTop');
-            [toggleBtn, toggleTop].forEach(function (btn) {
-                if (!btn) return;
-                btn.addEventListener('click', function () {
-                    sidebar && sidebar.classList.toggle('active');
-                });
-            });
-
-            // Close sidebar on outside click (mobile)
-            document.addEventListener('click', function (e) {
-                if (window.innerWidth < 768) {
-                    var sidebar = document.getElementById('sidebar');
-                    if (sidebar && !sidebar.contains(e.target) &&
-                        !e.target.closest('#sidebarToggle, #sidebarToggleTop, #mobileSidebarToggle')) {
-                        sidebar.classList.remove('active');
-                        sidebarOverlay.classList.remove('show');
-                    }
-                }
-            });
-        });
-    })();
-    </script>
+    <script th:src="@{/js/sidebar-toggle.js}"></script>
 
     <!-- 6. Office Profile Popup — renders office data inline via API (no iframe) -->
-    <script>
-    /**
-     * openOfficeProfilePopup(officeId, officeName)
-     * Fetches /api/postal-office/{id} and renders a rich profile popup inline.
-     * Used by table, dashboard, and quarters pages.
-     * Note: dashboard.js, table.js, quarters.js also define this function —
-     * because main-layout loads BEFORE those page scripts, the page scripts
-     * will override this definition. That's fine — they all do the same thing.
-     */
-    window.openOfficeProfilePopup = function (officeId, officeName) {
-        if (!officeId) return;
-
-        var nameEl = document.getElementById('officeProfilePopupName');
-        var bodyEl = document.getElementById('officeProfilePopupBody');
-        var fullEl = document.getElementById('officeProfileOpenFull');
-
-        if (!nameEl || !bodyEl) return;
-
-        nameEl.textContent = officeName || 'Post Office Profile';
-        if (fullEl) fullEl.href = '/profile/' + officeId;
-
-        bodyEl.innerHTML =
-            '<div class="d-flex align-items-center justify-content-center" style="height:300px;">' +
-            '<div class="text-center text-muted">' +
-            '<i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Loading profile...</div></div>';
-
-        $('#officeProfilePopup').modal('show');
-
-        fetch('/api/postal-office/' + officeId)
-            .then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            })
-            .then(function (data) {
-                _renderOfficeProfilePopup(data, officeId);
-            })
-            .catch(function () {
-                bodyEl.innerHTML =
-                    '<div class="text-center py-5">' +
-                    '<i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>' +
-                    '<p class="text-muted">Failed to load profile data.</p>' +
-                    '<a href="/profile/' + officeId + '" class="btn btn-primary btn-sm">' +
-                    '<i class="fas fa-external-link-alt mr-1"></i>Open Full Profile</a></div>';
-            });
-    };
-
-    function _renderOfficeProfilePopup(data, officeId) {
-        var nameEl = document.getElementById('officeProfilePopupName');
-        var bodyEl = document.getElementById('officeProfilePopupBody');
-        if (!bodyEl) return;
-
-        if (nameEl) nameEl.textContent = data.name || 'Post Office Profile';
-
-        var area = data.areaId ? 'Area ' + data.areaId : (data.area || 'N/A');
-
-        var connBadge = data.connectionStatus
-            ? '<span class="badge badge-success px-3 py-2"><i class="fas fa-wifi mr-1"></i>Active</span>'
-            : '<span class="badge badge-danger px-3 py-2"><i class="fas fa-wifi mr-1"></i>Inactive</span>';
-
-        var officeBadge = data.officeStatus === 'OPEN'
-            ? '<span class="badge badge-info px-3 py-2"><i class="fas fa-door-open mr-1"></i>Open</span>'
-            : data.officeStatus === 'CLOSED'
-            ? '<span class="badge badge-warning px-3 py-2"><i class="fas fa-door-closed mr-1"></i>Closed</span>'
-            : '<span class="badge badge-secondary px-3 py-2">—</span>';
-
-        function infoRow(icon, label, value) {
-            var val = (value !== null && value !== undefined && value !== '') ? value : '—';
-            return '<div class="mb-2 d-flex align-items-start" style="font-size:13px;">' +
-                '<i class="' + icon + ' text-muted mr-2 mt-1" style="width:14px;flex-shrink:0;"></i>' +
-                '<div><span class="text-muted" style="font-size:11px;display:block;">' + label + '</span>' +
-                '<strong>' + val + '</strong></div></div>';
-        }
-
-        bodyEl.innerHTML =
-            // Cover photo banner
-            '<div style="height:180px;overflow:hidden;position:relative;background:#1a3a7a;">' +
-            '<img src="/api/postal-office/' + officeId + '/cover-photo"' +
-            '     onerror="this.style.display=\'none\'"' +
-            '     style="width:100%;height:100%;object-fit:cover;opacity:0.7;">' +
-            '<div style="position:absolute;bottom:0;left:0;right:0;' +
-            '     padding:40px 20px 16px;background:linear-gradient(transparent,rgba(0,0,0,0.6));">' +
-            '<h4 class="text-white font-weight-bold mb-1" style="text-shadow:0 1px 4px rgba(0,0,0,0.5);">' +
-            (data.name || 'N/A') + '</h4>' +
-            '<div style="display:flex;gap:6px;">' + connBadge + ' ' + officeBadge + '</div>' +
-            '</div></div>' +
-
-            // Profile photo + name row
-            '<div class="d-flex align-items-center px-4 pt-3 pb-2" style="gap:14px;">' +
-            '<div style="width:60px;height:60px;border-radius:50%;overflow:hidden;' +
-            '     border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;">' +
-            '<img src="/api/postal-office/' + officeId + '/profile-photo"' +
-            '     onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(data.name || 'PO') + '&size=60&background=002868&color=fff\'"' +
-            '     style="width:100%;height:100%;object-fit:cover;"></div>' +
-            '<div>' +
-            '<div class="font-weight-bold" style="font-size:15px;color:#002868;">' + (data.name || 'N/A') + '</div>' +
-            '<div class="text-muted" style="font-size:12px;">' +
-            (data.address ? '<i class="fas fa-map-marker-alt mr-1"></i>' + data.address : '') +
-            '</div></div></div>' +
-
-            // Tabs: Basic | Connectivity | Contact
-            '<ul class="nav nav-tabs px-4" id="popupTabs" style="border-bottom:1px solid #dee2e6;">' +
-            '<li class="nav-item"><a class="nav-link active" href="#" data-popup-tab="basic" style="font-size:12px;">Basic Info</a></li>' +
-            '<li class="nav-item"><a class="nav-link" href="#" data-popup-tab="connectivity" style="font-size:12px;">Connectivity</a></li>' +
-            '<li class="nav-item"><a class="nav-link" href="#" data-popup-tab="contact" style="font-size:12px;">Contact & Staff</a></li>' +
-            '</ul>' +
-
-            // Tab panes
-            '<div class="p-4" id="popupTabContent">' +
-
-            // Basic tab (active)
-            '<div id="popup-tab-basic">' +
-            '<div class="row">' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-map-marker-alt', 'Area', area) +
-            infoRow('fas fa-envelope', 'ZIP Code', data.zipCode) +
-            infoRow('fas fa-tag', 'Classification', data.classification) +
-            '</div>' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-user-tie', 'Postmaster', data.postmaster) +
-            infoRow('fas fa-concierge-bell', 'Services', data.serviceProvided) +
-            infoRow('fas fa-sticky-note', 'Remarks', data.remarks) +
-            '</div></div></div>' +
-
-            // Connectivity tab (hidden)
-            '<div id="popup-tab-connectivity" style="display:none;">' +
-            '<div class="row">' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-building', 'ISP', data.internetServiceProvider) +
-            infoRow('fas fa-plug', 'Connection Type', data.typeOfConnection) +
-            infoRow('fas fa-tachometer-alt', 'Speed', data.speed) +
-            '</div>' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-network-wired', 'Static IP', data.staticIpAddress) +
-            infoRow('fas fa-door-open', 'Office Status', data.officeStatus) +
-            '</div></div></div>' +
-
-            // Contact tab (hidden)
-            '<div id="popup-tab-contact" style="display:none;">' +
-            '<div class="row">' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-phone', 'Office Contact', data.postalOfficeContactPerson) +
-            infoRow('fas fa-phone-alt', 'Contact Number', data.postalOfficeContactNumber) +
-            infoRow('fas fa-users', 'Employees', data.noOfEmployees) +
-            '</div>' +
-            '<div class="col-md-6">' +
-            infoRow('fas fa-headset', 'ISP Contact', data.ispContactPerson) +
-            infoRow('fas fa-phone-volume', 'ISP Number', data.ispContactNumber) +
-            infoRow('fas fa-cash-register', 'Tellers', data.noOfPostalTellers) +
-            '</div></div></div>' +
-
-            '</div>'; // end tab content
-
-        // Wire tab switching
-        bodyEl.querySelectorAll('[data-popup-tab]').forEach(function (tab) {
-            tab.addEventListener('click', function (e) {
-                e.preventDefault();
-                var target = this.getAttribute('data-popup-tab');
-                bodyEl.querySelectorAll('[data-popup-tab]').forEach(function (t) {
-                    t.classList.remove('active');
-                });
-                this.classList.add('active');
-                ['basic', 'connectivity', 'contact'].forEach(function (name) {
-                    var el = document.getElementById('popup-tab-' + name);
-                    if (el) el.style.display = (name === target) ? '' : 'none';
-                });
-            });
-        });
-    }
-    </script>
+    <script th:src="@{/js/office-profile-popup.js}"></script>
     
     <!-- 7. Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
@@ -496,16 +153,16 @@
     <!-- 8. Dashboard JS -->
     <script th:if="${activePage == 'dashboard'}" th:src="@{/js/dashboard.js}"></script>
     
-    <!-- 9. DataTables JS - AFTER jQuery! -->
-    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard'}" 
+    <!-- 9. DataTables JS -->
+    <script th:if="${activePage == 'table' or activePage == 'quarters' or activePage == 'users' or activePage == 'archive' or activePage == 'dashboard' or activePage == 'report'}" 
             src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js" defer></script>
     
     <!-- 10. Table JS -->
     <script th:if="${activePage == 'table'}" th:src="@{/js/table.js}"></script>
    
-   <!-- 10.1. Edit Modal JS -->
-   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal.js}"></script>
-   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters'}" th:src="@{/js/edit-modal-photos.js}"></script>
+   <!-- 10.1. Edit Modal JS (photos helpers must load after edit-modal.js — defines window.openModal) -->
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters' or activePage == 'profile'}" th:src="@{/js/edit-modal.js}"></script>
+   <script th:if="${activePage == 'table' or activePage == 'dashboard' or activePage == 'quarters' or activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
    
    <!-- 11. Quarters JS -->
    <script th:if="${activePage == 'quarters'}" th:src="@{/js/quarters.js}"></script>
@@ -514,14 +171,13 @@
    <script th:if="${activePage == 'users'}" th:src="@{/js/users-management.js}"></script>
 
    <!-- 13. Archive JS -->
-   <script th:if="${activePage == 'archive' or activePage == 'table'}" th:src="@{/js/archive.js}"></script>
+   <script th:if="${activePage == 'archive' or activePage == 'table' or activePage == 'dashboard'}" th:src="@{/js/archive.js}"></script>
 
    <!-- 14. Insert Office Wizard JS -->
    <script th:if="${activePage == 'insert'}" th:src="@{/js/insert-office-wizard.js}"></script>
 
    <!-- 15. Profile JS -->
    <script th:if="${activePage == 'profile'}" th:src="@{/js/profile.js}"></script>
-   <script th:if="${activePage == 'profile'}" th:src="@{/js/edit-modal-photos.js}"></script>
 
    <!-- 16. Session Timeout -->
    <script th:src="@{/js/session-timeout.js}"></script>
@@ -531,6 +187,7 @@
 
    <!-- 18. Notifications -->
    <script th:src="@{/js/notifications.js}"></script>
+   <script th:if="${activePage == 'notifications'}" th:src="@{/js/notifications-inbox.js}"></script>
 
    <!-- 19. Navigation Performance Optimizer -->
    <script th:src="@{/js/navigation-optimizer.js}"></script>
@@ -547,7 +204,7 @@
    <!-- 23. Bootstrap tooltip init — runs after jQuery & Bootstrap are loaded.
             Covers: insert-office page ISP/connection tooltips,
                     edit modal ISP/connection tooltips. -->
-   <script th:if="${activePage == 'insert' or activePage == 'table' or activePage == 'profile'}" 
+   <script th:if="${activePage == 'insert' or activePage == 'table' or activePage == 'profile' or activePage == 'dashboard'}" 
            th:src="@{/js/global-tooltips.js}"></script>
 
 </body>

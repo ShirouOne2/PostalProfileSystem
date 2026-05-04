@@ -1,0 +1,31 @@
+<!-- Add Department Modal Fragment -->
+<div th:fragment="content">
+<!-- ── ADD DEPARTMENT MODAL ── -->
+<div class="modal-overlay" id="deptModal" onclick="if(event.target===this)closeDeptModal()">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Add Department</div>
+        <div class="modal-sub">Create a new office / department</div>
+      </div>
+      <button class="modal-x" onclick="closeDeptModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group">
+          <label class="form-label">Department Name <span style="color:var(--accent)">*</span></label>
+          <input class="form-input" id="f-deptname" type="text" placeholder="e.g. Human Resources"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon / Emoji</label>
+          <input class="form-input" id="f-depticon" type="text" placeholder="e.g. 👥" maxlength="4"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDeptModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDept()">➕ Add Department</button>
+    </div>
+  </div>
+</div>
+</div>

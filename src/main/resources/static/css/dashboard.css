@@ -1,7 +1,88 @@
 /* Dashboard Styles */
 
-/* ── Page Header ────────────────────────────────────── */
-.dash-header {
+/* Custom 5-card layout */
+.col-xl-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.col-lg-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+/* Stats Cards Container */
+.stats-cards-row {
+    margin-bottom: 2rem;
+}
+
+/* Individual Stat Card */
+.stat-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.border-left-primary {
+    border-left-color: #4e73df;
+}
+
+.stat-card.border-left-success {
+    border-left-color: #1cc88a;
+}
+
+.stat-card.border-left-danger {
+    border-left-color: #e74a3b;
+}
+
+.stat-card.border-left-info {
+    border-left-color: #36b9cc;
+}
+
+.stat-card.border-left-warning {
+    border-left-color: #f6c23e;
+}
+
+.stat-card-body {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Filter Panel Styling */
+.table-filter-panel {
+    background: #ffffff;
+    border: 1px solid #e3e6f0;
+    border-radius: 10px;
+    padding: 14px 18px 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1rem;
+}
+
+.filter-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -123,16 +204,63 @@
 
 /* DataTable Styling for Dashboard */
 
-/* Table Container */
+/* Table Container (legacy; dashboard tables use .dashboard-dt-wrap for DataTables) */
 .table-responsive {
     background-color: #ffffff;
     border-radius: 0;
     padding: 0;
 }
 
-/* DataTable Wrapper */
+/* Host for DataTables: avoids nested overflow fights with Bootstrap .table-responsive */
+.dashboard-dt-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    background-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+    .dashboard-dt-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* DataTables moves <table> inside #officeTable_wrapper / #systemAdminTable_wrapper */
+#officeTable_wrapper,
+#systemAdminTable_wrapper {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    color: #333333;
+}
+
+/* DataTables 2 layout rows (when present) */
+#officeTable_wrapper .dt-layout-row,
+#systemAdminTable_wrapper .dt-layout-row {
+    width: 100%;
+    max-width: 100%;
+}
+
+#officeTable_wrapper table.dataTable,
+#systemAdminTable_wrapper table.dataTable {
+    width: 100% !important;
+    margin: 0;
+}
+
+/* DataTables 2 may use .dt-container instead of legacy class names */
+.dashboard-dt-wrap .dt-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* DataTable Wrapper (global fallback) */
 .dataTables_wrapper {
     color: #333333;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* System Admin Table */
@@ -185,13 +313,19 @@
 }
 
 #systemAdminTable tbody tr {
-    background-color: #ffffff;
     border-bottom: 1px solid #dee2e6;
     transition: background-color 0.2s ease;
 }
 
+/* Let Bootstrap table-striped + DataTables play nicely (avoid forcing every row white). */
+#systemAdminTable.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #ffffff;
+}
+#systemAdminTable.table-striped tbody tr:nth-of-type(even) {
+    background-color: #f8f9fc;
+}
 #systemAdminTable tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #eef2f7 !important;
 }
 
 #systemAdminTable tbody td {
@@ -254,14 +388,26 @@
     opacity: 1;
 }
 
+/* Area Admin dashboard table: explicit Area column (align with system admin table) */
+#officeTable.dashboard-office-area-admin thead th,
+#officeTable.dashboard-office-area-admin tbody td {
+    vertical-align: middle;
+}
+
 #officeTable tbody tr {
-    background-color: #ffffff;
     border-bottom: 1px solid #dee2e6;
     transition: background-color 0.2s ease;
 }
 
+/* Area Admin / User office table — restore zebra striping (was overridden by flat white). */
+#officeTable.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #ffffff;
+}
+#officeTable.table-striped tbody tr:nth-of-type(even) {
+    background-color: #f8f9fc;
+}
 #officeTable tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #eef2f7 !important;
 }
 
 #officeTable tbody td {
@@ -488,6 +634,23 @@
 
 /* Responsive */
 @media (max-width: 576px) {
-    .stat-card { flex: 1 1 calc(50% - 7px); }
-    .dash-header { flex-direction: column; align-items: flex-start; }
+    .stat-card-body {
+        padding: 1rem;
+    }
+    
+    .stat-card-value {
+        font-size: 1.25rem;
+    }
+    
+    .table-responsive,
+    .dashboard-dt-wrap {
+        font-size: 12px;
+    }
+    
+    #systemAdminTable th,
+    #systemAdminTable td,
+    #officeTable th,
+    #officeTable td {
+        padding: 8px;
+    }
 }

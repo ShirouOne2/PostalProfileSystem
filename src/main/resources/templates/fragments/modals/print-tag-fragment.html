@@ -1,0 +1,81 @@
+<!-- Print Tag Fragment — ID-card / short-size layout with QR code -->
+<div th:fragment="content" class="tag-wrapper">
+
+  <!-- Header / Logo -->
+  <div class="tag-header">
+    <div class="org-name">PHL<span>POST</span></div>
+    <div class="org-tagline">Your Parcel. Your Heritage.</div>
+    <div class="tag-title">PROPERTY TAG</div>
+  </div>
+
+  <!-- Office / Department -->
+  <div class="tag-office">
+    <div class="tag-office-label">OFFICE LOCATION</div>
+    <div class="tag-office-value" th:text="${barcode.department ?: 'N/A'}">MSD</div>
+  </div>
+
+  <!-- Description -->
+  <div class="tag-desc">
+    <div class="tag-desc-label">DESCRIPTION</div>
+    <div class="tag-desc-value" th:text="${barcode.description ?: 'N/A'}">
+      Regular Office Table w/ 3-Drawer Mobile Pedestal
+    </div>
+  </div>
+
+  <!-- Fields with underlines -->
+  <div class="tag-fields">
+    <div class="tag-row">
+      <span class="tag-field-label">PROPERTY NUMBER</span>
+      <span class="tag-field-value" th:text="${barcode.refNum ?: 'N/A'}">LV25-01-007-1D</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag-field-label">MODEL NUMBER</span>
+      <span class="tag-field-value" th:text="${barcode.modelNum ?: 'N/A'}">N/A</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag-field-label">SERIAL NUMBER</span>
+      <span class="tag-field-value">N/A</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag-field-label">DATE ACQUIRED</span>
+      <span class="tag-field-value"
+            th:text="${barcode.dateObtained != null ? #temporals.format(barcode.dateObtained, 'MM-dd-yyyy') : 'N/A'}">
+        10-30-2024
+      </span>
+    </div>
+    <div class="tag-row">
+      <span class="tag-field-label">ACQUISITION DATE/COST</span>
+      <span class="tag-field-value"
+            th:text="${barcode.itemCost != null ? '₱' + #numbers.formatDecimal(barcode.itemCost, 1, 'COMMA', 2, 'POINT') : 'N/A'}">
+        ₱54,910.71
+      </span>
+    </div>
+    <div class="tag-row">
+      <span class="tag-field-label">END-USER/PERSON ACCOUNTABLE</span>
+      <span class="tag-field-value" th:text="${barcode.accountableName ?: 'N/A'}">Catherine Punzalan</span>
+    </div>
+  </div>
+
+  <!-- Bottom Section: QR + Signature -->
+  <div class="tag-bottom">
+    <div class="tag-qr">
+      <div th:if="${qrBase64}">
+        <img th:src="'data:image/png;base64,' + ${qrBase64}" alt="QR Code" style="display:block;width:90px;height:90px;border:1px solid #ddd;border-radius:4px;"/>
+      </div>
+      <div th:unless="${qrBase64}" style="width:90px;height:90px;border:1px solid #ddd;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#888;">
+        QR Code
+      </div>
+    </div>
+    <div class="tag-signature-block">
+      <div class="sig-line">
+        <span class="sig-label">VERIFIED BY / SIGNATURE</span>
+        <div class="sig-underline"></div>
+      </div>
+      <div class="sig-line">
+        <span class="sig-label">DATE</span>
+        <div class="sig-underline"></div>
+      </div>
+    </div>
+  </div>
+
+</div>

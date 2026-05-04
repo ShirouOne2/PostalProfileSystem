@@ -8,6 +8,12 @@ $(document).ready(function () {
     initializePrint();
     initializeExportExcel();
     initializeReportTable();
+    
+    // Show back button if coming from profile page
+    const profileReturnUrl = sessionStorage.getItem('profileReturnUrl');
+    if (profileReturnUrl) {
+        $('#backToProfileRow').show();
+    }
 });
 
 /* ── Toggle expandable office list in QB cards ── */
@@ -39,6 +45,12 @@ function goToProfile(el) {
     // Save current URL (with filters) so the Back button on profile works
     sessionStorage.setItem('reportReturnUrl', window.location.href);
     window.location.href = '/profile/' + id.trim() + '?source=report';
+}
+
+function goBackToProfile() {
+    const url = sessionStorage.getItem('profileReturnUrl');
+    sessionStorage.removeItem('profileReturnUrl');
+    window.location.href = url || '/report';
 }
 
 /* =====================================================
@@ -251,6 +263,20 @@ function initializePrint() {
             '<tbody>' + tableRows + '</tbody>' +
             '</table>' +
 
+            // Newly Connected Offices Table
+            '<h3>Newly Connected Offices</h3>' +
+            '<table>' +
+            '<thead><tr><th>Year</th><th>Quarter</th><th>Office Name</th><th>Area</th></tr></thead>' +
+            '<tbody>' + buildNewlyConnectedTable() + '</tbody>' +
+            '</table>' +
+
+            // Newly Disconnected Offices Table
+            '<h3>Newly Disconnected Offices</h3>' +
+            '<table>' +
+            '<thead><tr><th>Year</th><th>Quarter</th><th>Office Name</th><th>Area</th></tr></thead>' +
+            '<tbody>' + buildNewlyDisconnectedTable() + '</tbody>' +
+            '</table>' +
+
             '<div class="footer">PHLPost Profile System &mdash; Connectivity Report &mdash; Confidential &mdash; ' + printDate + '</div>' +
             '</body></html>';
 
@@ -277,6 +303,87 @@ function initializePrint() {
     });
 }
 
+/* Helper functions to build office detail tables */
+function buildNewlyConnectedTable() {
+    var rows = '';
+    $('#quarterlyBreakdownTable tbody tr').each(function () {
+        var cells = $(this).find('td');
+        // Standard check: Ensure row has enough columns
+        if (cells.length < 5) return;
+        
+        var year = cells.eq(0).text().trim();
+        var quarter = cells.eq(1).text().trim();
+        
+        // In PO TEMPLATE structure, 'Newly Connected' is in column 3 (0-indexed)
+        // This should contain the count and the office list
+        var newlyConnectedCell = cells.eq(3);
+        
+        var officeList = newlyConnectedCell.find('.qb-names-list');
+        if (officeList.length > 0) {
+            officeList.find('.qb-names-item').each(function () {
+                var areaTag = $(this).find('.qb-area-tag').text().trim();
+                // Get office name from the span that comes after the area tag
+                var officeName = $(this).find('span').not('.qb-area-tag').first().text().trim();
+                
+                if (officeName) {
+                    rows += '<tr>';
+                    rows += '<td>' + year + '</td>';
+                    rows += '<td>' + quarter + '</td>';
+                    rows += '<td>' + officeName + '</td>';
+                    rows += '<td>' + areaTag + '</td>';
+                    rows += '</tr>';
+                }
+            });
+        }
+    });
+    
+    if (!rows) {
+        rows = '<tr><td colspan="4" class="text-center text-muted">No newly connected offices found</td></tr>';
+    }
+    
+    return rows;
+}
+
+function buildNewlyDisconnectedTable() {
+    var rows = '';
+    $('#quarterlyBreakdownTable tbody tr').each(function () {
+        var cells = $(this).find('td');
+        // Standard check: Ensure row has enough columns
+        if (cells.length < 6) return;
+        
+        var year = cells.eq(0).text().trim();
+        var quarter = cells.eq(1).text().trim();
+        
+        // In PO TEMPLATE structure, 'Newly Disconnected' is in column 5 (0-indexed)
+        // This should contain count and office list
+        var newlyDisconnectedCell = cells.eq(5);
+        
+        var officeList = newlyDisconnectedCell.find('.qb-names-list');
+        if (officeList.length > 0) {
+            officeList.find('.qb-names-item').each(function () {
+                var areaTag = $(this).find('.qb-area-tag').text().trim();
+                // Get the office name from the span that comes after the area tag
+                var officeName = $(this).find('span').not('.qb-area-tag').first().text().trim();
+                
+                if (officeName) {
+                    rows += '<tr>';
+                    rows += '<td>' + year + '</td>';
+                    rows += '<td>' + quarter + '</td>';
+                    rows += '<td>' + officeName + '</td>';
+                    rows += '<td>' + areaTag + '</td>';
+                    rows += '</tr>';
+                }
+            });
+        }
+    });
+    
+    if (!rows) {
+        rows = '<tr><td colspan="4" class="text-center text-muted">No newly disconnected offices found</td></tr>';
+    }
+    
+    return rows;
+}
+
 /* =====================================================
    EXPORT EXCEL
 ===================================================== */
@@ -295,45 +402,87 @@ function initializeExportExcel() {
         }
 
         var data = [];
-        data.push(['Year', 'Quarter', 'Connected', 'Newly Connected', 'Disconnected', 'Newly Disconnected', 'Total', 'Status']);
+        // Header based on Template Columns
+        data.push(['Area', 'Office Name', 'Province', 'City/Municipality', 'Connectivity Status', 'ISP', 'Type of Connection', 'Speed (Mbps)', 'Postmaster']);
 
         var hasData = false;
-        $('#quarterlyBreakdownTable tbody tr').each(function () {
-            var cells = $(this).find('td');
-            if (cells.length < 7) return;
-            hasData = true;
-
-            function parseNum(str) {
-                var n = parseInt(str.replace(/[^0-9]/g, ''));
-                return isNaN(n) ? 0 : n;
+        
+        // Check if DataTable is available and initialized
+        if (typeof $.fn !== 'undefined' && $.fn.DataTable && $.fn.DataTable.isDataTable('#postOfficeTable')) {
+            var table = $('#postOfficeTable').DataTable();
+            var rows = table.rows().data();
+            
+            console.log('Export: Found', rows.length, 'rows in DataTable');
+            console.log('Export: Sample row data:', rows.length > 0 ? rows[0] : 'No data');
+            
+            if (rows.length > 0) {
+                hasData = true;
+                rows.each(function(r, index) {
+                    data.push([
+                        r.area || 'N/A',
+                        r.name || 'N/A',
+                        r.province || 'N/A',
+                        r.cityMunicipality || 'N/A',
+                        r.connectivityStatus || 'N/A',
+                        r.internetServiceProvider || 'N/A',
+                        r.typeOfConnection || 'N/A',
+                        r.speed || 'N/A',
+                        r.postmaster || 'N/A'
+                    ]);
+                });
             }
-
-            var yearTxt       = cells.eq(0).text().trim();
-            var quarterTxt    = cells.eq(1).text().trim();
-            var connectedTxt  = cells.eq(2).find('.font-weight-bold').text().trim() || cells.eq(2).text().trim();
-            var newConnTxt    = cells.eq(3).find('.badge-success').text().trim()    || cells.eq(3).find('.text-muted').text().trim() || cells.eq(3).text().trim();
-            var disconnTxt    = cells.eq(4).find('.font-weight-bold').text().trim() || cells.eq(4).text().trim();
-            var newDisconnTxt = cells.eq(5).find('.badge-danger').text().trim()     || cells.eq(5).find('.text-muted').text().trim() || cells.eq(5).text().trim();
-            var totalTxt      = cells.eq(6).text().trim();
-            var statusTxt     = cells.eq(7).text().trim();
-
-            data.push([
-                yearTxt,
-                quarterTxt,
-                connectedTxt  === '—' || connectedTxt  === '' ? '' : parseNum(connectedTxt),
-                newConnTxt    === '—' || newConnTxt    === '' ? '' : parseNum(newConnTxt),
-                disconnTxt    === '—' || disconnTxt    === '' ? '' : parseNum(disconnTxt),
-                newDisconnTxt === '—' || newDisconnTxt === '' ? '' : parseNum(newDisconnTxt),
-                totalTxt      === '—' || totalTxt      === '' ? '' : parseNum(totalTxt),
-                statusTxt
-            ]);
-        });
+        } else {
+            // Fallback: Extract data directly from table if DataTable is not available
+            // Column indices based on actual table structure (0-indexed):
+            // 0: #, 1: Area, 2: Office Name, 3: Province, 4: City/Municipality, 
+            // 5: Connectivity Status, 6: ISP, 7: Type of Connection, 8: Speed, 9: Postmaster
+            $('#postOfficeTable tbody tr').each(function(index) {
+                hasData = true;
+                var cells = $(this).find('td');
+                data.push([
+                    cells.eq(1).text().trim() || 'N/A', // Area
+                    cells.eq(2).text().trim() || 'N/A', // Office Name
+                    cells.eq(3).text().trim() || 'N/A', // Province
+                    cells.eq(4).text().trim() || 'N/A', // City/Municipality
+                    cells.eq(5).text().trim() || 'N/A', // Connectivity Status
+                    cells.eq(6).text().trim() || 'N/A', // ISP
+                    cells.eq(7).text().trim() || 'N/A', // Type of Connection
+                    cells.eq(8).text().trim() || 'N/A', // Speed
+                    cells.eq(9).text().trim() || 'N/A'  // Postmaster
+                ]);
+            });
+        }
 
         if (!hasData) {
+            console.log('Export Debug: No data found. Checking table status...');
+            
+            // Additional debugging information
+            let debugInfo = {
+                tableExists: $('#postOfficeTable').length > 0,
+                dataTablesLoaded: typeof $.fn !== 'undefined' && $.fn.DataTable,
+                isDataTable: $.fn.DataTable.isDataTable('#postOfficeTable'),
+                currentFilters: {
+                    year: $('#yearSelector').val(),
+                    quarter: $('#quarterFilter').val(),
+                    area: $('#areaFilter').val(),
+                    status: $('#statusFilter').val()
+                },
+                tableRows: $('#postOfficeTable tbody tr').length
+            };
+            
+            console.log('Export Debug Info:', debugInfo);
+            
+            let message = 'There is no data to export for the current filters.';
+            if (debugInfo.tableRows === 0) {
+                message += ' The table appears to be empty. Try clearing filters or refreshing the page.';
+            } else if (!debugInfo.isDataTable) {
+                message += ' The data table is not properly initialized. Please refresh the page.';
+            }
+            
             Swal.fire({
                 icon: 'warning',
                 title: 'No Data',
-                text: 'There is no data to export for the current filters.',
+                text: message,
                 confirmButtonColor: '#002868'
             });
             return;
@@ -353,13 +502,13 @@ function initializeExportExcel() {
 
         var wb = XLSX.utils.book_new();
 
-        // Sheet 1 — Quarterly Breakdown
+        // Sheet 1 — Connectivity Data (based on PO Template)
         var ws = XLSX.utils.aoa_to_sheet(data);
         ws['!cols'] = [
-            { wch: 8 }, { wch: 10 }, { wch: 14 },
-            { wch: 18 }, { wch: 16 }, { wch: 20 }, { wch: 10 }, { wch: 14 }
+            { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 20 },
+            { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 12 }, { wch: 20 }
         ];
-        XLSX.utils.book_append_sheet(wb, ws, 'Quarterly Breakdown');
+        XLSX.utils.book_append_sheet(wb, ws, 'Connectivity Data');
 
         // Sheet 2 — Summary
         var summaryData = [
@@ -381,7 +530,7 @@ function initializeExportExcel() {
         wsSummary['!cols'] = [{ wch: 28 }, { wch: 24 }];
         XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
-        var filename = 'connectivity-report-' + year + '-' + quarter + '.xlsx';
+        var filename = 'PHLPost_Connectivity_' + new Date().toISOString().slice(0,10) + '.xlsx';
         XLSX.writeFile(wb, filename);
 
         setTimeout(function () {
@@ -457,22 +606,16 @@ function initializeReportTable() {
             }
         },
         columns: [
-            { data: null,      render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1 },
-            { data: 'areaId',  render: d => d ? 'Area ' + d : 'N/A' },
-            { data: 'name',    defaultContent: 'N/A' },
-            { data: 'address', defaultContent: 'N/A' },
-            { data: 'zipCode', defaultContent: 'N/A' },
-            { 
-                data: 'speed',
-                defaultContent: 'N/A',
-                render: d => d || 'N/A'
-            },
-            {
-                data: 'status',
+            { data: null, render: (data, type, row, meta) => meta.row + 1 },
+            { data: 'area', render: d => d || 'N/A' }, // From Column A: AREA
+            { data: 'name', defaultContent: 'N/A' },    // From Column B: POSTAL OFFICE NAME
+            { data: 'province', defaultContent: 'N/A' },// From Column J: PROVINCE
+            { data: 'cityMunicipality', defaultContent: 'N/A' }, // From Column K: CITY/MUNICIPALITY
+            { data: 'connectivityStatus',               // From Column Q: CONNECTIVITY STATUS
                 render: function(data, type, row) {
-                    let statusBadge = data
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-danger">Inactive</span>';
+                    let val = (data || '').toUpperCase();
+                    let badge = val === 'ACTIVE' ? 'success' : 'danger';
+                    let statusBadge = `<span class="badge badge-${badge}">${val}</span>`;
                     
                     if (row.newThisQuarter) {
                         statusBadge += ' <span class="badge badge-info ml-1">New This Quarter</span>';
@@ -481,26 +624,31 @@ function initializeReportTable() {
                     return statusBadge;
                 }
             },
-            { data: 'postmaster', defaultContent: 'N/A' },
-            {
-                data: 'remarks',
-                defaultContent: '—',
-                render: d => d ? `<span style="font-size:12px;color:#555;">${d}</span>` : '—'
-            },
+            { data: 'internetServiceProvider', defaultContent: 'N/A' },     // From Column R: INTERNET SERVICE PROVIDER
+            { data: 'typeOfConnection', defaultContent: 'N/A' }, // From Column S: TYPE OF CONNECTION
+            { data: 'speed', render: d => d ? d + ' Mbps' : 'N/A' }, // From Column T: SPEED(MBPS)
+            { data: 'postmaster', defaultContent: 'N/A' }, // From Column C: Postmaster
             {
                 data: null,
                 render: (d, t, row) => {
-                    // Check user roles from body data attributes
                     const isSystemAdmin = $('body').data('is-system-admin') === true;
                     const isAreaAdmin = $('body').data('is-area-admin') === true;
                     const isAnyAdmin = $('body').data('is-any-admin') === true;
 
                     let buttons = `
-                    <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
-                        <i class="fas fa-edit"></i>
+                    <button class="btn btn-sm btn-primary view-btn" data-id="${row.id}">
+                        <i class="fas fa-eye"></i>
                     </button>
                     `;
-
+                    
+                    if (isAnyAdmin) {
+                        buttons += `
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${row.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        `;
+                    }
+                    
                     // Only show Archive button for System Admin and Area Admin
                     if (isSystemAdmin || isAreaAdmin) {
                         buttons += `
@@ -536,6 +684,10 @@ function initializeReportTable() {
         if (rowData && rowData.id) {
             viewOfficeFromReport(rowData.id, rowData.name || 'Office');
         }
+    });
+
+    $('#postOfficeTable').on('click', '.view-btn', function() { 
+        viewOfficeFromReport($(this).data('id')); 
     });
 
     $('#postOfficeTable').on('click', '.edit-btn', function () { 

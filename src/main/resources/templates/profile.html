@@ -9,59 +9,61 @@
 
     <title th:text="${postOffice.postalOffice + ' - Profile'}">Post Office Profile</title>
 
-    <!-- Profile CSS -->
+    <div id="profileRoleFlags" class="d-none" aria-hidden="true"
+         th:data-can-profile-edit="${canProfileEdit}"
+         th:data-can-profile-archive="${canProfileArchive}"
+         th:data-can-profile-photo="${canProfilePhotoUpload}"
+         th:data-is-asset="${#authorization.expression('hasAnyRole(''ADMIN'', ''ASSET'')')}"></div>
+
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 
     <!-- Cover Photo Carousel -->
     <div class="cover-photo-container">
         <div id="coverPhotoCarousel" class="carousel slide">
-            <!-- Carousel Indicators -->
             <ol class="carousel-indicators">
                 <li data-target="#coverPhotoCarousel" data-slide-to="0" class="active"></li>
                 <li data-target="#coverPhotoCarousel" data-slide-to="1"></li>
                 <li data-target="#coverPhotoCarousel" data-slide-to="2"></li>
             </ol>
-            
-            <!-- Carousel Slides -->
+
             <div class="carousel-inner">
-                <!-- Cover Photo 1 -->
+                <!-- Slot 1 — cover_photo column -->
                 <div class="carousel-item active">
                     <div class="cover-photo"
                          th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/1); background-size: cover; background-position: center;'
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/1); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
                     </div>
-                    <div class="cover-upload-overlay" data-slot="1">
+                    <div class="cover-upload-overlay" data-slot="1" th:if="${canProfilePhotoUpload}">
                         <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 1</span>
                     </div>
                 </div>
-                
-                <!-- Cover Photo 2 -->
+
+                <!-- Slot 2 — cover_photo_2 column -->
                 <div class="carousel-item">
                     <div class="cover-photo"
-                         th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/2); background-size: cover; background-position: center;'
+                         th:style="${office.coverPhoto2 != null and !#strings.isEmpty(office.coverPhoto2)}
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/2); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'">
                     </div>
-                    <div class="cover-upload-overlay" data-slot="2">
+                    <div class="cover-upload-overlay" data-slot="2" th:if="${canProfilePhotoUpload}">
                         <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 2</span>
                     </div>
                 </div>
-                
-                <!-- Cover Photo 3 -->
+
+                <!-- Slot 3 — cover_photo_3 column -->
                 <div class="carousel-item">
                     <div class="cover-photo"
-                         th:style="${office.coverPhoto != null and !#strings.isEmpty(office.coverPhoto)}
-                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/3); background-size: cover; background-position: center;'
+                         th:style="${office.coverPhoto3 != null and !#strings.isEmpty(office.coverPhoto3)}
+                                    ? 'background-image: url(/api/postal-office/' + ${office.id} + '/cover-photo/3); background-size: contain; background-position: center;'
                                     : 'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'">
                     </div>
-                    <div class="cover-upload-overlay" data-slot="3">
+                    <div class="cover-upload-overlay" data-slot="3" th:if="${canProfilePhotoUpload}">
                         <span><i class="fas fa-camera mr-1"></i> Change Cover Photo 3</span>
                     </div>
                 </div>
             </div>
-            
-            <!-- Carousel Controls -->
+
             <a class="carousel-control-prev" href="#coverPhotoCarousel" role="button" data-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="sr-only">Previous</span>
@@ -71,8 +73,7 @@
                 <span class="sr-only">Next</span>
             </a>
         </div>
-        
-        <!-- Hidden file inputs for each cover photo -->
+
         <input type="file" id="coverPhotoInput1" accept="image/*" style="display:none" data-slot="1">
         <input type="file" id="coverPhotoInput2" accept="image/*" style="display:none" data-slot="2">
         <input type="file" id="coverPhotoInput3" accept="image/*" style="display:none" data-slot="3">
@@ -95,7 +96,7 @@
                              src="https://ui-avatars.com/api/?name=Post+Office&size=150&background=667eea&color=fff&rounded=true"
                              class="profile-picture" alt="Profile Picture">
                     </th:block>
-                    <div class="profile-upload-overlay" id="profileUploadOverlay">
+                    <div class="profile-upload-overlay" id="profileUploadOverlay" th:if="${canProfilePhotoUpload}">
                         <span><i class="fas fa-camera"></i><br>Change Photo</span>
                     </div>
                 </div>
@@ -114,79 +115,64 @@
 
         <!-- Action Buttons -->
         <div class="text-center mb-3">
-            <a th:if="${source == 'quarters'}"
-               href="#"
-               onclick="goBackToQuarters()"
-               class="btn btn-outline-secondary btn-sm mr-1">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-            <a th:if="${source == 'report'}"
-               href="#"
-               onclick="goBackToReport()"
-               class="btn btn-outline-secondary btn-sm mr-1">
+            <!-- Back Button - shown when coming from report page -->
+            <button type="button" class="btn btn-secondary btn-sm mr-1" id="backToReportBtn"
+                    th:if="${source == 'report'}" onclick="goBackToReport()">
                 <i class="fas fa-arrow-left"></i> Back to Report
-            </a>
-            <a th:unless="${source == 'quarters' or source == 'report'}"
-               href="/table"
-               class="btn btn-outline-secondary btn-sm mr-1">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-            <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn">
+            </button>
+            
+            <!-- View Report Button - always shown for navigation to report -->
+            <button type="button" class="btn btn-success btn-sm mr-1" onclick="goToReportFromProfile()">
+                <i class="fas fa-chart-bar"></i> View Report
+            </button>
+            
+            <button type="button" class="btn btn-primary btn-sm mr-1" id="profileEditBtn"
+                    th:if="${canProfileEdit}">
                 <i class="fas fa-edit"></i> Edit Profile
             </button>
             <button onclick="window.print()" class="btn btn-info btn-sm mr-1">
                 <i class="fas fa-print"></i> Print Profile
             </button>
-            <!-- ✅ ADMIN ONLY: Archive Button -->
             <button type="button" class="btn btn-warning btn-sm" id="profileArchiveBtn"
-                    sec:authorize="hasRole('ADMIN')">
+                    th:if="${canProfileArchive}">
                 <i class="fas fa-archive"></i> Archive
             </button>
         </div>
 
         <script>
         function goBackToQuarters() {
-            const returnUrl = sessionStorage.getItem('quartersReturnUrl');
-            if (returnUrl) {
-                sessionStorage.removeItem('quartersReturnUrl');
-                window.location.href = returnUrl;
-            } else {
-                window.location.href = '/quarters';
-            }
+            const url = sessionStorage.getItem('quartersReturnUrl');
+            sessionStorage.removeItem('quartersReturnUrl');
+            window.location.href = url || '/quarters';
         }
-
         function goBackToReport() {
-            const returnUrl = sessionStorage.getItem('reportReturnUrl');
-            if (returnUrl) {
-                sessionStorage.removeItem('reportReturnUrl');
-                window.location.href = returnUrl;
-            } else {
-                window.location.href = '/report';
-            }
+            const url = sessionStorage.getItem('reportReturnUrl');
+            sessionStorage.removeItem('reportReturnUrl');
+            window.location.href = url || '/report';
+        }
+        function goBackToDashboard() {
+            const url = sessionStorage.getItem('dashboardReturnUrl');
+            sessionStorage.removeItem('dashboardReturnUrl');
+            window.location.href = url || '/dashboard';
+        }
+        function goToReportFromProfile() {
+            // Save current profile URL so the Back button on report works
+            sessionStorage.setItem('profileReturnUrl', window.location.href);
+            window.location.href = '/report';
         }
         </script>
 
         <!-- Profile Tabs -->
         <div class="profile-tabs">
-            <button class="tab-item active" data-tab="basic">
-                <i class="fas fa-info-circle"></i> Basic Info
-            </button>
-            <button class="tab-item" data-tab="location">
-                <i class="fas fa-map-marker-alt"></i> Location
-            </button>
-            <button class="tab-item" data-tab="connectivity">
-                <i class="fas fa-wifi"></i> Connectivity
-            </button>
-            <button class="tab-item" data-tab="contact">
-                <i class="fas fa-address-book"></i> Contact
-            </button>
-            <button class="tab-item" data-tab="staff">
-                <i class="fas fa-users"></i> Staff
-            </button>
+            <button class="tab-item active" data-tab="basic"><i class="fas fa-info-circle"></i> Basic Info</button>
+            <button class="tab-item" data-tab="location"><i class="fas fa-map-marker-alt"></i> Location</button>
+            <button class="tab-item" data-tab="connectivity"><i class="fas fa-wifi"></i> Connectivity</button>
+            <button class="tab-item" data-tab="contact"><i class="fas fa-address-book"></i> Contact</button>
+            <button class="tab-item" data-tab="staff"><i class="fas fa-users"></i> Staff</button>
+            <button class="tab-item" data-tab="assets"><i class="fas fa-box"></i> Assets</button>
         </div>
 
-        <!-- Tab: Basic Info -->
-        <!-- ══ TAB: Basic Info ══ -->
+        <!-- TAB: Basic Info -->
         <div id="tab-basic" class="tab-panel active">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -195,31 +181,31 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Post Office Name</small>
-                            <div class="font-weight-bold" th:text="${postOffice.postalOffice ?: 'N/A'}">—</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Post Office Name</small>
+                            <div class="" th:text="${postOffice.postalOffice ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postmaster</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postmaster</small>
                             <div th:text="${postOffice.postmaster ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Classification</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Classification</small>
                             <div th:text="${postOffice.classification ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Services Provided</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Services Provided</small>
                             <div th:text="${postOffice.serviceProvided ?: 'N/A'}">—</div>
                         </div>
                     </div>
                     <div th:if="${postOffice.remarks != null and !#strings.isEmpty(postOffice.remarks)}" class="mt-2 pt-2 border-top">
-                        <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Remarks / Notes</small>
+                        <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Remarks / Notes</small>
                         <div th:text="${postOffice.remarks}">—</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ══ TAB: Location ══ -->
+        <!-- TAB: Location -->
         <div id="tab-location" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -228,35 +214,31 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Area</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Area</small>
                             <div th:text="${postOffice.area ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Region</small>
-                            <div th:text="${postOffice.region ?: 'N/A'}">—</div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Province</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Province</small>
                             <div th:text="${postOffice.province ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">City / Municipality</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">City / Municipality</small>
                             <div th:text="${postOffice.city ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Barangay</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Barangay</small>
                             <div th:text="${postOffice.barangay ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ZIP Code</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ZIP Code</small>
                             <div th:text="${postOffice.zipCode ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Latitude</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Latitude</small>
                             <div th:text="${postOffice.latitude != null ? postOffice.latitude : 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Longitude</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Longitude</small>
                             <div th:text="${postOffice.longitude != null ? postOffice.longitude : 'N/A'}">—</div>
                         </div>
                     </div>
@@ -264,7 +246,7 @@
             </div>
         </div>
 
-        <!-- ══ TAB: Connectivity ══ -->
+        <!-- TAB: Connectivity -->
         <div id="tab-connectivity" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -273,33 +255,33 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Status</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Status</small>
                             <span class="badge px-3 py-1"
                                   th:classappend="${postOffice.status == 'Active' ? 'badge-success' : 'badge-danger'}"
                                   th:text="${postOffice.status ?: 'N/A'}">—</span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Office Status (Physical)</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Office Status (Physical)</small>
                             <div th:text="${postOffice.officeStatus ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Internet Service Provider</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Internet Service Provider</small>
                             <div th:text="${postOffice.internetServiceProvider ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Type of Connection</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Type of Connection</small>
                             <div th:text="${postOffice.typeOfConnection ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Speed</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Connection Speed</small>
                             <div th:text="${postOffice.speed ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Static IP Address</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Static IP Address</small>
                             <div th:text="${postOffice.staticIpAddress ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Owned or Shared</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Owned or Shared</small>
                             <div th:text="${postOffice.ownedOrShared ?: 'N/A'}">—</div>
                         </div>
                     </div>
@@ -312,15 +294,15 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Name</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Name</small>
                             <div th:text="${postOffice.planName ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Price (₱/month)</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Plan Price (₱/month)</small>
                             <div th:text="${postOffice.planPrice != null ? '₱' + postOffice.planPrice : 'N/A'}">—</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Account Number</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Account Number</small>
                             <div th:text="${postOffice.accountNumber ?: 'N/A'}">—</div>
                         </div>
                     </div>
@@ -328,7 +310,7 @@
             </div>
         </div>
 
-        <!-- ══ TAB: Contact ══ -->
+        <!-- TAB: Contact -->
         <div id="tab-contact" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -337,36 +319,19 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Person</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Person</small>
                             <div th:text="${postOffice.postalOfficeContactPerson ?: 'N/A'}">—</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Number</small>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Contact Number</small>
                             <div th:text="${postOffice.postalOfficeContactNumber ?: 'N/A'}">—</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card mb-3 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-network-wired text-primary mr-2"></i>ISP Contact</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ISP Contact Person</small>
-                            <div th:text="${postOffice.ispContactPerson ?: 'N/A'}">—</div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">ISP Contact Number</small>
-                            <div th:text="${postOffice.ispContactNumber ?: 'N/A'}">—</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ══ TAB: Staff ══ -->
+        <!-- TAB: Staff -->
         <div id="tab-staff" class="tab-panel">
             <div class="card mb-3 shadow-sm">
                 <div class="card-header bg-light">
@@ -375,24 +340,89 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Number of Employees</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfEmployees ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Number of Employees</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfEmployees ?: '0'}">0</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postal Tellers</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfPostalTellers ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Postal Tellers</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfPostalTellers ?: '0'}">0</div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <small class="text-muted d-block font-weight-bold text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Letter Carriers</small>
-                            <div class="font-weight-bold" style="font-size:1.6rem;" th:text="${postOffice.noOfLetterCarriers ?: '0'}">0</div>
+                            <small class="text-muted d-block  text-uppercase" style="font-size:.72rem;letter-spacing:.5px;">Letter Carriers</small>
+                            <div class="" style="font-size:1.6rem;" th:text="${postOffice.noOfLetterCarriers ?: '0'}">0</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ✅ ADMIN ONLY: Archive Modal -->
-        <div sec:authorize="hasRole('ADMIN')">
+        <!-- TAB: Assets -->
+        <div id="tab-assets" class="tab-panel">
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-box text-primary mr-2"></i>Assets Information</h6>
+                    <span class="badge badge-info" th:text="${#lists.size(inventoryList)} + ' items'">0 items</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Tracking No.</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Amount (₱)</th>
+                                    <th>Date Acquired</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${inventoryList}"
+                                    style="cursor: pointer;"
+                                    title="Click to view in inventory"
+                                    th:data-search="${!#strings.isEmpty(item.trackingNumber) ? item.trackingNumber : item.name}"
+                                    onclick="window.location.href='/inventory?q=' + encodeURIComponent(this.getAttribute('data-search'))">
+                                    <td>
+                                        <span class="badge badge-secondary" th:text="${item.trackingNumber ?: 'N/A'}">N/A</span>
+                                    </td>
+                                    <td>
+                                        <div th:text="${item.name}">—</div>
+                                        <small class="text-muted" th:text="'#' + ${item.inventoryId}">—</small>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.category != null}"
+                                              class="badge"
+                                              th:classappend="${item.category.name() == 'IT_EQUIPMENT'}  ? 'badge-info'      :
+                                                              (${item.category.name() == 'VEHICLE'}      ? 'badge-warning' : 'badge-secondary')"
+                                              th:text="${item.category.name() == 'OFFICE_EQUIPMENT'}     ? 'Office Equipment' :
+                                                       (${item.category.name() == 'IT_EQUIPMENT'}        ? 'IT Equipment'     : 'Vehicle')">—</span>
+                                        <span th:if="${item.category == null}" class="text-muted">—</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.isServiceable != null and item.isServiceable.name() == 'yes'}"
+                                              class="badge badge-success">Serviceable</span>
+                                        <span th:if="${item.isServiceable != null and item.isServiceable.name() == 'no'}"
+                                              class="badge badge-danger">Not Serviceable</span>
+                                        <span th:if="${item.isServiceable == null}" class="text-muted">—</span>
+                                    </td>
+                                    <td th:text="${item.amount != null ? '₱' + #numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT') : '—'}">—</td>
+                                    <td th:text="${item.dateAcquired != null ? #temporals.format(item.dateAcquired, 'MMM dd, yyyy') : '—'}">—</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(inventoryList)}">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-box-open fa-2x mb-2"></i>
+                                        <div>No assets found for this post office.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Archive modal (optional; profile.js uses SweetAlert — kept for fragments using Bootstrap modal) -->
+        <div th:if="${canProfileArchive}">
             <div class="modal fade" id="profileArchiveModal" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">
@@ -404,7 +434,7 @@
                         </div>
                         <div class="modal-body">
                             <p class="text-muted mb-3">
-                                You are about to archive <strong th:text="${postOffice.postalOffice}"></strong>.
+                                You are about to archive <span th:text="${postOffice.postalOffice}"></span>.
                                 This office will be hidden from all views but can be restored later.
                             </p>
                             <div class="form-group">
@@ -422,13 +452,12 @@
                     </div>
                 </div>
             </div>
-        </div><!-- end ADMIN Archive Modal -->
+        </div>
 
-        <!-- Tab switching and carousel initialization -->
         <script src="/js/profile-init.js"></script>
 
-        <!-- OFFICE_DATA: injected here, inside fragment, runs before profile.js -->
         <script th:inline="javascript">
+            window.PROFILE_PAGE_SOURCE = /*[[${source}]]*/ 'table';
             window.OFFICE_DATA = {
                 id:                         /*[[${office.id}]]*/ null,
                 name:                       /*[[${postOffice.postalOffice}]]*/ '',
@@ -452,8 +481,12 @@
             };
         </script>
 
-        <!-- Profile Photo Management JavaScript -->
         <script src="/js/profile-photos.js"></script>
+
+    <!-- Include modal fragments -->
+    <div th:replace="~{fragments/modals/add-edit-modal :: modal}"></div>
+    <div th:replace="~{fragments/modals/delete-modal-alt :: content}"></div>
+    <div th:replace="~{fragments/modals/print-tag-modal :: content}"></div>
 
     </div><!-- /.profile-section -->
 

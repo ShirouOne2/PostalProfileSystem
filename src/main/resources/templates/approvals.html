@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
+
+<head>
+    <title>Approval Dashboard - PPS Profile System</title>
+</head>
+
+<body th:data-is-system-admin="${isSystemAdmin}" 
+      th:data-is-area-admin="${isAreaAdmin}">
+
+<div th:fragment="content">
+    
+    <link rel="stylesheet" th:href="@{/css/approvals.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Page Header -->
+   
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-clock text-warning"></i> Pending Your Review</h5>
+                </div>
+                <div class="text-center py-3">
+                    <h2 class="text-warning" id="pendingCount">0</h2>
+                    <small class="text-muted">Requests waiting for your approval</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-check-circle text-success"></i> Approved by You</h5>
+                </div>
+                <div class="text-center py-3">
+                    <h2 class="text-success" id="approvedCount">0</h2>
+                    <small class="text-muted">Requests you've approved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-card">
+                <div class="card-header-custom">
+                    <h5><i class="fas fa-times-circle text-danger"></i> Rejected by You</h5>
+                </div>
+                <div class="text-center py-3">
+                    <h2 class="text-danger" id="rejectedCount">0</h2>
+                    <small class="text-muted">Requests you've rejected</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests Table -->
+    <div class="content-card">
+        <div class="card-header-custom">
+            <h5><i class="fas fa-exclamation-triangle text-warning"></i> Pending Approval Requests</h5>
+            <div>
+                <span class="badge bg-warning" id="pendingBadge">0 pending</span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="pendingRequestsTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Type</th>
+                        <th>Requested By</th>
+                        <th>Changes</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingRequestsBody">
+                    <!-- Requests will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="noPendingRequests" class="empty-state d-none">
+            <i class="fas fa-check-circle text-success fa-3x"></i>
+            <h4>No Pending Requests</h4>
+            <p>All requests have been processed!</p>
+        </div>
+    </div>
+
+    <!-- Request Details Modal -->
+    <div id="requestModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Request Details</h5>
+                    <button type="button" class="btn-close" onclick="closeRequestModal()" aria-label="Close modal"></button>
+                </div>
+                <div class="modal-body" id="requestDetails">
+                    <!-- Request details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeRequestModal()" aria-label="Close modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="rejectBtn" onclick="rejectRequest()" aria-label="Reject request">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button type="button" class="btn btn-success" id="approveBtn" onclick="approveRequest()" aria-label="Approve request">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/approval-dashboard.js}"></script>
+</div>
+
+</body>
+</html>

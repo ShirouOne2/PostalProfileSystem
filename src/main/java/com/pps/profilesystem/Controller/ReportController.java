@@ -61,7 +61,7 @@ public class ReportController {
         }
 
         // Apply user area restrictions: non-system-admin users can only see their assigned area
-        if (roleId != null && roleId != 1) {
+        if (roleId != null && roleId != 1 && roleId != 4) {
             // User is not a system admin, restrict to their assigned area
             if (userAreaId != null) {
                 // If no area filter is set, default to user's area
@@ -80,7 +80,7 @@ public class ReportController {
 
         model.addAttribute("currentYear",       currentYear);
         model.addAttribute("currentQuarterInfo", getCurrentQuarterInfo());
-        model.addAttribute("areas",              getAllAreas());
+        model.addAttribute("areas",              getAllAreas(roleId, userAreaId));
         model.addAttribute("connectivityStats",
             getConnectivityStats(currentYear, quarterFilter, areaId, statusFilter));
         model.addAttribute("quartersData",
@@ -93,9 +93,9 @@ public class ReportController {
         model.addAttribute("activePage", "report");
 
         Map<String, Boolean> userAccess = new HashMap<>();
-        userAccess.put("can_access_all_areas", roleId != null && roleId == 1);
+        userAccess.put("can_access_all_areas", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("userAccess", userAccess);
-        model.addAttribute("isSystemAdmin", roleId != null && roleId == 1);
+        model.addAttribute("isSystemAdmin", roleId != null && (roleId == 1 || roleId == 4));
         model.addAttribute("isAreaAdmin", roleId != null && roleId == 2);
         model.addAttribute("isAnyAdmin", roleId != null && (roleId == 1 || roleId == 2));
 
@@ -375,8 +375,15 @@ public class ReportController {
         return info;
     }
 
-    private List<Area> getAllAreas() {
-        try { return areaRepository.findAll(); }
+    private List<Area> getAllAreas(Integer roleId, Integer userAreaId) {
+        try {
+            List<Area> all = areaRepository.findAll();
+            if (roleId != null && (roleId == 1 || roleId == 4)) return all;
+            if (userAreaId == null) return new ArrayList<>();
+            return all.stream()
+                .filter(a -> userAreaId.equals(a.getId()))
+                .toList();
+        }
         catch (Exception e) { return new ArrayList<>(); }
     }
 

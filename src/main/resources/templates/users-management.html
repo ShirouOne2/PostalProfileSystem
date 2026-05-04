@@ -1,37 +1,24 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Management</title>
-</head>
-<body>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
-<!-- Use the main layout -->
-<div th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
-    
-    <!-- Page Title -->
-    <title>User Management - PPS Profile System</title>
-    
-    <!-- Page Content -->
-    <div th:fragment="content">
-        
-        <!-- Page Header -->
-        <div class="page-header">
-            <div>
-                <h1><i class="fas fa-users me-2"></i> User Management</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/table">Post Office</a></li>
-                        <li class="breadcrumb-item active">Users</li>
-                    </ol>
-                </nav>
+<title th:fragment="title">User Management - PHLPost Profile System</title>
+
+<div th:fragment="content">
+    <div class="users-page container-fluid"
+         th:data-is-system-admin="${isSystemAdmin}"
+         th:data-is-area-admin="${isAreaAdmin}"
+         th:data-is-srd-operation="${isSrdOperation}"
+         th:data-current-area-id="${currentAreaId}">
+
+        <div class="page-header page-header--toolbar-only">
+            <div class="page-header-actions">
+                <button type="button" class="btn btn-add-user" onclick="showAddModal()">
+                    <i class="fas fa-user-plus"></i> Add New User
+                </button>
             </div>
-            <button class="btn btn-add-user" onclick="showAddModal()">
-                <i class="fas fa-user-plus"></i> Add New User
-            </button>
         </div>
 
-        <!-- Content Card -->
         <div class="content-card">
             <div class="card-header-custom">
                 <div>
@@ -40,8 +27,7 @@
                 </div>
             </div>
 
-            <!-- Users Table -->
-            <div class="table-responsive">
+            <div class="table-responsive users-dt-wrap">
                 <table id="usersTable" class="table table-hover" style="width:100%">
                     <thead>
                         <tr>
@@ -55,18 +41,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Data will be loaded via AJAX -->
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- User Modal Fragment -->
         <div th:replace="~{fragments/modals/User-modal :: userModal}"></div>
-        
     </div>
-
 </div>
-
-</body>
 </html>

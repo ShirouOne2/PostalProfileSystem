@@ -288,27 +288,114 @@
 
                         </div>
 
-                            <div class="col-md-6">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editContactPerson">Postal Office Contact Person</label>
+                                <input type="text" class="form-control" id="editContactPerson">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editContactNumber">Postal Office Contact Number</label>
+                                <input type="text" class="form-control" id="editContactNumber">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
 
                             <div class="form-group">
 
-                                <label for="editContactNumber">Postal Office Contact Number</label>
+                                <label for="editClassification">
 
-                                <input type="text" class="form-control" id="editContactNumber">
+                                    Classification
+
+                                    <span data-toggle="tooltip" data-placement="top"
+
+                                          title="Type of postal office classification based on operations and services."
+
+                                         style="margin-left:5px;">
+
+                                        <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+
+                                    </span>
+
+                                </label>
+
+                                <select class="form-control" id="editClassification">
+
+                                    <option value="">-- Select Classification --</option>
+
+                                    <option value="Regular">Regular</option>
+
+                                    <option value="Extension">Extension</option>
+
+                                    <option value="Delivery">Delivery</option>
+
+                                    <option value="Non-Delivery">Non-Delivery</option>
+
+                                    <option value="Acceptance with Delivery">Acceptance with Delivery</option>
+
+                                    <option value="Acceptance">Acceptance</option>
+
+                                    <option value="Mother">Mother</option>
+
+                                    <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
+
+                                    <option value="Post Shop">Post Shop</option>
+
+                                    <option value="Campus">Campus</option>
+
+                                    <option value="Mall Based">Mall Based</option>
+
+                                    <option value="Postal Station - LGU">Postal Station - LGU</option>
+
+                                    <option value="Barangay Based">Barangay Based</option>
+
+                                    <option value="Private">Private</option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="form-group">
+
+                                <label for="editServiceProvided">
+
+                                    Services Provided
+
+                                    <span data-toggle="tooltip" data-placement="top"
+
+                                          title="Main postal services offered at this location."
+
+                                         style="margin-left:5px;">
+
+                                        <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
+
+                                    </span>
+
+                                </label>
+
+                                <select class="form-control" id="editServiceProvided">
+
+                                    <option value="">-- Select Service --</option>
+
+                                    <option value="Delivery">Delivery</option>
+
+                                    <option value="Acceptance">Acceptance</option>
+
+                                    <option value="Acceptance and Delivery">Acceptance and Delivery</option>
+
+                                </select>
 
                             </div>
 
                         </div>
 
                     </div>
-
-                    
-
-
-
-                  
-
-
 
                     <!-- ── Address ───────────────────────────────────────── -->
 
@@ -347,22 +434,6 @@
                                 <select class="form-control" id="editAreaId">
 
                                     <option value="">-- Select Area --</option>
-
-                                </select>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <div class="form-group">
-
-                                <label for="editRegionId">Region</label>
-
-                                <select class="form-control" id="editRegionId">
-
-                                    <option value="">-- Select Region --</option>
 
                                 </select>
 
@@ -493,7 +564,7 @@
 
                         <h6 class="mt-3 mb-2 text-primary">
 
-                            <i class="fas fa-wifi mr-1"></i>Connectivity &amp; Office Status
+                            <i class="fas fa-wifi mr-1"></i>Operational Status
 
                         </h6>
 
@@ -509,7 +580,7 @@
 
                                     <label for="editStatus">
 
-                                        <i class="fas fa-wifi mr-1 text-primary"></i>
+                                        <i class="fa-solid fa-circle-check mr-1 text-primary"></i>
 
                                         Connection Status <span class="text-danger">*</span>
 
@@ -539,7 +610,7 @@
 
                                         <i class="fas fa-door-open mr-1 text-info"></i>
 
-                                        Office Status <small class="text-muted">(Physical)</small>
+                                        Office Availability <small class="text-muted"></small>
 
                                     </label>
 
@@ -550,6 +621,8 @@
                                         <option value="OPEN">OPEN</option>
 
                                         <option value="CLOSED">CLOSED</option>
+
+                                        <option value="TBD">TBD</option>
 
                                     </select>
 
@@ -565,113 +638,19 @@
 
                         <div class="row">
 
-                            <div class="col-md-3">
-
-                                <div class="form-group">
-
-                                    <label for="editClassification">
-
-                                        Classification
-
-                                        <span data-toggle="tooltip" data-placement="top"
-
-                                              title="Type of postal office classification based on operations and services."
-
-                                              style="cursor:help;">
-
-                                            <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-
-                                        </span>
-
-                                    </label>
-
-                                    <select class="form-control" id="editClassification">
-
-                                        <option value="">-- Select Classification --</option>
-
-                                        <option value="Regular">Regular</option>
-
-                                        <option value="Extension">Extension</option>
-
-                                        <option value="Delivery">Delivery</option>
-
-                                        <option value="Non-Delivery">Non-Delivery</option>
-
-                                        <option value="Acceptance with Delivery">Acceptance with Delivery</option>
-
-                                        <option value="Acceptance">Acceptance</option>
-
-                                        <option value="Mother">Mother</option>
-
-                                        <option value="Personnel Handling Delivery">Personnel Handling Delivery</option>
-
-                                        <option value="Post Shop">Post Shop</option>
-
-                                        <option value="Campus">Campus</option>
-
-                                        <option value="Mall Based">Mall Based</option>
-
-                                        <option value="Postal Station - LGU">Postal Station - LGU</option>
-
-                                        <option value="Barangay Based">Barangay Based</option>
-
-                                        <option value="Private">Private</option>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-3">
-
-                                <div class="form-group">
-
-                                    <label for="editServiceProvided">
-
-                                        Services Provided
-
-                                        <span data-toggle="tooltip" data-placement="top"
-
-                                              title="Main postal services offered at this location."
-
-                                              style="cursor:help;">
-
-                                            <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
-
-                                        </span>
-
-                                    </label>
-
-                                    <select class="form-control" id="editServiceProvided">
-
-                                        <option value="">-- Select Service --</option>
-
-                                        <option value="Delivery">Delivery</option>
-
-                                        <option value="Acceptance">Acceptance</option>
-
-                                        <option value="Acceptance and Delivery">Acceptance and Delivery</option>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-3">
+                            <div class="col-md-4">
 
                                 <div class="form-group">
 
                                     <label for="editISP">
 
-                                        <i class="fas fa-network-wired mr-1"></i>ISP
+                                        <i class="fas fa-network-wired mr-1"></i> Internet Service Provider
 
                                         <span data-toggle="tooltip" data-placement="top"
 
                                               title="The company providing internet service to this post office (e.g. PLDT, Globe, Converge)."
 
-                                              style="cursor:help;">
+                                              style="margin-left:5px;">
 
                                             <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
 
@@ -705,21 +684,21 @@
 
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
 
                                 <div class="form-group">
 
                                     <label for="editTypeOfConnection">
 
-                                        Type of Connection
+                                        <i class="fas fa-plug mr-1"></i> Type of Connection
 
                                         <span data-toggle="tooltip" data-placement="top"
 
                                               title="The physical medium used for internet connectivity (e.g. Fiber — fastest and most reliable; DSL — uses phone line; Wireless — radio signal; Satellite — for remote areas)."
 
-                                              style="cursor:help;">
+                                            style="margin-left:5px;">
 
-                                            <i class="fas fa-question-circle text-muted" style="font-size:11px;"></i>
+                                            <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
 
                                         </span>
 
@@ -745,23 +724,19 @@
 
                             </div>
 
-                        </div>
-
-                        <div class="row">
-
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
                                     <label for="editIPAddressType">
 
-                                        IP Address Type
+                                        <i class="fas fa-network-wired mr-1"></i> IP Address Type
 
                                         <span data-toggle="tooltip" data-placement="top"
 
                                               title="Dynamic IP changes each time you connect, Static IP stays the same."
 
-                                              style="cursor:help;">
+                                           style="margin-left:5px;">
 
                                             <i class="fas fa-info-circle text-muted" style="font-size:11px;"></i>
 
@@ -900,7 +875,7 @@
 
                     <button type="button" class="btn btn-danger mr-auto" id="editModalArchiveBtn"
 
-                            sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_AREA_ADMIN')">
+                            sec:authorize="hasRole('ADMIN')">
 
                         <i class="fas fa-archive"></i> Archive
 
@@ -928,9 +903,7 @@
 
 
 
-    <!-- ── Photo upload script ───────────────────────────────────── -->
-
-    <script src="/js/edit-modal-photos.js"></script>
+    <!-- Photo upload JS: main-layout loads /js/edit-modal-photos.js after jQuery and edit-modal.js -->
 
     <!-- Tooltip init handled by main-layout.html script #23 -->
 

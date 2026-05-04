@@ -160,7 +160,7 @@ async function handleFormSubmit(e) {
 
     // Show loading
     Swal.fire({
-        title: editingUserId ? 'Updating User...' : 'Adding User...',
+        title: editingUserId ? 'Submitting Update Request...' : 'Submitting Create Request...',
         text: 'Please wait',
         allowOutsideClick: false,
         didOpen: () => {
@@ -172,17 +172,20 @@ async function handleFormSubmit(e) {
         let response;
 
         if (editingUserId) {
-            // Update existing user
-            response = await fetch(`/users/api/update/${editingUserId}`, {
-                method: 'PUT',
+            // Create approval request for user update
+            response = await fetch('/users/api/request-update', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(userData)
+                body: JSON.stringify({
+                    userId: editingUserId,
+                    changes: userData
+                })
             });
         } else {
-            // Add new user
-            response = await fetch('/users/api/add', {
+            // Create approval request for new user
+            response = await fetch('/users/api/request-create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -196,9 +199,9 @@ async function handleFormSubmit(e) {
         if (result.success) {
             await Swal.fire({
                 icon: 'success',
-                title: 'Success!',
-                text: result.message,
-                timer: 2000,
+                title: 'Request Submitted!',
+                text: result.message + ' Your request is now pending Area Admin approval.',
+                timer: 3000,
                 showConfirmButton: false
             });
             closeModal();
@@ -213,11 +216,11 @@ async function handleFormSubmit(e) {
         }
 
     } catch (error) {
-        console.error('Error saving user:', error);
+        console.error('Error submitting request:', error);
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Failed to save user',
+            text: 'Failed to submit request',
             confirmButtonColor: '#d33'
         });
     }
@@ -355,6 +358,65 @@ async function deleteUser(id) {
             confirmButtonColor: '#d33'
         });
     }
+}
+
+// Role change handler
+function onRoleChange() {
+    const roleSelect = document.getElementById('role');
+    const selectedRole = roleSelect.value;
+    
+    // Get role name from value
+    const roleNames = {
+        '1': 'System Admin',
+        '2': 'Area Admin', 
+        '3': 'User',
+        '4': 'SRD Operation'
+    };
+    
+    const roleName = roleNames[selectedRole] || '';
+    
+    // Show role change notification
+    if (selectedRole) {
+        // You can add specific logic based on role selection
+        console.log('Role changed to:', roleName);
+        
+        // Example: Show/hide certain fields based on role
+        if (selectedRole === '1') {
+            // System Admin specific logic
+            console.log('System Admin selected - Full permissions');
+        } else if (selectedRole === '2') {
+            // Area Admin specific logic
+            console.log('Area Admin selected - Area-specific permissions');
+        } else if (selectedRole === '3') {
+            // User specific logic
+            console.log('User selected - Limited permissions');
+        } else if (selectedRole === '4') {
+            // SRD Operation specific logic
+            console.log('SRD Operation selected - Search, Read, Delete permissions');
+        }
+    }
+}
+
+// Get role display name
+function getRoleDisplayName(roleValue) {
+    const roleNames = {
+        '1': 'System Admin',
+        '2': 'Area Admin',
+        '3': 'User',
+        '4': 'SRD Operation'
+    };
+    return roleNames[roleValue] || 'Unknown';
+}
+
+// Get role badge class
+function getRoleBadgeClass(roleValue) {
+    const badgeClasses = {
+        '1': 'danger',    // System Admin - Red
+        '2': 'warning',   // Area Admin - Orange
+        '3': 'primary',    // User - Blue
+        '4': 'info'       // SRD Operation - Light Blue
+    };
+    return badgeClasses[roleValue] || 'secondary';
 }
 
 // Logout

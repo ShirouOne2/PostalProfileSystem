@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="en"
+      th:replace="~{layout/main-layout :: layout(~{::title}, ~{::main})}">
+
+<title>AssetVault — Inventory</title>
+
+<main th:fragment="main">
+
+    <!-- ── Page-specific CSS ── -->
+    <link rel="stylesheet" th:href="@{/css/inventory-styles.css}"/>
+
+    <!-- ── Flash Messages ── -->
+    <div class="page-body">
+        <div id="flashArea">
+        <div th:if="${successMsg}" class="flash flash-success">
+            ✅ <span th:text="${successMsg}"></span>
+        </div>
+        <div th:if="${errorMsg}" class="flash flash-error">
+            ⚠️ <span th:text="${errorMsg}"></span>
+        </div>
+    </div>
+
+    <!-- ── Welcome Row ── -->
+    <div class="welcome-row">
+        <div>
+            <div class="welcome-title">Inventory <em>Assets</em></div>
+            <div class="welcome-date" id="todayDate"></div>
+        </div>
+        <div class="header-btns">
+            <a th:href="@{/inventory/export}" class="btn btn-outline">⬇️ Export CSV</a>
+            <button class="btn btn-primary" type="button" onclick="openModal()">＋ Add Item</button>
+        </div>
+    </div>
+
+    <!-- ── Stat Cards ── -->
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-orange">📦</div>
+            <div>
+                <div class="stat-value" th:text="${totalCount}">0</div>
+                <div class="stat-label">Total Items</div>
+                <div class="stat-change">All registered assets</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">✅</div>
+            <div>
+                <div class="stat-value" th:text="${serviceableCount}">0</div>
+                <div class="stat-label">Serviceable</div>
+                <div class="stat-change"
+                     th:text="${totalCount > 0} ? ('↑ ' + ${#numbers.formatDecimal(serviceableCount * 100.0 / totalCount, 1, 0)} + '% of total') : '—'">—</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">💰</div>
+            <div>
+                <div class="stat-value"
+                     th:text="'₱' + ${#numbers.formatDecimal(totalValue, 1, 'COMMA', 0, 'POINT')}">₱0</div>
+                <div class="stat-label">Total Value</div>
+                <div class="stat-change">Combined asset worth</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">📄</div>
+            <div>
+                <div class="stat-value" th:text="${totalPages}">1</div>
+                <div class="stat-label">Pages</div>
+                <div class="stat-change"
+                     th:text="'Page ' + ${currentPage + 1} + ' of ' + ${totalPages}">Page 1 of 1</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Filters (server-side GET form) ── -->
+    <form th:action="@{/inventory}" method="get" id="filterForm">
+        <div class="filters-bar">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+
+                <!-- Search (also searches tracking number now) -->
+                <div class="search-wrap">
+                    <span style="color:var(--muted);font-size:13px">🔍</span>
+                    <input type="text"
+                           name="q"
+                           id="searchInput"
+                           th:value="${param.q}"
+                           placeholder="Search name, tracking no., employee…"
+                           oninput="debounceSubmit()"/>
+                </div>
+
+                <!-- Category -->
+                <div class="filter-pill">
+                    <span>🗂️</span>
+                    <select name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        <option value="OFFICE_EQUIPMENT" th:selected="${param.category == 'OFFICE_EQUIPMENT'}">Office Equipment</option>
+                        <option value="IT_EQUIPMENT"     th:selected="${param.category == 'IT_EQUIPMENT'}">IT Equipment</option>
+                        <option value="VEHICLE"          th:selected="${param.category == 'VEHICLE'}">Vehicle</option>
+                    </select>
+                </div>
+
+                <!-- Serviceable -->
+                <div class="filter-pill">
+                    <span>🔵</span>
+                    <select name="serviceable" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="yes" th:selected="${param.serviceable == 'yes'}">✅ Serviceable</option>
+                        <option value="no"  th:selected="${param.serviceable == 'no'}">❌ Not Serviceable</option>
+                    </select>
+                </div>
+
+                <!-- Preserve sort params -->
+                <input type="hidden" name="sort" th:value="${param.sort ?: 'name'}"/>
+                <input type="hidden" name="dir"  th:value="${param.dir  ?: 'asc'}"/>
+                <input type="hidden" name="page" value="0"/>
+            </div>
+
+            <a th:href="@{/inventory}" class="btn btn-outline" style="font-size:11px">✕ Clear</a>
+        </div>
+    </form>
+
+    <!-- ── Inventory Table ── -->
+    <div class="inventory-card">
+        <div class="table-wrapper">
+            <table class="inv-table">
+            <thead>
+                <tr>
+                    <!-- Tracking Number -->
+                    <th>
+                        <span class="sort-link">Tracking No.</span>
+                    </th>
+                    <!-- Sortable: Name -->
+                    <th>
+                        <a class="sort-link"
+                           th:classappend="${param.sort == 'name'} ? ' sorted'"
+                           th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort='name',dir=${(param.sort == 'name') and (param.dir == 'asc')} ? 'desc' : 'asc',page=0)}">
+                            Item Name
+                            <span th:if="${param.sort == 'name'}" th:text="${param.dir == 'asc'} ? '↑' : '↓'"></span>
+                        </a>
+                    </th>
+                    <th>Description</th>
+                    <!-- Sortable: Category -->
+                    <th>
+                        <a class="sort-link"
+                           th:classappend="${param.sort == 'category'} ? ' sorted'"
+                           th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort='category',dir=${(param.sort == 'category') and (param.dir == 'asc')} ? 'desc' : 'asc',page=0)}">
+                            Category
+                            <span th:if="${param.sort == 'category'}" th:text="${param.dir == 'asc'} ? '↑' : '↓'"></span>
+                        </a>
+                    </th>
+                    <th>Status</th>
+                    <th>Employee ID</th>
+                    <!-- Sortable: Date -->
+                    <th>
+                        <a class="sort-link"
+                           th:classappend="${param.sort == 'dateAcquired'} ? ' sorted'"
+                           th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort='dateAcquired',dir=${(param.sort == 'dateAcquired') and (param.dir == 'asc')} ? 'desc' : 'asc',page=0)}">
+                            Date Acquired
+                            <span th:if="${param.sort == 'dateAcquired'}" th:text="${param.dir == 'asc'} ? '↑' : '↓'"></span>
+                        </a>
+                    </th>
+                    <!-- Sortable: Amount -->
+                    <th>
+                        <a class="sort-link"
+                           th:classappend="${param.sort == 'amount'} ? ' sorted'"
+                           th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort='amount',dir=${(param.sort == 'amount') and (param.dir == 'asc')} ? 'desc' : 'asc',page=0)}">
+                            Amount (₱)
+                            <span th:if="${param.sort == 'amount'}" th:text="${param.dir == 'asc'} ? '↑' : '↓'"></span>
+                        </a>
+                    </th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <!-- ── DATABASE ROWS ── -->
+                <tr th:each="item : ${inventoryList}">
+
+                    <!-- Tracking Number -->
+                    <td>
+                        <span class="tracking-badge"
+                              th:text="${item.trackingNumber ?: 'TRK-N/A'}">TRK-N/A</span>
+                    </td>
+
+                    <!-- Item Name -->
+                    <td>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <div class="prod-img-wrap"
+                                 th:text="${item.category != null and item.category.name() == 'IT_EQUIPMENT'} ? '💻' :
+                                          (${item.category != null and item.category.name() == 'VEHICLE'} ? '🚗' : '🗂️')">📦</div>
+                            <div>
+                                <div class="prod-name" th:text="${item.name}">—</div>
+                                <div class="prod-id"   th:text="'#' + ${item.inventoryId}">—</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Description -->
+                    <td>
+                        <div class="td-desc"
+                             th:text="${item.description != null ? item.description : '—'}">—</div>
+                    </td>
+
+                    <!-- Category Badge -->
+                    <td>
+                        <span th:if="${item.category != null}"
+                              class="cat-badge"
+                              th:classappend="${item.category.name() == 'IT_EQUIPMENT'}  ? ' cat-it'      :
+                                              (${item.category.name() == 'VEHICLE'}      ? ' cat-vehicle' : ' cat-office')"
+                              th:text="${item.category.name() == 'OFFICE_EQUIPMENT'}     ? 'Office Equipment' :
+                                       (${item.category.name() == 'IT_EQUIPMENT'}        ? 'IT Equipment'     : 'Vehicle')">—</span>
+                        <span th:if="${item.category == null}" class="td-muted">—</span>
+                    </td>
+
+                    <!-- Serviceable Status -->
+                    <td>
+                        <span th:if="${item.isServiceable != null and item.isServiceable.name() == 'yes'}"
+                              class="status-badge status-yes">
+                            <span class="status-dot"></span>Serviceable
+                        </span>
+                        <span th:if="${item.isServiceable != null and item.isServiceable.name() == 'no'}"
+                              class="status-badge status-no">
+                            <span class="status-dot"></span>Not Serviceable
+                        </span>
+                        <span th:if="${item.isServiceable == null}" class="td-muted">—</span>
+                    </td>
+
+                    <!-- Employee ID -->
+                    <td>
+                        <span class="td-muted"
+                              th:text="${item.employeeId != null ? item.employeeId : '—'}">—</span>
+                    </td>
+
+                    <!-- Date Acquired -->
+                    <td>
+                        <span class="td-muted"
+                              th:text="${item.dateAcquired != null ? #temporals.format(item.dateAcquired, 'MMM dd, yyyy') : '—'}">—</span>
+                    </td>
+
+                    <!-- Amount -->
+                    <td>
+                        <span class="amount-cell"
+                              th:text="${item.amount != null ? '₱' + #numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT') : '—'}">—</span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                        <div class="action-wrap">
+                            <!-- Edit -->
+                            <button type="button"
+                                    class="act-btn edit"
+                                    title="Edit"
+                                    th:data-id="${item.inventoryId}"
+                                    th:data-name="${item.name}"
+                                    th:data-desc="${item.description}"
+                                    th:data-cat="${item.category != null ? item.category.name() : ''}"
+                                    th:data-svc="${item.isServiceable != null ? item.isServiceable.name() : 'yes'}"
+                                    th:data-emp="${item.employeeId}"
+                                    th:data-date="${item.dateAcquired}"
+                                    th:data-amt="${item.amount != null ? item.amount : 0}"
+                                    th:data-by="${item.createdBy}"><i class="fas fa-edit"></i></button>
+                            <!-- Print Tag -->
+                            <button type="button"
+                                    class="act-btn print"
+                                    title="Print Property Tag"
+                                    th:data-id="${item.inventoryId}"><i class="fas fa-print"></i></button>
+                            <!-- Delete -->
+                            <form th:action="@{/inventory/{id}/delete(id=${item.inventoryId})}"
+                                  method="post"
+                                  style="display:inline"
+                                  onsubmit="return confirm('Delete this item permanently?')">
+                                <button type="submit" class="act-btn del" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- ── EMPTY STATE ── -->
+                <tr th:if="${#lists.isEmpty(inventoryList)}" class="empty-row">
+                    <td colspan="9">
+                        <div class="empty-icon">📭</div>
+                        No items found. Try adjusting your search or filters.
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+        </div>
+
+        <!-- ── PAGINATION ── -->
+        <div class="table-footer">
+            <div class="table-info">
+                Page <span th:text="${currentPage + 1}">1</span>
+                of <span th:text="${totalPages}">1</span>
+                &nbsp;·&nbsp;
+                <span th:text="${#lists.size(inventoryList)}">0</span> items shown
+            </div>
+            <div class="pagination">
+                <a class="page-btn"
+                   th:classappend="${currentPage == 0} ? ' disabled'"
+                   th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort=${param.sort},dir=${param.dir},page=${currentPage - 1})}">‹</a>
+
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <a class="page-btn"
+                       th:classappend="${i == currentPage} ? ' active'"
+                       th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort=${param.sort},dir=${param.dir},page=${i})}"
+                       th:text="${i + 1}">1</a>
+                </th:block>
+
+                <a class="page-btn"
+                   th:classappend="${currentPage >= totalPages - 1} ? ' disabled'"
+                   th:href="@{/inventory(q=${param.q},category=${param.category},serviceable=${param.serviceable},sort=${param.sort},dir=${param.dir},page=${currentPage + 1})}">›</a>
+            </div>
+        </div>
+
+    </div><!-- end .inventory-card -->
+    </div><!-- end .page-body -->
+
+    <!-- ══════════════════════════════════════
+         ADD / EDIT MODAL
+         ══════════════════════════════════════ -->
+    <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modalTitle">Add New Item</div>
+                    <div class="modal-sub"   id="modalSub">Fill in the asset details below</div>
+                </div>
+                <button class="modal-x" type="button" onclick="closeModal()">✕</button>
+            </div>
+            <form id="itemForm" th:action="@{/inventory/save}" method="post">
+                <input type="hidden" id="f-id" name="inventoryId"/>
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label class="form-label">Item Name <span style="color:var(--accent)">*</span></label>
+                            <input class="form-input" id="f-name" name="name" type="text"
+                                   placeholder="e.g. Dell Laptop XPS 15" required/>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="f-desc" name="description"
+                                      placeholder="Brief description of the asset…"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category <span style="color:var(--accent)">*</span></label>
+                            <select class="form-select" id="f-cat" name="category" required>
+                                <option value="">Select category…</option>
+                                <option value="OFFICE_EQUIPMENT">🗂️ Office Equipment</option>
+                                <option value="IT_EQUIPMENT">💻 IT Equipment</option>
+                                <option value="VEHICLE">🚗 Vehicle</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Serviceable Status</label>
+                            <select class="form-select" id="f-svc" name="isServiceable">
+                                <option value="yes">✅ Serviceable</option>
+                                <option value="no">❌ Not Serviceable</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Employee ID</label>
+                            <input class="form-input" id="f-emp" name="employeeId" type="text"
+                                   placeholder="e.g. EMP-0042"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date Acquired</label>
+                            <input class="form-input" id="f-date" name="dateAcquired" type="date"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amount (₱) <span style="color:var(--accent)">*</span></label>
+                            <input class="form-input" id="f-amount" name="amount"
+                                   type="number" step="0.01" min="0" placeholder="0.00" required/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Created By <span style="color:var(--accent)">*</span></label>
+                            <input class="form-input" id="f-createdBy" name="createdBy" type="text"
+                                   placeholder="e.g. admin" required/>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">💾 Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Print Tag Modal Fragment -->
+    <div th:replace="~{fragments/modals/print-tag-modal :: content}"></div>
+
+    <!-- Page-specific scripts -->
+    <th:block th:replace="~{::script}"></th:block>
+    <script th:src="@{/js/inventory-page.js}"></script>
+    <script th:src="@{/js/print-tag-modal-script.js}"></script>
+
+
+</main>
+</html>

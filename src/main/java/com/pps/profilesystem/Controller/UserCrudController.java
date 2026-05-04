@@ -42,7 +42,8 @@ public class UserCrudController {
      * Check if current user is system admin
      */
     private boolean isSystemAdmin(User user) {
-        return user != null && Integer.valueOf(1).equals(user.getRole());
+        return user != null && (Integer.valueOf(1).equals(user.getRole()) 
+                             || Integer.valueOf(4).equals(user.getRole()));
     }
 
     /**

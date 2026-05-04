@@ -1,0 +1,28 @@
+<!-- Delete Confirmation Modal Fragment -->
+<div th:fragment="content">
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModalOverlay" onclick="handleDeleteOverlayClick(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title">Confirm Delete</div>
+                <div class="modal-sub" id="deleteModalSub">This item will be permanently removed.</div>
+            </div>
+            <button class="modal-x" type="button" onclick="closeDeleteModal()">✕</button>
+        </div>
+        <div class="del-modal-body">
+            <div class="del-modal-icon">🗑️</div>
+            <div class="del-modal-title" id="deleteModalTitle">Delete this item?</div>
+            <div class="del-modal-sub" id="deleteConfirmSub">
+                This action cannot be undone. The item will be permanently removed from the inventory.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" style="background: var(--red); border-color: var(--red);" onclick="confirmDelete()">
+                🗑️ Delete
+            </button>
+        </div>
+    </div>
+</div>
+</div>

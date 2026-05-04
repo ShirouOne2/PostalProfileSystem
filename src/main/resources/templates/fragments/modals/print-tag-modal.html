@@ -1,0 +1,34 @@
+<!-- Print Tag Modal Fragment -->
+<div th:fragment="content" id="printTagModal" class="modal-overlay">
+    <div class="modal" style="width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+
+        <div class="modal-header">
+            <div>
+                <div class="modal-title">🏷️ Property Tag Preview</div>
+                <div class="modal-sub">Review before printing</div>
+            </div>
+            <button class="modal-x" type="button" onclick="closePrintTagModal()">✕</button>
+        </div>
+
+        <div class="modal-body" style="padding:20px 24px;">
+            <!-- Error Message -->
+            <div id="printTagError" class="flash flash-error" style="display:none;margin-bottom:12px;">
+                <strong>⚠️ Error:</strong> <span id="printTagErrorMsg">Unable to load tag.</span>
+            </div>
+
+            <!-- Loading state -->
+            <div id="printTagLoading" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:40px 0;color:var(--muted);font-size:13px;">
+                <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                <span>Loading tag…</span>
+            </div>
+
+            <!-- Tag content injected here -->
+            <div id="printTagContent" style="display:none;justify-content:center;"></div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closePrintTagModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="printTagFromModal()">🖨️ Print</button>
+        </div>
+    </div>
+</div>

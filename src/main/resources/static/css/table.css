@@ -82,7 +82,7 @@ span.text-muted {
 #staticTable thead th {
     background-color: #f8f9fa !important;
     color: #333333;
-    font-weight: 600;
+    font-weight: normal;
     padding: 12px 15px;
     border-bottom: 2px solid #dee2e6;
     border-top: 1px solid #dee2e6;
@@ -107,7 +107,7 @@ span.text-muted {
     position: absolute;
     right: 10px;
     opacity: 0.3;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 #staticTable thead th.sorting_asc:after,
@@ -141,7 +141,7 @@ span.text-muted {
     width: 50px;
     text-align: center;
     color: #333333;
-    font-weight: 500;
+    font-weight: normal;
 }
 
 #staticTable thead th:first-child {
@@ -158,8 +158,8 @@ span.text-muted {
 .badge {
     padding: 4px 12px;
     border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: normal;
     text-transform: capitalize;
 }
 
@@ -264,7 +264,7 @@ span.text-muted {
     background-color: #007bff;
     color: #ffffff !important;
     border-color: #007bff;
-    font-weight: 600;
+    font-weight: normal;
 }
 
 .dataTables_paginate .paginate_button.current:hover {
@@ -294,13 +294,13 @@ span.text-muted {
 /* Previous and Next buttons */
 .dataTables_paginate .paginate_button.previous,
 .dataTables_paginate .paginate_button.next {
-    font-weight: 500;
+    font-weight: normal;
 }
 
 /* First and Last buttons (if using full_numbers) */
 .dataTables_paginate .paginate_button.first,
 .dataTables_paginate .paginate_button.last {
-    font-weight: 500;
+    font-weight: normal;
 }
 
 /* Processing/Loading Indicator */
@@ -370,7 +370,7 @@ span.text-muted {
 }
 .filter-panel-title { font-size:13px; font-weight:700; color:#2c3e50; }
 .filter-label {
-    font-size:0.72rem; font-weight:700; color:#6c757d;
+    font-size:12px; font-weight:700; color:#6c757d;
     text-transform:uppercase; letter-spacing:0.5px;
     margin-bottom:5px; display:block;
 }
@@ -394,7 +394,7 @@ span.text-muted {
 .filter-tag-pill {
     display:inline-flex; align-items:center; gap:4px;
     padding:3px 10px; border-radius:20px;
-    font-size:11px; font-weight:600;
+    font-size:12px; font-weight:600;
     border:1px solid transparent;
     animation:tagFadeIn 0.15s ease;
 }

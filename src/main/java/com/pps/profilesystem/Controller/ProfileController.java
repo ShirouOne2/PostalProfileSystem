@@ -1,8 +1,13 @@
 package com.pps.profilesystem.Controller;
 
 import com.pps.profilesystem.Entity.PostalOffice;
+import com.pps.profilesystem.Entity.User;
 import com.pps.profilesystem.Repository.PostalOfficeRepository;
+import com.pps.profilesystem.Repository.UserRepository;
+import com.pps.profilesystem.Service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -17,6 +22,12 @@ public class ProfileController {
 
     @Autowired
     private PostalOfficeRepository postalOfficeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private InventoryService inventoryService;
 
     /**
      * View profile by ID - accessible via /profile/{id}
@@ -33,12 +44,21 @@ public class ProfileController {
         }
 
         PostalOffice office = officeOptional.get();
+
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        if (!canAccessProfileOffice(currentUser, office)) {
+            return "redirect:/access-denied";
+        }
+
         model.addAttribute("office",    office);
         model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("inventoryList", inventoryService.getByPostalOfficeId(id));
         model.addAttribute("activePage", "profile");
-        model.addAttribute("canEdit",    true);
-        model.addAttribute("canAccessAllAreas", true);
-        model.addAttribute("source",    source);   // ← passed to Back button in profile.html
+        model.addAttribute("source",    source);
+        addProfileActionFlags(model, currentUser);
 
         return "profile";
     }
@@ -56,9 +76,21 @@ public class ProfileController {
         }
 
         PostalOffice office = officeOptional.get();
+
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        if (!canAccessProfileOffice(currentUser, office)) {
+            return "redirect:/access-denied";
+        }
+
         model.addAttribute("office",    office);
         model.addAttribute("postOffice", buildProfileData(office));
+        model.addAttribute("inventoryList", inventoryService.getByPostalOfficeId(id));
         model.addAttribute("activePage", "profile");
+        model.addAttribute("source", "table");
+        addProfileActionFlags(model, currentUser);
 
         return "profile-popup";
     }
@@ -125,5 +157,38 @@ public class ProfileController {
                                     ? (conn.getIsShared() ? "Shared" : "Owned") : null);
 
         return data;
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        return userRepository.findByEmail(auth.getName()).orElse(null);
+    }
+
+    /**
+     * System admin (1) and SRD Operation (4) may open any office; others only offices in their area.
+     */
+    private boolean canAccessProfileOffice(User user, PostalOffice office) {
+        Integer roleId = user.getRole();
+        if (roleId == null) {
+            return false;
+        }
+        if (roleId == 1 || roleId == 4) {
+            return true;
+        }
+        Integer userAreaId = user.getAreaId();
+        return office.getArea() != null && userAreaId != null && userAreaId.equals(office.getArea().getId());
+    }
+
+    private void addProfileActionFlags(Model model, User user) {
+        Integer roleId = user.getRole();
+        boolean isSrd = roleId != null && roleId == 4;
+        model.addAttribute("canProfileEdit", roleId != null && !isSrd);
+        model.addAttribute("canProfileArchive", roleId != null && (roleId == 1 || roleId == 2 || roleId == 4));
+        model.addAttribute("canProfilePhotoUpload", roleId != null && !isSrd);
+        model.addAttribute("canAccessAllAreas", roleId != null && (roleId == 1 || roleId == 4));
+        model.addAttribute("canEdit", roleId != null && !isSrd);
     }
 }

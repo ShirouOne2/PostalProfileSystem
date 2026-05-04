@@ -10,16 +10,21 @@
     <div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
         <div class="row">
             <div class="col-lg-12 text-center">
-                <div class="error mx-auto" data-text="500">500</div>
-                <p class="lead text-gray-800 mb-5">Internal Server Error</p>
+                <div class="error mx-auto" th:attr="data-text=${status != null ? status : '500'}"
+                     th:text="${status != null ? status : '500'}">500</div>
+                <p class="lead text-gray-800 mb-5" th:text="${error != null ? error : 'Error'}">Internal Server Error</p>
                 <p class="text-gray-500 mb-0">It looks like something went wrong...</p>
                 <p class="text-gray-500 mb-4">Please check the database connection or try again later.</p>
                 <a href="/table" class="btn btn-primary btn-lg">
                     <i class="fas fa-home me-2"></i>Return to Home
                 </a>
                 <div class="mt-4">
+                    <small class="text-muted d-block" th:if="${path != null}">
+                        Path: <span th:text="${path}">/</span>
+                    </small>
                     <small class="text-muted">
-                        Error details: <span th:text="${error}">Unknown error</span>
+                        Error details:
+                        <span th:text="${(message != null and !#strings.isEmpty(message)) ? message : (error != null ? error : 'Unknown error')}">Unknown error</span>
                     </small>
                 </div>
             </div>

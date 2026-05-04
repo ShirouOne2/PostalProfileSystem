@@ -1,46 +1,3 @@
-<!-- User Modal Styles Fragment -->
-<style th:fragment="userModalStyles">
-    .modal-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-bottom: none;
-    }
-    .modal-title { font-weight: 600; font-size: 1.25rem; }
-    .modal-body { padding: 2rem; }
-    .form-group label { font-weight: 500; color: #495057; margin-bottom: 0.5rem; }
-    .form-control:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none; padding: 0.5rem 1.5rem; font-weight: 500;
-    }
-    .btn-primary:hover { background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%); }
-    .btn-secondary { background: #6c757d; border: none; padding: 0.5rem 1.5rem; font-weight: 500; }
-
-    /* CSS-only default avatar */
-    .avatar-placeholder {
-        width: 80px; height: 80px;
-        border-radius: 50%;
-        border: 3px solid #667eea;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 2rem; color: white; font-weight: bold;
-        margin: 0 auto; position: relative; cursor: pointer;
-    }
-    .avatar-upload { text-align: center; margin-bottom: 1rem; }
-    .avatar-upload label { cursor: pointer; display: inline-block; position: relative; }
-    .avatar-upload input[type="file"] { display: none; }
-    .avatar-upload .upload-overlay {
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5); border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        opacity: 0; transition: opacity 0.3s;
-    }
-    .avatar-upload label:hover .upload-overlay { opacity: 1; }
-</style>
-
 <!-- ========================================================= -->
 <!-- User Modal Fragment                                        -->
 <!-- ========================================================= -->
@@ -51,7 +8,7 @@
 
             <div class="modal-header">
                 <h5 class="modal-title" id="userModalLabel">
-                    <i class="fas fa-user-edit mr-2"></i>
+                 
                     <span id="modalTitle">Add New User</span>
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -108,8 +65,16 @@
                             Password
                             <span id="passwordRequired" class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control" id="password"
-                               placeholder="Enter password">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password"
+                                   placeholder="Enter password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword"
+                                        onclick="togglePasswordVisibility('password', 'togglePassword')">
+                                    <i class="fas fa-eye" id="passwordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
                         <small id="passwordHint" class="form-text text-muted" style="display:none;">
                             Leave blank to keep current password
                         </small>
@@ -122,8 +87,16 @@
                             Confirm Password
                             <span id="confirmRequired" class="text-danger">*</span>
                         </label>
-                        <input type="password" class="form-control" id="confirmPassword"
-                               placeholder="Confirm password">
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirmPassword"
+                                   placeholder="Confirm password">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword"
+                                        onclick="togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div id="passwordStrengthText" class="mt-1" style="font-size:0.8rem;"></div>
                         <div class="progress mt-1" style="height:5px;">
                             <div id="passwordStrengthBar" class="progress-bar" style="width:0;"></div>
@@ -133,7 +106,7 @@
 
                     <!-- Role & Status -->
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="form-group">
                                 <label for="role">Role <span class="text-danger">*</span></label>
                                 <!-- ✅ onRoleChange defined in users-management.js -->
@@ -143,11 +116,13 @@
                                     <option value="1">System Admin</option>
                                     <option value="2">Area Admin</option>
                                     <option value="3">User</option>
+                                    <option value="4">SRD Operation</option>
+                                    <option value="5">Asset</option>
                                 </select>
                                 <div class="invalid-feedback">Please select a role.</div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="form-group">
                                 <label>Status</label>
                                 <div class="mt-2">
@@ -245,3 +220,4 @@
     </div>
 </div>
 <!-- ✅ NO <script> tag here — all JS is in users-management.js -->
+    

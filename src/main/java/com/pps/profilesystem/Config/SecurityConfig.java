@@ -30,13 +30,24 @@ public class SecurityConfig {
                 System.err.println("Response already committed - cannot redirect");
                 return;
             }
+
+            // SSE requests may have already started streaming via OutputStream.
+            // Writing a JSON body (getWriter) would throw IllegalStateException.
+            String accept = request.getHeader("Accept");
+            if (accept != null && accept.contains("text/event-stream")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
             
             // For AJAX/SSE requests, return 403 JSON
             if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With")) ||
                 request.getRequestURI().startsWith("/api/")) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"Access denied\",\"status\":403}");
+                response.setCharacterEncoding("UTF-8");
+                response.setContentType("application/json;charset=UTF-8");
+                try (var writer = response.getWriter()) {
+                    writer.write("{\"error\":\"Access denied\",\"status\":403}");
+                }
             } else {
                 // For regular requests, redirect to access denied page
                 response.sendRedirect("/access-denied");
@@ -52,6 +63,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",
                     "/error",
+                    "/error/**",
                     "/access-denied",
                     "/request-otp",
                     "/verify-otp",
@@ -64,14 +76,16 @@ public class SecurityConfig {
                     "/api/keep-alive",          // public ping for session check
                     "/api/user/current"         // public check for authentication status
                 ).permitAll()
-                // FIX: Notifications SSE — accessible by ADMIN and AREA_ADMIN
-                // Previously was hasRole("ADMIN") only — Area Admin (role 2) was getting
-                // 403 Forbidden on /api/notifications/stream, causing silent SSE failure.
-                .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "AREA_ADMIN")
-                // Only ADMIN can access user management and archive
+                // Only ADMIN, AREA_ADMIN, and SRD_OPERATION can access user management and archive
                 // AREA_ADMIN can access but sees only their own area's data
-                .requestMatchers("/users", "/register").hasAnyRole("ADMIN", "AREA_ADMIN")
-                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasAnyRole("ADMIN", "AREA_ADMIN")
+                .requestMatchers("/users", "/register").hasAnyRole("ADMIN", "AREA_ADMIN", "SRD_OPERATION")
+                .requestMatchers("/archive", "/api/archive/**", "/api/restore/**").hasAnyRole("ADMIN", "AREA_ADMIN", "SRD_OPERATION")
+                // Only AREA_ADMIN and SRD_OPERATION can access approval system
+                .requestMatchers("/approvals/**").hasAnyRole("AREA_ADMIN", "SRD_OPERATION")
+                // All authenticated users can receive approval/connectivity notifications.
+                .requestMatchers("/api/notifications/**").authenticated()
+                // Asset login/page restriction
+                .requestMatchers("/inventory", "/inventory/**").hasAnyRole("ADMIN", "ASSET")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -100,7 +114,7 @@ public class SecurityConfig {
             // This prevents the browser Back button from showing protected pages after logout.
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.sameOrigin())
-                .cacheControl(cache -> {})   // enables no-cache / no-store / must-revalidate
+                .cacheControl(cache -> {})
             );
 
         return http.build();

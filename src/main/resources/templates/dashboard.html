@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/main-layout :: layout(~{::title}, ~{::content})}">
 
 <head>
     <title>Dashboard - PHLPost</title>
 </head>
 
-<body th:data-is-area-admin="${isAreaAdmin}">
+<section th:fragment="content">
+    <div id="dashboardRoleFlags" class="d-none" aria-hidden="true"
+         th:data-is-system-admin="${isSystemAdmin}"
+         th:data-is-area-admin="${isAreaAdmin}"
+         th:data-is-srd-operation="${isSrdOperation}"
+         th:data-can-dashboard-edit="${canDashboardEdit}"
+         th:data-can-dashboard-archive="${canDashboardArchive}"></div>
 
-<div th:fragment="content">
-
-   
     <!-- Main Body -->
     <div class="container-fluid p-2">
 
         <!-- Stats Cards Row -->
         <div class="row mb-3">
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
+            <div class="col-xl-2-4 col-lg-2-4 col-md-4 col-sm-6 mb-2">
                 <div class="card shadow-sm border-left-primary w-100">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">Total Offices</div>
@@ -26,7 +28,7 @@
                 </div>
             </div>
            
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
+            <div class="col-xl-2-4 col-lg-2-4 col-md-4 col-sm-6 mb-2">
                 <div class="card shadow-sm border-left-success w-100">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-2">Connected</div>
@@ -34,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
+            <div class="col-xl-2-4 col-lg-2-4 col-md-4 col-sm-6 mb-2">
                 <div class="card shadow-sm w-100" style="border-left:4px solid #dc3545;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-2">Disconnected</div>
@@ -42,7 +44,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
+            <div class="col-xl-2-4 col-lg-2-4 col-md-4 col-sm-6 mb-2">
                 <div class="card shadow-sm w-100" style="border-left:4px solid #17a2b8;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
                         <div class="text-xs font-weight-bold text-uppercase mb-2" style="color:#17a2b8;">Office Open</div>
@@ -50,7 +52,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
+            <div class="col-xl-2-4 col-lg-2-4 col-md-4 col-sm-6 mb-2">
                 <div class="card shadow-sm w-100" style="border-left:4px solid #ffc107;">
                     <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
                         <div class="text-xs font-weight-bold text-uppercase mb-2" style="color:#856404;">Office Closed</div>
@@ -106,14 +108,6 @@
                 <span class="val" th:text="${closedCount}">0</span>
                 <i class="fas fa-door-closed ico"></i>
             </div>
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-2">
-                <div class="card shadow-sm w-100" style="border-left:4px solid #6c757d;">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-3">
-                        <div class="text-xs font-weight-bold text-uppercase mb-2" style="color:#6c757d;">Total Areas</div>
-                        <h4 class="mb-0 font-weight-bold" style="color:#6c757d;" th:text="${areaCount}">0</h4>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Filter Panel -->
@@ -149,16 +143,13 @@
                                    placeholder="Office name..."
                                    style="border-radius:7px 0 0 7px !important;">
                             <div class="input-group-append">
-                                <button class="filter-clear-x" id="clearSearchBtn" 
-                                        data-toggle="tooltip" data-placement="top" title="Clear Search">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                             
                             </div>
                         </div>
                     </div>
 
-                    <!-- Area — System Admin only -->
-                    <div th:if="${isSystemAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
+                    <!-- Area filter — System Admin and SRD Operation only -->
+                    <div th:if="${isSystemAdmin or isSrdOperation}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
                         <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
                         <select id="dashFilterArea" class="form-control filter-select">
                             <option value="">All Areas</option>
@@ -169,13 +160,7 @@
                                     th:text="${area.areaName}">Area</option>
                         </select>
                     </div>
-                    <!-- Area filter for Area Admins only - shows only their assigned area -->
-                    <div th:unless="${isSystemAdmin}" th:if="${isAreaAdmin}" class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
-                        <label class="filter-label"><i class="fas fa-map-marker-alt mr-1"></i>Area</label>
-                        <select id="filterArea" class="form-control filter-select">
-                            <option value="1">Area 1</option>
-                        </select>
-                    </div>
+                    <!-- Area filter for Area Admins removed/hidden as requested -->
 
                     <!-- Connection Status -->
                     <div class="col-md-2 col-sm-6 mb-2" style="padding:0 5px;">
@@ -194,6 +179,7 @@
                             <option value="">All</option>
                             <option value="Open">Open</option>
                             <option value="Closed">Closed</option>
+                            <option value="TBD">TBD</option>
                         </select>
                     </div>
                     <div th:unless="${isSystemAdmin}" style="display:none;">
@@ -220,12 +206,12 @@
         <!-- ── /Filter Panel ───────────────────────── -->
 
         <!-- ══════════════════════════════════════════════════════════
-             SYSTEM ADMIN TABLE (all columns)
+             SYSTEM ADMIN & SRD OPERATION TABLE (all columns)
              ══════════════════════════════════════════════════════ -->
-        <div th:if="${isSystemAdmin}" class="card shadow-sm mb-3">
+        <div th:if="${isSystemAdmin or isSrdOperation}" class="card shadow-sm mb-3">
         
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="dashboard-dt-wrap">
                     <table id="systemAdminTable" class="table table-hover table-striped mb-0" style="width:100%">
         <!-- ══════════════════════════════════════════════════
                      TABLE — System Admin sees full columns
@@ -246,33 +232,37 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th class="text-center" style="width:45px;">#</th>
-                                <th> Name</th>
                                 <th style="width:110px;">Area</th>
+                                <th> Name</th>
                                 <th style="width:130px;">Province</th>
                                 <th style="width:160px;">City/Municipality</th>
                                 <th class="text-center" style="width:120px;">
-                                    Connection
+                                   
                                     <span class="th-sub">Internet Status</span>
                                 </th>
                                 <th class="text-center" style="width:105px;">
                                     Office
                                     <span class="th-sub">Open / Closed</span>
                                 </th>
-                                <th class="text-center" style="width:120px;">Actions</th>
+                                <th class="text-center" style="width:120px;"
+                                    sec:authorize="!hasRole('SRD_OPERATION')">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="office, iter : ${offices}">
                                 <td class="text-center text-muted" style="font-size:12px;"></td>
+                                <td th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}"></td>
                                 <td>
                                     <a href="#"
                                        th:data-office-id="${office.id}"
                                        th:data-office-name="${office.name}"
                                        onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName)"
                                        class="office-name-link"
+                                       data-toggle="tooltip"
+                                       data-placement="top"
+                                       th:title="'Click to view details for ' + ${office.name}"
                                        th:text="${office.name}">Office Name</a>
                                 </td>
-                                <td th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}"></td>
                                 <td th:text="${not #strings.isEmpty(office.province) ? office.province : 'N/A'}"></td>
                                 <td th:text="${not #strings.isEmpty(office.cityMunicipality) ? office.cityMunicipality : 'N/A'}"></td>
                                 <td class="text-center">
@@ -291,26 +281,21 @@
                                         <i class="fas fa-door-closed mr-1"></i>Closed
                                     </span>
                                     <span th:if="${office.officeStatus == null or office.officeStatus == ''}"
-                                          class="badge badge-unknown">—</span>
+                                          class="badge badge-unknown"></span>
                                 </td>
-                                <td class="text-center action-buttons">
-                                    <button type="button" class="btn btn-sm btn-info"
-                                            th:onclick="|dashViewOffice(${office.id})|"
-                                            title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                <td class="text-center action-buttons" sec:authorize="!hasRole('SRD_OPERATION')">
                                     <button class="btn btn-sm btn-warning btn-edit"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            data-toggle="tooltip" data-placement="top" title="Edit Office">
+                                            data-toggle="tooltip" data-placement="top" title="Edit Office"
+                                            sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN', 'USER')">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-archive"
-                                            style="background:#fd7e14;color:white;"
+                                    <button class="btn btn-sm btn-secondary btn-archive"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            sec:authorize="hasRole('ADMIN')"
-                                            data-toggle="tooltip" data-placement="top" title="Archive Office">
+                                            data-toggle="tooltip" data-placement="top" title="Archive Office"
+                                            sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN', 'SRD_OPERATION')">
                                         <i class="fas fa-archive"></i>
                                     </button>
                                 </td>
@@ -319,21 +304,24 @@
                     </table>
                 </div>
 
-        <!-- Data Table (Area Admin / User view) — hidden for System Admin who has the full table above -->
-        <div th:if="${not isSystemAdmin}" class="card shadow-sm mb-4">
+        <!-- Data Table (Area Admin / User view) — hidden for System Admin and SRD Operation who have full table above -->
+        <div th:if="${not isSystemAdmin and not isSrdOperation}" class="card shadow-sm mb-4">
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-hover table-striped mb-0" id="officeTable">
+                <div class="dashboard-dt-wrap">
+                    <table class="table table-hover table-striped mb-0"
+                           id="officeTable"
+                           th:classappend="${isAreaAdmin} ? ' dashboard-office-area-admin'">
                         <thead class="thead-light">
                             <tr>
                                 <th class="text-center" style="width:60px;">#</th>
                                 <th>Name</th>
-                                <th th:if="${isAreaAdmin}" style="display:none;">Area</th>
+                                <th th:if="${isAreaAdmin}" style="width:110px;">Area</th>
                                 <th>Province</th>
                                 <th>City/Municipality</th>
                                 <th class="text-center">Connectivity</th>
                                 <th class="text-center">Office Status</th>
-                                <th class="text-center" style="width:120px;">Actions</th>
+                                <th class="text-center" style="width:120px;"
+                                    sec:authorize="!hasRole('SRD_OPERATION')">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -347,9 +335,12 @@
                                        th:data-office-name="${office.name}"
                                        onclick="openOfficeProfilePopup(this.dataset.officeId, this.dataset.officeName)"
                                        class="office-name-link"
+                                       data-toggle="tooltip"
+                                       data-placement="top"
+                                       th:title="'Click to view details for ' + ${office.name}"
                                        th:text="${office.name}">Office Name</a>
                                 </td>
-                                <td th:if="${isAreaAdmin}" th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}" style="display:none;">Area</td>
+                                <td th:if="${isAreaAdmin}" th:text="${not #strings.isEmpty(office.area) ? office.area : 'N/A'}">Area</td>
                                 <td th:text="${not #strings.isEmpty(office.province) ? office.province : 'N/A'}">Province</td>
                                 <td th:text="${not #strings.isEmpty(office.cityMunicipality) ? office.cityMunicipality : 'N/A'}">City/Municipality</td>
                                 <td class="text-center">
@@ -368,24 +359,20 @@
                                     <span th:unless="${office.speed != null and !#strings.isEmpty(office.speed)}"
                                           class="text-muted">—</span>
                                 </td>
-                                <td class="text-center action-buttons">
-                                    <button type="button" class="btn btn-sm btn-info"
-                                            th:onclick="|dashViewOffice(${office.id})|"
-                                            title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                <td class="text-center action-buttons"
+                                    sec:authorize="!hasRole('SRD_OPERATION')">
                                     <button class="btn btn-sm btn-warning btn-edit"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            data-toggle="tooltip" data-placement="top" title="Edit Office">
+                                            data-toggle="tooltip" data-placement="top" title="Edit Office"
+                                            sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN', 'USER')">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button th:if="${isAreaAdmin}"
-                                            class="btn btn-sm btn-archive"
-                                            style="background:#fd7e14;color:white;"
+                                    <button class="btn btn-sm btn-secondary btn-archive"
                                             th:data-office-id="${office.id}"
                                             th:data-office-name="${office.name}"
-                                            title="Archive Office">
+                                            data-toggle="tooltip" data-placement="top" title="Archive Office"
+                                            sec:authorize="hasAnyRole('ADMIN', 'AREA_ADMIN', 'SRD_OPERATION')">
                                         <i class="fas fa-archive"></i>
                                     </button>
                                 </td>
@@ -432,12 +419,13 @@
                 </div>
             </div>
         </div>
-    </div>
-
-</div>
-
-<!-- Edit Modal -->
+            <!-- Edit Modal -->
 <div th:replace="~{fragments/modals/edit-modal :: editModal}"></div>
 
-</body>
-</html>
+<!-- Archive Reason Modal -->
+<div th:replace="~{fragments/modals/archive-modal :: archiveModal}"></div>
+
+    </div>
+
+</section>
+
